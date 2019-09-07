@@ -1,0 +1,175 @@
+{
+	"core": {
+		"app_name": "Anonynote",
+		"lang": "English",
+		"lang_code": "en-US",
+		"root": "/",
+		"menu": "Menu"
+	},
+	"app": {
+		"title": "App",
+		"tagline": "A Free Note Taking Progressive Web App",
+		"meta_desc": "A free Progressive Web App for anonymously saving, retrieving and organizing notes. No accounts or logins! Quickly access important data from all of your devices.",
+		"input_label": "Type a new or existing <br class='visible-sm'/>notepad name",
+		"info": "Case-sensitive, any characters accepted, max 16",
+		"open_button": "Open"
+	},
+	"about": {
+		"title": "About",
+		"meta_desc": "A 100% free Progressive Web App, designed for a fast-moving, multi-device world. We believe that saving, retrieving and organizing notes should be quick and easy."
+	},
+	"credits": {
+		"title": "Credits",
+		"meta_desc": "This was a lot of work. Many people's efforts played a part. Here the creator takes a bow and offers acknowledgment and gratitude."
+	},
+	"contact": {
+		"title": "Contact",
+		"meta_desc": "Praise, criticism, or sass: I'd love to hear from you! I want to make this web app the best it can possibly be. Your voice would help us get there."
+	},
+	"error": {
+		"title": "404",
+		"meta_desc": "Something went wrong."
+	},
+	"notepad": {
+		"home": "Home",
+		"refresh": "Refresh",
+		"lock": "Toggle lock",
+		"json": "JSON",
+		"sort": "Sort",
+		"sort_az": "A to Z",
+		"sort_za": "Z to A",
+		"sort_color": "Color",
+		"sort_checked": "Checked",
+		"sort_unchecked": "Unchecked",
+		"offline_mode": "Offline mode",
+		"quick_add_placeholder": "Enter short note",
+		"quick_add_label": "Create quick note",
+		"save": "Save changes",
+		"desc_placeholder": "Enter a notepad description",
+		"desc_char": "characters",
+		"empty_msg": "There are no notes",
+		"empty_tip": "Tip: return here by either retyping the notepad name or bookmarking this page",
+		"expand": "Read more",
+		"moveup": "Move up",
+		"movedown": "Move down",
+		"options": "Options",
+		"reorder": "Drag to re-order",
+		"delete_all": "Delete all",
+		"edit": "Edit",
+		"check": "Check",
+		"check_all": "Check all",
+		"change_color": "Change color",
+		"change_colors": "Change all colors",
+		"note_copy": "Copy to clipboard",
+		"note_copy_success": "Copied",
+		"add_new": "Add note",
+		"sticky_toggle": "Toggle tools",
+		"go_to_top": "Go to top"
+	},
+	"toolbar": {
+		"toggle": "Toggle toolbar",
+		"cloud": "Internet status",
+		"idb": "IndexedDB status",
+		"advanced": "Advanced"
+	},
+	"popup": {
+		"empty": "You must enter something here.",
+		"find_notepad_launch_fail": "Unable to locate notepad. Falling back to home page.",
+		"notepad_launch_timeout": "Timeout loading notepad.",
+		"rename": "Notepad name already in use. Please choose another.",
+		"offline": {
+			"enabled_user": "Offline mode enabled.",
+			"disabled_user": "Offline mode disabled.",
+			"enabled_sys": "Connection error. Offline mode enabled.",
+			"disabled_sys": "Connection re-established. Offline mode disabled."
+		},
+		"sync": {
+			"already": "All local data is already synced. Offline Mode disabled.",
+			"error": "Sync failed. Connection error. Still operating in Offline Mode."
+		}
+	},
+	"modal": {
+		"delete_all": "Are you sure you want to delete all notes from this notepad?",
+		"json": {
+			"prompt": "Use this notepad in webhooks",
+			"prompt_detail": "This notepad data is available in JSON format at the following URL:",
+			"url": "JSON URL"
+		},
+		"sort": "Sort the notepad by the method below",
+		"advanced": {
+			"prompt_detail": "To troubleshoot any problems, or to clear note data off of your local device, you may want to purge the IndexedDB database. Doing so will delete all unsynced notes created in Offline Mode.",
+			"local_version": "Local app version",
+			"current_version": "Current app version",
+			"idb": "Purge IndexedDB"
+		},
+		"sync": {
+			"dialog": {
+				"prompt": "Would you like to sync offline data to the remote server?",
+				"prompt_detail": "Your notes must be synced to access them from other devices. You can either remain in Offline Mode or sync your data now.",
+				"prompt_warning": "After a successful synchronization, the application will reload.",
+				"sync_confirm": "Sync my data",
+				"sync_decline": "Return to Offline Mode"
+			},
+			"error": {
+				"prompt": "Critical error(s) occurred during data sync",
+				"prompt_detail": "Please review the details below. If you choose to sync anyway, some or all of your data will be discarded. Alternatively, you may cancel now and fix these issues before attempting to sync again.",
+				"override": "Sync anyway",
+				"npnamefail": "This notepad cannot be created because the notepad name already exists. If you proceed, the entire notepad will be discarded. Please cancel and try renaming the notepad to something else.",
+				"nprenamefail": "This notepad cannot be renamed because another notepad already has this name. If you proceed, the previous notepad name will be retained. You may cancel and try renaming the notepad to something else.",
+				"lockfail": "This notepad is locked. Changes are not permissable. If you proceed, all of your changes in this notepad will be discarded.",
+				"hashfail": "A critical error has occurred. Please contact us if this problem persists. If you proceed, all of your changes in this notepad will be discarded.",
+				"findfail": "This previously existing notepad no longer exists. If you proceed, all of your changes in this notepad will be discarded."
+			}
+		},
+		"lock": {
+			"prompt": "To lock this notepad, please enter a password",
+			"prompt_detail": "A locked notepad is still visible, but cannot be edited",
+			"password_detail": "Case-sensitive, any characters accepted, max 16",
+			"password_placeholder": "Enter password",
+			"reenter_placeholder": "Re-enter password",
+			"mismatch": "Passwords do not match",
+			"success": "This notepad is now locked!",
+			"success_detail": "You may unlock it at any time with your password. Notepads automatically unlock after 30 days.",
+			"locked_already": "This notepad is locked already. Please reload."
+		},
+		"unlock": {
+			"prompt": "Please enter the password used to lock this notepad",
+			"prompt_detail": "Remember that all notepads automatically unlock after 30 days",
+			"incorrect": "Incorrect password",
+			"success": "This notepad is now unlocked!",
+			"not_locked": "This notepad is not locked. Please reload."
+		},
+		"error": {
+			"retry": "Please try again.",
+			"timeout": "Connection error. Please try again.",
+			"http_code_403": "Connection error. Access forbidden.",
+			"http_code_404": "Connection error. File missing.",
+			"http_code_408": "Connection error. Access timeout.",
+			"http_code_500": "Database connection or query error.",
+			"catchall": "Something went wrong.",
+			"critical": "System error. Please contact us if this persists.",
+			"locked": "This notepad is locked. Please reload."
+		}
+	},
+	"edit": {
+		"pick": "Pick a color",
+		"placeholder": "Enter note here"
+	},
+	"general": {
+		"yes": "Yes",
+		"no": "No",
+		"cancel": "Cancel",
+		"continue": "Continue",
+		"reload": "Reload",
+		"retry": "Retry",
+		"close": "Close",
+		"save": "Save",
+		"delete": "Delete",
+		"next": "Next",
+		"previous": "Previous",
+		"back": "Back",
+		"error": "Error",
+		"online": "Online",
+		"offline": "Offline"
+	}
+}
