@@ -18,7 +18,6 @@ define("PAGEDESC", $locale["contact"]["meta_desc"]);
 		<link rel="stylesheet" type="text/css" href="<?php echo $minify["css"]; ?>">
 	</head>
 	<body id="about">
-<?php include_once realpath($_SERVER['DOCUMENT_ROOT']) . '/includes/analytics-tracking.php'; ?>
 <?php include realpath($_SERVER['DOCUMENT_ROOT']) . '/includes/top.php'; ?>
 		<div id="container" class="article">
 			<form class="quform" action="/quform/process" method="post" enctype="multipart/form-data" onclick="">

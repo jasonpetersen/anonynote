@@ -1,3 +1,11 @@
+		<!-- Global site tag (gtag.js) - Google Analytics -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-XXXXXXXX-X"></script>
+		<script>
+			window.dataLayer = window.dataLayer || [];
+			function gtag(){dataLayer.push(arguments);}
+			gtag('js', new Date());
+			gtag('config', 'UA-XXXXXXXX-X');
+		</script>
 		<meta charset="utf-8">
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -13,7 +21,7 @@
 		<meta property="og:description" content="<?php echo PAGEDESC; ?>">
 		<meta property="og:url" content="<?php echo ESCAPEDURL; ?>">
 		<meta property="og:site_name" content="<?php echo $locale["core"]["app_name"]; ?>">
-		<meta property="og:image" content="https://anonynote.org/img/site-image.png">
+		<meta property="og:image" content="<?php echo THISDOMAIN; ?>/img/site-image.png">
 		<meta property="fb:app_id" content="1246209422093086">
 		<link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png">
 		<link rel="icon" type="image/png" sizes="32x32" href="/favicons/favicon-32x32.png">

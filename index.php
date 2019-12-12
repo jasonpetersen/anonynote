@@ -25,7 +25,6 @@ define("PAGEDESC", $locale["app"]["meta_desc"]);
 		<link rel="preload" href="<?php echo $minify["css"]; ?>" as="style" onload="this.onload=null;this.rel='stylesheet'">
 	</head>
 	<body id="app" class="noscroll">
-<?php include_once realpath($_SERVER['DOCUMENT_ROOT']) . '/includes/analytics-tracking.php'; ?>
 		<div id="splash">
 			<div class="loading-circle"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
 			<button id="splash-reload-button" type="button" class="button white" onclick="window.location.reload();"><?php echo $locale["general"]["reload"]; ?></button>

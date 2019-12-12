@@ -18,7 +18,6 @@ define("PAGEDESC", $locale["credits"]["meta_desc"]);
 		<link rel="stylesheet" type="text/css" href="<?php echo $minify["css"]; ?>">
 	</head>
 	<body id="credits">
-<?php include_once realpath($_SERVER['DOCUMENT_ROOT']) . '/includes/analytics-tracking.php'; ?>
 <?php include realpath($_SERVER['DOCUMENT_ROOT']) . '/includes/top.php'; ?>
 		<div id="container" class="article">
 			<h1>Credit, acknowledgment &amp; thanks</h1>

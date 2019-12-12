@@ -20,7 +20,6 @@ header("HTTP/1.0 404 Not Found");
 		<link rel="stylesheet" type="text/css" href="<?php echo $minify["css"]; ?>">
 	</head>
 	<body id="error">
-<?php include_once realpath($_SERVER['DOCUMENT_ROOT']) . '/includes/analytics-tracking.php'; ?>
 <?php include realpath($_SERVER['DOCUMENT_ROOT']) . '/includes/top.php'; ?>
 		<div id="full-container">
 			<div id="broken-pencil">
