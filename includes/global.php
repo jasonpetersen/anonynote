@@ -6,8 +6,10 @@ define("USE_STATIC_CACHE", false);
 define("COPYRIGHT_TEXT", "&copy; " . date("Y") . " Peterscene");
 define("COPYRIGHT_URL", "https://peterscene.com");
 
-define("THISPAGE", $_SERVER[REQUEST_URI]);
-define("THISURL", "https://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]");
+define("THISPROTOCOL", stripos($_SERVER["SERVER_PROTOCOL"], "https") === 0 ? "https://" : "http://");
+define("THISDOMAIN", THISPROTOCOL . $_SERVER["HTTP_HOST"]);
+define("THISPAGE", $_SERVER["REQUEST_URI"]);
+define("THISURL", THISDOMAIN . $_SERVER["REQUEST_URI"]);
 define("ESCAPEDURL", htmlspecialchars(THISURL, ENT_QUOTES, 'UTF-8'));
 
 define("DB_HOST", "###");
