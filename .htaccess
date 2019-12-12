@@ -12,13 +12,22 @@ RewriteBase /
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)/$ /$1 [L,R=301]
 
-### Rewrite HTTP to HTTPS
-RewriteCond %{HTTPS} !=on
-RewriteRule .* https://%{SERVER_NAME}%{REQUEST_URI} [L,R=301]
+### Redirect all requests for favicon.ico to the proper directory
+RewriteCond $0 !=favicons/favicon.ico
+RewriteRule ^([^/]+/)*favicon\.ico$ /favicons/favicon.ico [R=301,L]
 
 ### Rewrite without www
+RewriteCond %{HTTPS} off
 RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
-RewriteRule ^(.*)$ http://%1%{REQUEST_URI} [L,R=301,QSA,NC]
+RewriteRule ^ http://%1%{REQUEST_URI} [R=301,L]
+
+RewriteCond %{HTTPS} on
+RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
+RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L]
+
+### Rewrite HTTP to HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule .* https://%{SERVER_NAME}%{REQUEST_URI} [R=301,L]
 
 ### Rewrite JSON notepad request
 RewriteRule ^json/([a-zA-Z0-9]+)$ /json.php?np=$1 [L,QSA]
@@ -31,7 +40,7 @@ RewriteRule ^local/([0-9]+)$ /index.php?local=$1 [L,QSA]
 
 ### Rewrite without index.php
 RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /(.*)index\.php($|\ |\?)
-RewriteRule ^ /%1 [L,R=301]
+RewriteRule ^ /%1 [R=301,L]
 
 ### Rewrite without .php extension
 RewriteCond %{REQUEST_FILENAME} !-d
