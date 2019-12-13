@@ -80,7 +80,7 @@ define("PAGEDESC", $locale["app"]["meta_desc"]);
 			"name": "<?php echo $locale['core']['app_name']; ?>",
 			"description": "<?php echo PAGEDESC; ?>",
 			"url": "<?php echo ESCAPEDURL; ?>",
-			"image": "https://anonynote.org/img/pencil-square.png",
+			"image": "<?php echo THISDOMAIN; ?>/img/pencil-square.png",
 			"applicationCategory": "BusinessApplication",
 			"offers": {
 				"@type": "Offer",
