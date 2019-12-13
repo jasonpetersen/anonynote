@@ -49,12 +49,12 @@ define("PAGEDESC", $locale["contact"]["meta_desc"]);
 						<label>Security check <span class="quform-required">*</span></label>
 						<div class="quform-input">
 							<script src="https://www.google.com/recaptcha/api.js" async defer></script>
-							<div class="g-recaptcha" data-sitekey="6LfMRBoUAAAAACq3yv27jXv6_OhT27EUvu5U-ZpX"></div>
+							<div class="g-recaptcha" data-sitekey="XXX"></div>
 							<noscript>
 							  <div style="width: 302px; height: 352px;">
 								<div style="width: 302px; height: 352px; position: relative;">
 								  <div style="width: 302px; height: 352px; position: absolute;">
-									<iframe src="https://www.google.com/recaptcha/api/fallback?k=6LfMRBoUAAAAACq3yv27jXv6_OhT27EUvu5U-ZpX"
+									<iframe src="https://www.google.com/recaptcha/api/fallback?k=XXX"
 											frameborder="0" scrolling="no"
 											style="width: 302px; height:352px; border-style: none;">
 									</iframe>
