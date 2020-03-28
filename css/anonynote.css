@@ -5,35 +5,35 @@
 	--white-color: #ffffff;
 	--white-medium-color: #ababab;
 	--white-dark-color: #808080;
-	
+
 	--gray-color: #dddddd;
 	--gray-medium-color: #949494;
 	--gray-dark-color: #6f6f6f;
-	
+
 	--yellow-color: #fff4bb;
 	--yellow-medium-color: #b5aa72;
 	--yellow-dark-color: #91864d;
-	
+
 	--green-color: #c6ffbb;
 	--green-medium-color: #7db572;
 	--green-dark-color: #58914d;
-	
+
 	--cyan-color: #bbfff4;
 	--cyan-medium-color: #72b5aa;
 	--cyan-dark-color: #4d9186;
-	
+
 	--blue-color: #bbddff;
 	--blue-medium-color: #7294b5;
 	--blue-dark-color: #4d6f91;
-	
+
 	--purple-color: #ddbbff;
 	--purple-medium-color: #9472b5;
 	--purple-dark-color: #6f4d91;
-	
+
 	--red-color: #ffbbc6;
 	--red-medium-color: #b5727d;
 	--red-dark-color: #914d58;
-	
+
 	--orange-color: #ffd5b2;
 	--orange-medium-color: #b58872;
 	--orange-dark-color: #91644d;
@@ -995,7 +995,7 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 	background-color: #0099cc;
 	height: 46px;
 	border: 1px solid #000000;
-	margin: -1px 0 0 -1px;
+	margin: -1pt 0 0 -1pt;
 }
 
 #notepad-table #notepad-header .col-2,
@@ -1049,7 +1049,7 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 	align-items: flex-start;
 	min-height: 70px;
 	border: 1px solid #000000;
-	margin: -1px 0 0 -1px;
+	margin: -1pt 0 0 -1pt;
 	-webkit-transition: background-color 0.1s linear;
 	-moz-transition: background-color 0.1s linear;
 	-o-transition: background-color 0.1s linear;
@@ -2194,7 +2194,7 @@ html:not(.ie) #sticky-add {
 .sp-preview-inner {
 	width: 26px;
 	height: 26px;
-	margin: -1px 0 0 -1px;
+	margin: -1pt 0 0 -1pt;
 	border: solid 1px #222;
 	box-sizing: border-box;
 }
@@ -2202,7 +2202,7 @@ html:not(.ie) #sticky-add {
 .sp-palette .sp-thumb-inner {
 	width: 26px;
 	height: 26px;
-	margin: -1px 0 0 -1px;
+	margin: -1pt 0 0 -1pt;
 	border: solid 1px silver;
 	box-sizing: border-box;
 }
