@@ -2194,7 +2194,7 @@ html:not(.ie) #sticky-add {
 .sp-preview-inner {
 	width: 26px;
 	height: 26px;
-	margin: -1pt 0 0 -1pt;
+	margin: -1px 0 0 -1px;
 	border: solid 1px #222;
 	box-sizing: border-box;
 }
@@ -2202,7 +2202,7 @@ html:not(.ie) #sticky-add {
 .sp-palette .sp-thumb-inner {
 	width: 26px;
 	height: 26px;
-	margin: -1pt 0 0 -1pt;
+	margin: -1px 0 0 -1px;
 	border: solid 1px silver;
 	box-sizing: border-box;
 }
