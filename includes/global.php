@@ -6,10 +6,17 @@ define("USE_STATIC_CACHE", false);
 define("COPYRIGHT_TEXT", "&copy; " . date("Y") . " Peterscene");
 define("COPYRIGHT_URL", "https://peterscene.com");
 
-define("THISPROTOCOL", stripos($_SERVER["SERVER_PROTOCOL"], "https") === 0 ? "https://" : "http://");
+$isSecure = false;
+if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') {
+	$isSecure = true;
+} elseif (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https' || !empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] == 'on') {
+	$isSecure = true;
+}
+
+define("THISPROTOCOL", ($isSecure) ? 'https://' : 'http://');
 define("THISDOMAIN", THISPROTOCOL . $_SERVER["HTTP_HOST"]);
 define("THISPAGE", $_SERVER["REQUEST_URI"]);
-define("THISURL", THISDOMAIN . $_SERVER["REQUEST_URI"]);
+define("THISURL", THISDOMAIN . THISPAGE);
 define("ESCAPEDURL", htmlspecialchars(THISURL, ENT_QUOTES, 'UTF-8'));
 
 define("DB_HOST", "###");
