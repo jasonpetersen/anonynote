@@ -22,9 +22,7 @@ define("PAGEDESC", $locale["credits"]["meta_desc"]);
 		<div id="container" class="article">
 			<h1>Credit, acknowledgment &amp; thanks</h1>
 			<img src="/img/headshot.jpg" alt="JP" class="img-right img-circle" width="200" height="200">
-			<p>Hi, I'm Jason, the creator of Anonynote. I live in Boston, MA earning my living as a videographer. But every now and then I immerse myself in web work, and every now and then someone even pays me for it.</p>
-			<p>This was not one of those times.</p>
-			<p>In fact, when I consider the minutes this app saves me versus the countless hours spent programming it, I wonder about my time management.</p>
+			<p>Hi, I'm Jason, the creator of Anonynote. I live in Kingston, NY. I'm a tech generalist working in the non-profit world. Web and application development is a particular passion of mine.</p>
 			<p>I keep a personal website called <a href="https://peterscene.com" target="_blank">Peterscene</a> where I blog and post about all the varied things I do.</p>
 			<h2>Frameworks, libraries &amp; plugins</h2>
 			<p>It takes a village, as the saying goes.</p>
