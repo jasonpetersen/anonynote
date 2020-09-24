@@ -3,6 +3,8 @@ require_once realpath($_SERVER['DOCUMENT_ROOT']) . '/includes/global.php';
 require_once realpath($_SERVER['DOCUMENT_ROOT']) . '/includes/database-class.php';
 require_once realpath($_SERVER['DOCUMENT_ROOT']) . '/includes/hashids.php';
 
+header("Content-Type: application/json"); 
+
 if ($_GET['np'] != "") {
 	$ntpdhash = $_GET['np'];
 	$npHashMethod = new Hashids(HASH_NP_SALT, HASH_NP_CHAR, HASH_NP_ALPHABET);
