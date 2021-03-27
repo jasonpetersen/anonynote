@@ -1,12 +1,14 @@
 //** GLOBAL APPLICATION VARIABLES **//
 
-var appVer = '5.0.15';// the application version number
+var appVer = "5.0.16";// the application version number
 
 $.holdReady( true );// hold document ready
 var holdReleaseCurrent = 0;// number; 0 to start; increment upward until we hit holdReleaseTarget
-var holdReleaseTarget = 5;// how many checks are needed before we release the hold on document ready. 1) Google Fonts loaded, 2) CSS loaded, 3) Locale loaded, 4) Core app variables set, 5) IndexedDB initialized
+var holdReleaseTarget = 6;// how many checks are needed before we release the hold on document ready. 1) Check internet connection, 2) Google Fonts loaded, 3) CSS loaded, 4) Locale loaded, 5) Core app variables set, 6) IndexedDB initialized
 
 // variables stored in and retrieved from IndexedDB object stores
+var idbVersion;// holds the current database version number
+var idbDB = "anonynote";// the IDB database name
 var notepadIdLocal;// number; if in notepad location, holds that notepad local ID
 var offlineState = 0;// 0 = offline mode off (default); 1 = offline mode on; 2 = offline mode on by user choice; 3 = unavailable (no IDB support)
 var localPadCounter = 0;// local notepad counter; default to 0, unless later pulled from an IndexedDB stored value
@@ -41,46 +43,17 @@ var actionQueue = [];// an array for temporary storage, used in the delay and ex
 var colors = [];// an array that will later hold the palette for the color picker
 var colorHexToId = [];// another array that will later hold the palette for the color picker
 
-var internetConn = (navigator.onLine) ? true : false;// boolean; whether an internet connection is detected
 var isInWebApp = false;// assume we're not operating from within an iOS or Android web app environment...
 if ((window.navigator.standalone == true) || (window.matchMedia('(display-mode: standalone)').matches)) isInWebApp = true;// ...unless we are!
 var idbSupport;// boolean; holds whether there is IDB support
 
-var urlParams = {};
+var networkConn, internetConn;
+networkConn = internetConn = (navigator.onLine) ? true : false;// boolean; whether network and internet connections are detected. assume their statuses are the same unless proven otherwise
+
+var urlParams = {};// an object that holds all URL parameters
 var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,val) {
 	urlParams[key] = val;
 });
-
-WebFont.load({// document hold release #1: asynchronously load the Google Fonts
-	google: { families: ['Mukta:400,700', 'Lora:700'] },
-	active: function() { holdRelease(); },// hold release on success...
-	inactive: function() { holdRelease(); },// ...or failure
-	timeout: 3000
-});
-
-var cssCheck = setInterval(function(){// document hold release #2: CSS is being loaded asynchronously on the index.php page; wait for the presence of one of its styles to confirm it's ready
-	if (getComputedStyle(document.querySelector(':root')).getPropertyValue('--white-color') != "") {
-		holdRelease();
-		clearInterval(cssCheck);
-	}
-}, 250);
-
-if (!('indexedDB' in window)) {// check for IndexedDB support
-	if (internetConn) {
-		idbSupport = false;
-		$('body').attr('data-idb-support', 0);
-		setOfflineState("system", 3);// without IDB support, offline mode is unavailable
-		loadLocale();// document hold release #3: load the default language code locale
-		prepLaunchState();// document hold release #4: set core app variables
-		holdRelease();// document hold release #5: no IDB to initialize, so skip it
-	} else {
-		splashHandler("doa");// without either IndexedDB or an internet connection, this app can't run
-	}
-} else {
-	var idbVersion;// holds the current database version number
-	var idbDB = 'anonynote';// the IDB database name
-	idbInit();// initialize IndexedDB
-}
 
 
 //** GLOBAL AJAX SETTINGS **//
@@ -89,7 +62,7 @@ $.ajaxSetup({
 	cache: false,// do not allow AJAX requests to be cached
 	contentType: "application/json",//the type of data we're sending
 	dataType : "json",// the type of data we expect to get back
-	timeout: 10000,// when to give up (in milliseconds)
+	timeout: 8000,// when to give up (in milliseconds)
 	error: function(xhr, status, errorThrown) {
 		userControl("open");
 		cloudIndicator("error");
@@ -125,6 +98,51 @@ function holdRelease() {
 		$.holdReady( false );
 	}
 }
+
+WebFont.load({// document hold release #2: asynchronously load the Google Fonts
+	google: { families: ['Mukta:400,700', 'Lora:700'] },
+	active: function() { holdRelease(); },// hold release on success...
+	inactive: function() { holdRelease(); },// ...or failure
+	timeout: 3000
+});
+
+var cssCheck = setInterval(function(){// document hold release #3: CSS is being loaded asynchronously on the index.php page; wait for the presence of one of its styles to confirm it's ready
+	if (getComputedStyle(document.querySelector(':root')).getPropertyValue('--white-color') != "") {
+		holdRelease();
+		clearInterval(cssCheck);
+	}
+}, 250);
+
+// determine internet connection status
+$.ajax({
+	type: "GET",
+	dataType: "text",
+	timeout: 5000,
+	url: "/ajax/is-connected",
+	success: function() {
+		internetConn = true;// we are probably online
+	},
+	error: function(xhr, status, errorThrown) {
+		internetConn = false;// we are either offline, or have a poor connection -- the latter to be treated the same as the former
+	},
+	complete: function() {
+		holdRelease();// document hold release #1: determine whether there is a functional internet connection
+		if (!('indexedDB' in window)) {// check for IndexedDB support
+			if (internetConn) {
+				idbSupport = false;
+				$('body').attr('data-idb-support', 0);
+				setOfflineState("system", 3);// without IDB support, offline mode is unavailable
+				loadLocale();// document hold release #4: load the default language code locale
+				prepLaunchState();// document hold release #5: set core app variables
+				holdRelease();// document hold release #6: no IDB to initialize, so skip it
+			} else {
+				splashHandler("doa");// without either IndexedDB or an internet connection, this app can't run
+			}
+		} else {
+			idbInit();// initialize IndexedDB
+		}
+	}
+});
 
 // load the locale JSON file
 function loadLocale() {
@@ -242,16 +260,32 @@ function userControl(directive) {
 	}
 }
 
-// trigger on changes to internet connection status
+// trigger on changes to network connection status
 function updateOnlineStatus(event) {
-	console.log("Internet connection status change: " + event.type + ".");
-	internetConn = navigator.onLine ? true : false;
-	$('body').attr('data-internet', (internetConn) ? 1 : 0);
-	if (!internetConn) {
-		if (!idbSupport) splashHandler("doa");// without both IndexedDB and an internet connection, this app can't run
+	console.log("Network connection status change: " + event.type + ".");
+	networkConn = navigator.onLine ? true : false;
+	if (!networkConn) {
+		if (!idbSupport) splashHandler("doa");// without either IndexedDB or a network connection, this app can't run
+		$('body').attr('data-internet', 0);
 		setOfflineState("system", 1);
 	} else if (offlineState == 1) {
-		setOfflineState("system", 0);
+		$.ajax({
+			type: "GET",
+			dataType: "text",
+			timeout: 5000,
+			url: "/ajax/is-connected",
+			success: function() { internetConn = true; },
+			error: function(xhr, status, errorThrown) { internetConn = false; },
+			complete: function() {
+				$('body').attr('data-internet', (internetConn) ? 1 : 0);
+				if (!internetConn) {
+					if (!idbSupport) splashHandler("doa");// without either IndexedDB or an internet connection, this app can't run
+					setOfflineState("system", 1);
+				} else if (offlineState == 1) {
+					setOfflineState("system", 0);
+				}
+			}
+		});
 	}
 }
 window.addEventListener('online',  updateOnlineStatus);
@@ -600,9 +634,9 @@ function idbInit() {
 			idbSupport = false;
 			$('body').attr('data-idb-support', 0);
 			setOfflineState("system", 3);// without IDB support, offline mode is unavailable
-			loadLocale();// document hold release #3: load the default language code locale
-			prepLaunchState();// document hold release #4: set core app variables
-			holdRelease();// document hold release #5: no IDB to initialize, so skip it
+			loadLocale();// document hold release #4: load the default language code locale
+			prepLaunchState();// document hold release #5: set core app variables
+			holdRelease();// document hold release #6: no IDB to initialize, so skip it
 		}
 	});
 	dbCheckPromise.then(function(db) {
@@ -613,8 +647,8 @@ function idbInit() {
 		if (idbVersion == 1) {
 			// V1 means application is running for the first time. Proceed to the build function where we upgrade to V2 and create core object stores.
 			$('body').attr('data-offline-mode', offlineState);
-			loadLocale();// document hold release #3: load the default language code locale
-			prepLaunchState();// document hold release #4: set core app variables
+			loadLocale();// document hold release #4: load the default language code locale
+			prepLaunchState();// document hold release #5: set core app variables
 			idbBuild();
 		} else {
 			// any other version, pull stored variables
@@ -634,11 +668,11 @@ function idbInit() {
 					}
 				}
 				$('body').attr('data-offline-mode', offlineState);
-				loadLocale();// document hold release #3: load the stored language code locale
+				loadLocale();// document hold release #4: load the stored language code locale
 				idbGetAll('catalog').then(function(catalogArray) {
 					if (catalogArray.length == 0) {
-						prepLaunchState();// document hold release #4: set core app variables
-						holdRelease();// document hold release #5: completed IDB initialization
+						prepLaunchState();// document hold release #5: set core app variables
+						holdRelease();// document hold release #6: completed IDB initialization
 					} else {
 						for (var c=0; c<catalogArray.length; c++) {
 							catalog[catalogArray[c]["npidLocal"]] = {
@@ -667,8 +701,8 @@ function idbInit() {
 									}
 								}
 								if (cycles == catalogArray.length) {
-									prepLaunchState();// document hold release #4: set core app variables
-									holdRelease();// document hold release #5: completed IDB initialization
+									prepLaunchState();// document hold release #5: set core app variables
+									holdRelease();// document hold release #6: completed IDB initialization
 								}
 							});
 						});
@@ -711,7 +745,7 @@ function idbInit() {
 			return tx.complete;
 		}).then(function() {
 			console.log('First time visit. Core application object stores defined.');
-			holdRelease();// document hold release #5: completed IDB initialization
+			holdRelease();// document hold release #6: completed IDB initialization
 		});
 	}
 }
@@ -3259,7 +3293,7 @@ function getUnixTimestampMS() {
 
 $(document).ready(function() {
 	// now that we have the current offline state, potentially toggle it based on internet connectivity
-	if (navigator.onLine) {
+	if (internetConn) {
 		console.log('Internet connection detected.');
 		if (offlineState == 1) setOfflineState("system", 0);
 	} else {
