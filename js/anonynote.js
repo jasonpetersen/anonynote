@@ -1,6 +1,6 @@
 //** GLOBAL APPLICATION VARIABLES **//
 
-var appVer = "5.1.1";// the application version number
+var appVer = "5.1.2";// the application version number
 
 $.holdReady( true );// hold document ready
 var holdReleaseCurrent = 0;// number; 0 to start; increment upward until we hit holdReleaseTarget
@@ -73,10 +73,10 @@ $.ajaxSetup({
 			if (appLoc == "notepad") {
 				$('#notepad').empty().removeAttr('style').removeClass('active-loc');
 				$('#home').removeAttr('style').addClass('active-loc');
-				$('#notepad-input').focus();
 				updateState("home", "replace");
 				popupMsg(locale.popup.notepad_launch_timeout, "red");
 			}
+			$('#notepad-input').focus();
 			splashHandler("clear");
 		} else if (status == "timeout") {
 			if (offlineState == 3) {
@@ -1001,8 +1001,8 @@ function buildHome(dir) {
 		case "start":
 			statusIndicator("success");
 			$('#home').addClass('active-loc');
-			$('#notepad-input').focus();
 			updateState("home", "replace");
+			$('#notepad-input').focus();
 			splashHandler("clear");
 			break;
 		case "jump":
@@ -1265,7 +1265,7 @@ function buildNotepad(arg, scrPos, elem) {
 				stickyButtonsToggle("hide");
 			},
 			'focusout': function() {
-				quickAddFocusOut = setTimeout(function() { stickyButtonsToggle("show"); }, 500);
+				quickAddFocusOut = setTimeout(function() { stickyButtonsToggle("show"); }, 100);
 			}
 		});
 		// lock the notepad if specified in database
@@ -2027,21 +2027,21 @@ function quickAdd() {
 	setCheckAllState();
 	linkifyInit(domID);
 	spectrumInit(domID);
-	$('#quick-add-input').one("blur", function() {// a long, crazy method of focusing out and in again, so as to reset any keyboard autocompletes
-		const quickAddInput = document.getElementById('quick-add-input');
-		const fakeInput = document.createElement('input');// create invisible dummy input to receive the focus first
+	$('#quick-add-input').one("blur", function() {// a long, crazy method of focusing out and in again, so as to reset any mobile keyboard autocompletes
+		const quickAddInput = document.querySelector('#quick-add-input');
+		const quickAddLoc = document.querySelector('#quick-add > form');
+		const fakeInput = document.createElement('input');// create invisible dummy input to receive the focus
 		fakeInput.setAttribute('type', 'text');
-		fakeInput.readOnly = true;
 		fakeInput.style.position = 'absolute';
 		fakeInput.style.opacity = 0;
 		fakeInput.style.height = 0;
 		fakeInput.style.fontSize = '16px';// disable auto zoom
-		document.body.prepend(fakeInput);
+		quickAddLoc.prepend(fakeInput);
 		fakeInput.focus();// focus so that subsequent async focus will work
 		setTimeout(() => {
 			quickAddInput.focus();// now we can focus back on this input
 			fakeInput.remove();// and cleanup
-		}, 500);
+		}, 100);
 	});
 	$('#quick-add-input').val("").blur();
 	$('#quick-add-button').addClass('disabled');
