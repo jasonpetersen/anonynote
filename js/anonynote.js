@@ -1,6 +1,6 @@
 //** GLOBAL APPLICATION VARIABLES **//
 
-var appVer = "5.0.16";// the application version number
+var appVer = "5.1.1";// the application version number
 
 $.holdReady( true );// hold document ready
 var holdReleaseCurrent = 0;// number; 0 to start; increment upward until we hit holdReleaseTarget
@@ -29,6 +29,8 @@ var statusQueue = 0;// number; increments up and down for actions triggering the
 var statusComplete = 1;// boolean (1 or 0); indicates whether the statusQueue is clear or not
 var speed = 400;// milliseconds; transition speed
 $.fx.speeds._default = 400;// milliseconds; jQuery speed
+var timeoutInternet = 5000;// milliseconds; how long to wait before bailing on an internet connection check
+var timeoutAjax = 7500;// milliseconds; how long to wait before bailing any other Ajax call
 var funcThrottle = 3000;// milliseconds; certain functions are throttled so as to not rapid-fire, but will trigger after no more than the provided number of milliseconds
 var charSplitter = new GraphemeSplitter();// initialize the Grapheme Splitter library, used for accurate character counting
 var desktopWidth = 768;// number; the pixel width at which desktop screen size begins
@@ -62,7 +64,7 @@ $.ajaxSetup({
 	cache: false,// do not allow AJAX requests to be cached
 	contentType: "application/json",//the type of data we're sending
 	dataType : "json",// the type of data we expect to get back
-	timeout: 8000,// when to give up (in milliseconds)
+	timeout: timeoutAjax,// when to give up (in milliseconds)
 	error: function(xhr, status, errorThrown) {
 		userControl("open");
 		cloudIndicator("error");
@@ -80,7 +82,10 @@ $.ajaxSetup({
 			if (offlineState == 3) {
 				errorModal("timeout");
 			} else {
+				internetConn = false;
+				$('body').attr('data-internet', 0);
 				setOfflineState("system", 1);
+				recheckInternet(3, 45);
 			}
 		} else {
 			errorModal(xhr.status);
@@ -117,7 +122,7 @@ var cssCheck = setInterval(function(){// document hold release #3: CSS is being 
 $.ajax({
 	type: "GET",
 	dataType: "text",
-	timeout: 5000,
+	timeout: timeoutInternet,
 	url: "/ajax/is-connected",
 	success: function() {
 		internetConn = true;// we are probably online
@@ -143,6 +148,29 @@ $.ajax({
 		}
 	}
 });
+
+// re-check for an internet connection at an interval
+function recheckInternet(maxTimes, intervalSeconds) {
+	var internetCheckCount = 0;
+	var internetCheck = setInterval(function(){
+		$.ajax({
+			type: "GET",
+			dataType: "text",
+			timeout: timeoutInternet,
+			url: "/ajax/is-connected",
+			success: function() {
+				internetConn = true;
+				$('body').attr('data-internet', 1);
+				setOfflineState("system", 0);
+				clearInterval(internetCheck);
+			},
+			error: function(xhr, status, errorThrown) {
+				internetCheckCount++;
+				if (internetCheckCount >= maxTimes) clearInterval(internetCheck);
+			}
+		});
+	}, 1000 * intervalSeconds);
+}
 
 // load the locale JSON file
 function loadLocale() {
@@ -264,26 +292,27 @@ function userControl(directive) {
 function updateOnlineStatus(event) {
 	console.log("Network connection status change: " + event.type + ".");
 	networkConn = navigator.onLine ? true : false;
-	if (!networkConn) {
-		if (!idbSupport) splashHandler("doa");// without either IndexedDB or a network connection, this app can't run
+	if (!networkConn) {// if the network connection has been lost
+		internetConn = false;
 		$('body').attr('data-internet', 0);
 		setOfflineState("system", 1);
-	} else if (offlineState == 1) {
+		if (!idbSupport) splashHandler("doa");// without either IndexedDB or a network connection, this app can't run
+	} else {// if the network connection has been re-established
 		$.ajax({
 			type: "GET",
 			dataType: "text",
-			timeout: 5000,
+			timeout: timeoutInternet,
 			url: "/ajax/is-connected",
-			success: function() { internetConn = true; },
-			error: function(xhr, status, errorThrown) { internetConn = false; },
-			complete: function() {
-				$('body').attr('data-internet', (internetConn) ? 1 : 0);
-				if (!internetConn) {
-					if (!idbSupport) splashHandler("doa");// without either IndexedDB or an internet connection, this app can't run
-					setOfflineState("system", 1);
-				} else if (offlineState == 1) {
-					setOfflineState("system", 0);
-				}
+			success: function() {
+				internetConn = true;
+				$('body').attr('data-internet', 1);
+				setOfflineState("system", 0);
+			},
+			error: function(xhr, status, errorThrown) {
+				internetConn = false;
+				$('body').attr('data-internet', 0);
+				setOfflineState("system", 1);
+				recheckInternet(3, 45);
 			}
 		});
 	}
@@ -1217,6 +1246,7 @@ function buildNotepad(arg, scrPos, elem) {
 		fillNotepadName();
 		fillNotepadDesc();
 		// add listeners to quick add input
+		var quickAddFocusOut;
 		$('#quick-add-input').on({
 			'input': function() {
 				if ($(this).val() == "") {
@@ -1231,10 +1261,11 @@ function buildNotepad(arg, scrPos, elem) {
 				}
 			},
 			'focusin': function() {
+				clearTimeout(quickAddFocusOut);
 				stickyButtonsToggle("hide");
 			},
 			'focusout': function() {
-				stickyButtonsToggle("show");
+				quickAddFocusOut = setTimeout(function() { stickyButtonsToggle("show"); }, 500);
 			}
 		});
 		// lock the notepad if specified in database
@@ -1996,7 +2027,23 @@ function quickAdd() {
 	setCheckAllState();
 	linkifyInit(domID);
 	spectrumInit(domID);
-	$('#quick-add-input').val("").blur().focus();// the re-focusing back into the same field is purely to reset autocomplete / predictive text on mobile keyboards
+	$('#quick-add-input').one("blur", function() {// a long, crazy method of focusing out and in again, so as to reset any keyboard autocompletes
+		const quickAddInput = document.getElementById('quick-add-input');
+		const fakeInput = document.createElement('input');// create invisible dummy input to receive the focus first
+		fakeInput.setAttribute('type', 'text');
+		fakeInput.readOnly = true;
+		fakeInput.style.position = 'absolute';
+		fakeInput.style.opacity = 0;
+		fakeInput.style.height = 0;
+		fakeInput.style.fontSize = '16px';// disable auto zoom
+		document.body.prepend(fakeInput);
+		fakeInput.focus();// focus so that subsequent async focus will work
+		setTimeout(() => {
+			quickAddInput.focus();// now we can focus back on this input
+			fakeInput.remove();// and cleanup
+		}, 500);
+	});
+	$('#quick-add-input').val("").blur();
 	$('#quick-add-button').addClass('disabled');
 	// IDB and MySQL updates
 	if ([0, 3].includes(offlineState)) {// if online
