@@ -156,7 +156,7 @@ function recheckInternet(maxTimes, intervalSeconds) {
 		$.ajax({
 			type: "GET",
 			dataType: "text",
-			timeout: timeoutInternet,
+			timeout: 1000 * (intervalSeconds - 1),
 			url: "/ajax/is-connected",
 			success: function() {
 				internetConn = true;
