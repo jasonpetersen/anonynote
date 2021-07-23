@@ -1,3 +1,7 @@
+		<!-- Google Tag Manager (noscript) -->
+		<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-XXXXXXX"
+		height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+		<!-- End Google Tag Manager (noscript) -->
 		<div id="menu-button" title="<?php echo $locale["core"]["menu"]; ?>" onclick="toggleMenu();"><i class="fa fa-bars"></i></div>
 		<div id="menu">
 			<div id="menu-options">
