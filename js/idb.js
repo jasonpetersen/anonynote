@@ -192,10 +192,7 @@
 		return new ObjectStore(this._tx.objectStore.apply(this._tx, arguments));
 	};
 
-	proxyProperties(Transaction, '_tx', [
-		'objectStoreNames',
-		'mode'
-	]);
+	proxyProperties(Transaction, '_tx', ['objectStoreNames'], 'mode');
 
 	proxyMethods(Transaction, '_tx', IDBTransaction, [
 		'abort'
