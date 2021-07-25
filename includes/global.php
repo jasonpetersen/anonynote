@@ -33,17 +33,19 @@ define("NPNAME_MAX_CHAR", 16);
 define("NPDESC_MAX_CHAR", 160);
 
 define("DEFAULT_LANG_CODE", "en-US");
-$validLangs = ["en-US"];
+define('AVAILABLE_LANGS', array(
+	"en-US"
+));
 
 function loadLocale($inputCode) {
-	$langCode = (in_array($inputCode, $validLangs)) ? $inputCode : DEFAULT_LANG_CODE;
+	$langCode = (in_array($inputCode, AVAILABLE_LANGS)) ? $inputCode : DEFAULT_LANG_CODE;
 	$json = file_get_contents(realpath($_SERVER['DOCUMENT_ROOT']) . '/locales/' . $langCode . '.json');
 	$GLOBALS['locale'] = json_decode($json, true);
 	return $langCode;
 }
 
 $queryAppJS = $queryAboutJS = $queryCreditsJS = $queryContactJS = $query404JS = [];
-foreach ($validLangs as $lang) {
+foreach (AVAILABLE_LANGS as $lang) {
 	$queryAppJS[$lang] = "b=js&f=jquery-3.4.1.min.js,jquery-ui.min.js,jquery.transit.min.js,jquery.ba-throttle-debounce.min.js,anime.min.js,idb.js,webfont-1.6.26.min.js,linkify.min.js,linkify-jquery.min.js,spectrum.min.js,clipboard.min.js,grapheme-splitter.js,main.js,anonynote.js";
 	$queryAboutJS[$lang] = $queryCreditsJS[$lang] = $query404JS[$lang] = "b=js&f=jquery-3.4.1.min.js,jquery.ba-throttle-debounce.min.js,main.js";
 	$queryContactJS[$lang] = "b=js&f=jquery-3.4.1.min.js,jquery.ba-throttle-debounce.min.js,quform-plugins.js,quform-scripts.js,main.js";
