@@ -3,8 +3,11 @@
 		"app_name": "Anonynote",
 		"lang": "English",
 		"lang_code": "en-US",
-		"root": "/",
-		"menu": "Menu"
+		"root": "/"
+	},
+	"header": {
+		"menu": "Menu",
+		"offline_mode": "Offline mode"
 	},
 	"app": {
 		"title": "App",
@@ -12,7 +15,8 @@
 		"meta_desc": "A free Progressive Web App for anonymously saving, retrieving and organizing notes. No accounts or logins! Quickly access important data from all of your devices.",
 		"input_label": "Type a new or existing <br class='visible-sm'/>notepad name",
 		"info": "Case-sensitive, any characters accepted, max 16",
-		"open_button": "Open"
+		"recent": "Recent notepads",
+		"recent_label": "Or select a recently opened notepad"
 	},
 	"about": {
 		"title": "About",
@@ -41,7 +45,6 @@
 		"sort_color": "Color",
 		"sort_checked": "Checked",
 		"sort_unchecked": "Unchecked",
-		"offline_mode": "Offline mode",
 		"quick_add_placeholder": "Enter short note",
 		"quick_add_label": "Create quick note",
 		"save": "Save changes",
@@ -68,9 +71,11 @@
 	},
 	"toolbar": {
 		"toggle": "Toggle toolbar",
+		"status": "Status",
 		"cloud": "Internet status",
 		"idb": "IndexedDB status",
-		"advanced": "Advanced"
+		"light_dark": "Set light or dark mode",
+		"advanced": "Advanced settings"
 	},
 	"popup": {
 		"empty": "You must enter something here.",
@@ -96,6 +101,15 @@
 			"url": "JSON URL"
 		},
 		"sort": "Sort the notepad by the method below",
+		"light_dark": {
+			"prompt": "You are currently in",
+			"prompt_detail": "The mode/theme of this app is based upon your OS preference. To override that, use the button below.",
+			"additional_notice": "Please note that the page will reload during this change.",
+			"change_mode": "Change to",
+			"dark_mode": "Dark Mode",
+			"light_mode": "Light Mode",
+			"error": "This feature is only available in browsers with IndexedDB support"
+		},
 		"advanced": {
 			"prompt_detail": "To troubleshoot any problems, or to clear note data off of your local device, you may want to purge the IndexedDB database. Doing so will delete all unsynced notes created in Offline Mode.",
 			"local_version": "Local app version",

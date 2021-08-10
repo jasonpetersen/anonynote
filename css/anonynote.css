@@ -2,6 +2,7 @@
 /* applied here at the CSS level and tapped by JavaScript */
 
 :root {
+	/* LIGHT */
 	--white-color: #ffffff;
 	--white-medium-color: #ababab;
 	--white-dark-color: #808080;
@@ -37,6 +38,43 @@
 	--orange-color: #ffd5b2;
 	--orange-medium-color: #b58872;
 	--orange-dark-color: #91644d;
+
+	/* DARK */
+	--dark-white-color: #000;
+	--dark-white-medium-color: #3f3f3f;
+	--dark-white-light-color: #7f7f7f;
+
+	--dark-gray-color: #373737;
+	--dark-gray-medium-color: #6f6f6f;
+	--dark-gray-light-color: #a6a6a6;
+
+	--dark-yellow-color: #594d16;
+	--dark-yellow-medium-color: #91854d;
+	--dark-yellow-light-color: #c8bd84;
+
+	--dark-green-color: #1e5916;
+	--dark-green-medium-color: #57914d;
+	--dark-green-light-color: #8dc884;
+
+	--dark-cyan-color: #16594d;
+	--dark-cyan-medium-color: #4b9185;
+	--dark-cyan-light-color: #83c8bd;
+
+	--dark-blue-color: #163559;
+	--dark-blue-medium-color: #4b6f91;
+	--dark-blue-light-color: #83a5c8;
+
+	--dark-purple-color: #351659;
+	--dark-purple-medium-color: #6f4d91;
+	--dark-purple-light-color: #a584c8;
+
+	--dark-red-color: #591622;
+	--dark-red-medium-color: #914d57;
+	--dark-red-light-color: #c8848f;
+
+	--dark-orange-color: #5c3011;
+	--dark-orange-medium-color: #936945;
+	--dark-orange-light-color: #c99e7c;
 }
 
 /* SPLASH */
@@ -106,9 +144,9 @@
 #app #header #app-header-wrapper {
 	display: inline-flex;
 	justify-content: space-between;
-	width: calc(100% - 60px);
-	height: 40px;/* MATCH HEADER HEIGHT ON MAIN.CSS */
-	padding-left: 10px;
+	width: calc(100% - 100px);
+	height: 60px;/* MATCH HEADER HEIGHT ON MAIN.CSS */
+	padding-left: 20px;
 	color: #fff;
 }
 
@@ -123,9 +161,9 @@
 
 #header #app-header-wrapper #offline-button #offline-button-label {
 	position: absolute;
-	right: 12px;
-	top: 9px;
-	font-size: 12px;
+	right: 18px;
+	top: 17px;
+	font-size: 16px;
 	letter-spacing: 0.1em;
 	font-feature-settings: "liga" 0;
 }
@@ -139,7 +177,7 @@ body[data-offline-mode="2"] #header #app-header-wrapper #offline-button #offline
 body[data-offline-mode="1"] #header #app-header-wrapper #offline-button #offline-button-label,
 body[data-offline-mode="2"] #header #app-header-wrapper #offline-button #offline-button-label {
 	right: initial;
-	left: 12px;
+	left: 20px;
 	color: #0099cc;
 }
 
@@ -149,7 +187,7 @@ body[data-offline-mode="2"] #header #app-header-wrapper #offline-button #offline
 }
 
 #header #app-header-wrapper #offline-button i {
-	font-size: 1.7em;
+	font-size: 2.3em;
 }
 
 #header #app-header-wrapper #offline-button .fa-toggle:before {
@@ -172,9 +210,9 @@ body[data-offline-mode="3"] #header #app-header-wrapper #offline-button {
 	flex-direction: row;
 	align-items: center;
 	justify-content: center;
-	font-size: 2em;
-	width: 35px;
-	height: 40px;/* MATCHES APP-TOOLBAR HEIGHT */
+	font-size: 3em;
+	width: 45px;
+	height: 60px;/* MATCHES APP-TOOLBAR HEIGHT */
 	-webkit-transform: scale(0);
 	-moz-transform: scale(0);
 	-o-transform: scale(0);
@@ -204,31 +242,6 @@ body[data-offline-mode="2"] #header #app-header-wrapper #icon-status {
 	display: none;
 }
 
-@media screen and (min-width: 768px) {
-	#app #header #app-header-wrapper {
-		width: calc(100% - 100px);
-		height: 60px;/* MATCH HEADER HEIGHT ON MAIN.CSS */
-		padding-left: 20px;
-	}
-	#header #app-header-wrapper #offline-button #offline-button-label {
-		right: 18px;
-		top: 17px;
-		font-size: 16px;
-	}
-	body[data-offline-mode="1"] #header #app-header-wrapper #offline-button #offline-button-label,
-	body[data-offline-mode="2"] #header #app-header-wrapper #offline-button #offline-button-label {
-		left: 20px;
-	}
-	#header #app-header-wrapper #offline-button i {
-		font-size: 2.3em;
-	}
-	#header #app-header-wrapper #icon-status {
-		font-size: 3em;
-		width: 45px;
-		height: 60px;/* MATCHES APP-TOOLBAR HEIGHT */
-	}
-}
-
 /* APP TOOLBAR */
 
 #app #app-toolbar {
@@ -237,13 +250,13 @@ body[data-offline-mode="2"] #header #app-header-wrapper #icon-status {
 	align-items: center;
 	justify-content: space-between;
 	position: fixed;
-	width: 190px;
-	height: 40px;
-	top: 40px;
+	width: 260px;
+	height: 60px;
+	top: 60px;
 	right: 0;
 	z-index: 9001;
 	background-color: #282828;
-	padding: 0 10px;
+	padding: 0 22px 0 10px;
 	-webkit-transition: right 0.5s ease-in-out;
 	-moz-transition: right 0.5s ease-in-out;
 	-o-transition: right 0.5s ease-in-out;
@@ -252,33 +265,28 @@ body[data-offline-mode="2"] #header #app-header-wrapper #icon-status {
 }
 
 #app #app-toolbar.hide {
-	right: -195px;
-}
-
-#app-toolbar i {
-	font-size: 2em;
-	margin-bottom: 3px;
+	right: -270px;
 }
 
 #app-toolbar #app-toolbar-handle-background {
 	position: absolute;
 	width: 0px;
 	height: 0px;
-	border-top: 20px solid transparent;
-	border-bottom: 20px solid transparent;
-	border-right: 15px solid #282828;
-	left: -15px;
+	border-top: 30px solid transparent;
+	border-bottom: 30px solid transparent;
+	border-right: 20px solid #282828;
+	left: -20px;
 }
 
 #app-toolbar #app-toolbar-handle-wrapper {
 	position: absolute;
-	left: -15px;
+	left: -20px;
 }
 
 #app-toolbar #app-toolbar-handle {
 	font-size: 50%;
 	width: 40px;
-	height: 40px;/* MATCHES APP-TOOLBAR HEIGHT */
+	height: 60px;/* MATCHES APP-TOOLBAR HEIGHT */
 }
 
 #app-toolbar #app-toolbar-handle .fa:before {
@@ -289,8 +297,35 @@ body[data-offline-mode="2"] #header #app-header-wrapper #icon-status {
 	content: "\2795";
 }
 
-#app-toolbar #icon-cloud {
-	margin-left: 6px;
+#app-toolbar #app-toolbar-status-wrapper {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: space-evenly;
+	background-color: rgba(255,255,255,0.2);
+	height: 60px;/* MATCHES APP-TOOLBAR HEIGHT */
+	margin-left: 20px;
+	padding: 0 20px;
+}
+
+#app-toolbar #app-toolbar-status-wrapper > span {
+	color: #fff;
+	font-weight: bold;
+	font-size: 16px;
+	line-height: 16px;
+	cursor: default;
+}
+
+#app-toolbar #icon-wrapper {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-around;
+	width: 100%;
+	gap: 10px;
+}
+
+#app-toolbar #icon-wrapper i {
+	font-size: 1.5em;
 }
 
 #app-toolbar #icon-database,
@@ -300,48 +335,11 @@ body[data-offline-mode="2"] #header #app-header-wrapper #icon-status {
 	flex-direction: row;
 	align-items: center;
 	justify-content: center;
-	width: 35px;
-	height: 40px;/* MATCHES APP-TOOLBAR HEIGHT */
 }
 
-@media screen and (min-width: 768px) {
-	#app #app-toolbar {
-		width: 230px;
-		height: 60px;
-		top: 60px;
-		padding: 0 22px 0 10px;
-	}
-	#app #app-toolbar.hide {
-		right: -240px;
-	}
-	#app-toolbar i {
-		font-size: 3em;
-		margin-bottom: 5px;
-	}
-	#app-toolbar #app-toolbar-handle-background {
-		border-top: 30px solid transparent;
-		border-bottom: 30px solid transparent;
-		border-right: 20px solid #282828;
-		left: -20px;
-	}
-	#app-toolbar #app-toolbar-handle-wrapper {
-		left: -20px;
-	}
-	#app-toolbar #app-toolbar-handle {
-		height: 60px;/* MATCHES APP-TOOLBAR HEIGHT */
-	}
-	#app-toolbar #icon-cloud {
-		margin-left: 16px;
-	}
-	#app-toolbar #icon-database,
-	#app-toolbar #icon-cloud,
-	#app-toolbar #app-toolbar-handle-wrapper {
-		width: 45px;
-		height: 60px;/* MATCHES APP-TOOLBAR HEIGHT */
-	}
-	#app-toolbar #advanced-modal-button {
-		padding: 8px 12px;
-	}
+#app-toolbar #app-toolbar-handle-wrapper {
+	width: 45px;
+	height: 60px;/* MATCHES APP-TOOLBAR HEIGHT */
 }
 
 #app-toolbar .fa-database:before {
@@ -383,6 +381,16 @@ body[data-idb-support="0"] #app-toolbar .fa-database {
 	color: #269ce9;
 }
 
+#app-toolbar button {
+	width: 60px;
+	height: 60px;/* MATCHES APP-TOOLBAR HEIGHT */
+}
+
+#app-toolbar button i {
+	font-size: 3em;
+	margin-bottom: 5px;
+}
+
 /* POP UP MESSAGE */
 
 #popup-status {
@@ -392,7 +400,7 @@ body[data-idb-support="0"] #app-toolbar .fa-database {
 	visibility: hidden;
 	overflow: auto;
 	width: 100%;
-	min-height: 50px;/* MATCHES FOOTER HEIGHT ON MAIN.CSS */
+	min-height: 60px;/* MATCHES FOOTER HEIGHT ON MAIN.CSS */
 	background-color: #282828;
 	color: #ffffff;
 	font-size: 18px;
@@ -429,7 +437,7 @@ body[data-idb-support="0"] #app-toolbar .fa-database {
 
 #popup-status #popup-msg {
 	display: inline-block;
-	padding: 10px;
+	padding: 15px 10px;
 }
 
 /* MODAL WINDOW */
@@ -602,40 +610,6 @@ body[data-idb-support="0"] #app-toolbar .fa-database {
 	background-color: rgba(0,0,0,0.10);
 }
 
-/* video */
-#modal #modal-window .row.video-row {
-	padding: 28px;
-}
-
-#modal #modal-window .row.video-row .video-wrap {
-	border: 3px solid #000;
-	max-width: none;
-}
-
-/* Force smaller video size if screen height is too small. Otherwise, it overflows. */
-@media screen and (min-height: 360px) and (max-height: 450px) and (min-width: 720px) {
-	#modal #modal-window .row.video-row .video-wrap {
-		width: 560px;
-		height: 316px;
-	}
-}
-@media screen and (min-height: 280px) and (max-height: 359px) and (min-width: 585px) {
-	#modal #modal-window .row.video-row .video-wrap {
-		width: 426px;
-		height: 240px;
-	}
-}
-@media screen and (max-height: 279px) and (min-width: 480px) {
-	#modal #modal-window .row.video-row .video-wrap {
-		width: 320px;
-		height: 180px;
-	}
-}
-
-#modal #modal-window .row.video-row .video-wrap iframe {
-	background-color: #000;
-}
-
 /* ACTIVE DIV */
 
 #home,
@@ -660,14 +634,7 @@ body[data-idb-support="0"] #app-toolbar .fa-database {
 	justify-content: center;
 	align-items: center;
 	text-align: center;
-	height: 50vh;
-	padding: 20px 0;
-}
-
-@media screen and (max-height: 480px) {
-	#home {
-		height: initial;
-	}
+	padding: 40px 0;
 }
 
 #home .label {
@@ -700,59 +667,119 @@ body[data-idb-support="0"] #app-toolbar .fa-database {
 	margin: 15px 0;
 }
 
-.logo-homepage-path {
-	fill: #000;
-}
-
-#notepad-input {
-	font-size: 1.5em;
-	width: 90vw;
-	max-width: 90vw;
-	padding: 5px 10px;
-	-webkit-box-shadow: 5px 5px 0 rgba(0,0,0,0.15);
-	-moz-box-shadow: 5px 5px 0 rgba(0,0,0,0.15);
-	box-shadow: 5px 5px 0 rgba(0,0,0,0.15);
-}
-
 @media screen and (min-width: 481px) and (min-height: 481px) {
 	#logo-homepage {
 		width: 400px;
 		height: 105px;
 		background-size: 400px 105px;
 	}
-	#notepad-input {
-		font-size: 2em;
-	}
+}
+
+.logo-homepage-path {
+	fill: #000;
+}
+
+#notepad-input-wrapper,
+#recent-notepads-wrapper {
+	width: 90vw;
+	max-width: 90vw;
 }
 
 @media screen and (min-width: 481px) and (max-width: 767px) {
-	#notepad-input {
+	#notepad-input-wrapper,
+	#recent-notepads-wrapper {
 		width: 75vw;
 	}
 }
 
 @media screen and (min-width: 768px) {
-	#notepad-input {
+	#notepad-input-wrapper,
+	#recent-notepads-wrapper {
 		width: 50vw;
 	}
 }
 
-#video-homepage {
-	display: inline-block;
-	font-weight: bold;
-	margin-top: 40px;
-	padding: 20px 40px;
-	background-color: rgba(0, 153, 204, 0.15);
+#notepad-input-wrapper {
+	display: flex;
+	flex-direction: row;
 }
 
-#video-homepage a:link span,
-#video-homepage a:visited span,
-#video-homepage a:active span {
-	color: #282828;
+#notepad-input {
+	width: calc(100% - 50px);
+	height: 50px;
+	font-size: 1.5em;
+	padding: 5px 10px;
 }
 
-.no-touchevents #video-homepage a:hover span {
-	color: #0099cc;
+#find-notepad-button {
+	width: 50px;
+	height: 50px;
+	font-size: 24px;
+}
+
+@media screen and (min-width: 481px) {
+	#notepad-input {
+		width: calc(100% - 75px);
+		height: 75px;
+		font-size: 2em;
+	}
+	#find-notepad-button {
+		width: 75px;
+		height: 75px;
+		font-size: 36px;
+	}
+}
+
+#recent-notepads-wrapper {
+	display: none;
+	margin-top: 20px;
+}
+
+#recent-notepads-button {
+	position: relative;
+}
+
+#recent-notepads-button:after {
+	content: '\02795';
+	position: absolute;
+	right: 20px;
+	font-size: 13px;
+	color: transparent;
+    text-shadow: 0 0 0 #fff;
+}
+
+#recent-notepads-button.active:after {
+	content: "\2796";
+}
+
+#recent-notepads {
+	overflow: hidden;
+	max-height: 0px;
+	transition: max-height 0.2s ease-out;
+}
+
+#recent-notepads button {
+	border-bottom: 1pt solid #000;
+}
+
+#recent-notepads button:last-of-type {
+	border-bottom: none !important;
+}
+
+body[data-web-app="1"] #recent-notepads-wrapper {
+	display: block;
+}
+
+body[data-web-app="1"] #notepad-input-label {
+	order: 1;
+}
+
+body[data-web-app="1"] #notepad-input-wrapper {
+	order: 2;
+}
+
+body[data-web-app="1"] #recent-notepads-wrapper {
+	order: 3;
 }
 
 /* NOTEPAD TOP */
@@ -929,10 +956,25 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 	display: flex;
 	flex-direction: row;
 	flex-wrap: wrap;
+	justify-content: space-between;
+	gap: 10px;
+}
+
+@media screen and (max-width: 767px) {
+	#notepad-btns {
+		flex-wrap: nowrap;
+		gap: 0;
+	}
+}
+
+@media screen and (min-width: 993px) {
+	#notepad-btns {
+		gap: 20px;
+	}
 }
 
 #notepad-btns button {
-	margin: 0 10px 10px 0;
+	flex: 1 1 0;
 }
 
 #notepad-btns button:nth-last-child(1) {
@@ -941,7 +983,7 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 
 #quick-add {
 	display: flex;
-	margin: 10px 0 20px 0;
+	margin: 20px 0;
 }
 
 #quick-add form {
@@ -1550,22 +1592,8 @@ body.noscroll #sticky-buttons {
 	color: #c43c35;
 }
 
-html:not(.ie) #sticky-add {
-	animation: pulse 5s infinite;
-}
-
 .no-touchevents #sticky-add:hover {
 	color: #000000;
-	animation: none;
-}
-
-@keyframes pulse {
-	0%, 100% {
-		color: #c43c35;
-	}
-	50% {
-		color: #ee5f5b;
-	}
 }
 
 #sticky-add .fa-circle {
@@ -2224,4 +2252,343 @@ html:not(.ie) #sticky-add {
 	margin: -1px 0 0 -1px;
 	border: solid 1px silver;
 	box-sizing: border-box;
+}
+
+/* DARK MODE */
+
+body[data-dark-mode="1"] .logo-homepage-path {
+	fill: #fff;
+}
+
+body[data-dark-mode="1"] #modal {
+	background: rgba(255,255,255,.35);
+}
+
+body[data-dark-mode="1"] #modal #modal-window {
+	background: #000;
+}
+
+body[data-dark-mode="1"] #modal #modal-window #modal-close {
+	color: #fff;
+}
+
+body[data-dark-mode="1"] #modal #modal-window #lock-password-input-1, body[data-dark-mode="1"] #modal #modal-window #lock-password-input-2, body[data-dark-mode="1"] #modal #modal-window #unlock-password-input {
+	background-color: rgba(255,255,255,.2);
+}
+
+body[data-dark-mode="1"] #modal #modal-window #lock-password-input-1.invalid:focus, body[data-dark-mode="1"] #modal #modal-window #lock-password-input-2.invalid:focus, body[data-dark-mode="1"] #modal #modal-window #unlock-password-input.invalid:focus {
+	background-color: rgba(255,255,255,.3);
+}
+
+body[data-dark-mode="1"] #modal #modal-window #lock-password-input-1:focus, body[data-dark-mode="1"] #modal #modal-window #lock-password-input-2:focus, body[data-dark-mode="1"] #modal #modal-window #unlock-password-input:focus,
+.no-touchevents body[data-dark-mode="1"] #modal #modal-window #json-wrapper a:hover {
+	color: rgba(0,128,0,.75);
+	background-color: rgba(0,128,0,.5);
+}
+
+body[data-dark-mode="1"] #modal #modal-window #json-wrapper a {
+	color: rgba(255,255,255,.35);
+	background-color: rgba(255,255,255,.2);
+}
+
+body[data-dark-mode="1"] #popup-status {
+	background-color: #fff;
+	color: #282828;
+}
+
+body#app[data-dark-mode="1"] #app-toolbar {
+	background-color: #fff;
+}
+
+body[data-dark-mode="1"] #app-toolbar #app-toolbar-handle-background {
+	border-right: 20px solid #fff;
+}
+
+body[data-dark-mode="1"] #app-toolbar #app-toolbar-status-wrapper {
+	background-color: rgba(0,0,0,0.2);
+}
+
+body[data-dark-mode="1"] #app-toolbar #app-toolbar-status-wrapper > span {
+	color: #282828;
+}
+
+body[data-dark-mode="1"] #recent-notepads-button:after {
+	text-shadow: 0 0 0 #282828;
+}
+
+body[data-dark-mode="1"] #recent-notepads button {
+	border-bottom: 1pt solid #fff;
+}
+
+body[data-dark-mode="1"] #notepad-table #notepad-header button {
+	color: #fff;
+}
+
+.no-touchevents body[data-dark-mode="1"] #header #app-header-wrapper #offline-button:hover,
+.no-touchevents body[data-dark-mode="1"] #notepad-table #notepad-header button:hover {
+	color: #6e99a8;
+}
+
+body[data-offline-mode="1"][data-dark-mode="1"] #header #app-header-wrapper #offline-button #offline-button-label,
+body[data-offline-mode="2"][data-dark-mode="1"] #header #app-header-wrapper #offline-button #offline-button-label {
+	color: #004d66;
+}
+
+body[data-dark-mode="1"] #np-rename-input:focus {
+	background-color: #000;
+}
+
+body[data-dark-mode="1"] #np-desc-textarea:empty {
+	color: rgba(255,255,255,.35);
+	background-color: #000;
+}
+
+body[data-dark-mode="1"] #lock-button {
+	background-color: #545454;
+}
+
+.no-touchevents body[data-dark-mode="1"] #np-desc-textarea:hover,
+.no-touchevents body[data-dark-mode="1"] #np-desc-textarea:focus {
+	background-color: #000;
+}
+
+.no-touchevents body[data-dark-mode="1"] #np-desc-textarea:empty:hover {
+	color: rgba(255,255,255,.5);
+	background-color: #000;
+}
+
+body[data-dark-mode="1"] #notepad-table #notepad-header {
+	background-color: #004d66;
+}
+
+body[data-dark-mode="1"] #notepad-table #notepad-header,
+body[data-dark-mode="1"] #notepad-table .note-row {
+	border: 1pt solid #fff;
+}
+
+body[data-dark-mode="1"] .note-row button,
+.no-touchevents body[data-dark-mode="1"] .note-row button:hover,
+.no-touchevents body[data-dark-mode="1"] .note-row .note a:hover,
+.no-touchevents body[data-dark-mode="1"] #sticky-add:hover,
+body[data-dark-mode="1"] #sticky-buttons-expand-group button,
+.no-touchevents body[data-dark-mode="1"] #sticky-buttons-expand-group button:hover,
+body[data-dark-mode="1"] #note-text {
+	color: #fff;
+}
+
+.no-touchevents body[data-dark-mode="1"] #sticky-add:hover .fa-inverse,
+body[data-dark-mode="1"] #sticky-buttons-expand-group .fa-inverse {
+	color: #282828;
+}
+
+body[data-dark-mode="1"] .tooltipped::after {
+	color: #282828;
+	background: #fff;
+}
+
+body[data-dark-mode="1"] .tooltipped::before {
+	color: #fff;
+}
+
+body[data-dark-mode="1"] #notepad-table .note-row[data-is-checked="1"][data-color="0"] {
+	background-image: repeating-linear-gradient(
+		45deg,
+		rgba(0, 0, 0, 0.2),
+		rgba(0, 0, 0, 0.2) 10px,
+		rgba(255, 255, 255, 0.2) 10px,
+		rgba(255, 255, 255, 0.2) 20px
+	)
+}
+
+body[data-dark-mode="1"] .note-row[data-color="0"] {
+	background-color: var(--dark-white-color);
+}
+
+body[data-dark-mode="1"] .note-row[data-color="0"] button {
+	background-color: var(--dark-white-medium-color);
+}
+
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="0"] .col-3 button:hover,
+body[data-dark-mode="1"] .note-row[data-color="0"] .note a:link,
+body[data-dark-mode="1"] .note-row[data-color="0"] .note a:visited,
+body[data-dark-mode="1"] .note-row[data-color="0"] .note a:active {
+	color: var(--dark-white-light-color);
+}
+
+body[data-dark-mode="1"] .note-row[data-color="0"] .note span::selection,
+body[data-dark-mode="1"] .note-row[data-color="0"] .note a::selection,
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="0"] button:hover {
+	background-color: var(--dark-white-light-color);
+}
+
+body[data-dark-mode="1"] .note-row[data-color="1"] {
+	background-color: var(--dark-gray-color);
+}
+
+body[data-dark-mode="1"] .note-row[data-color="1"] button {
+	background-color: var(--dark-gray-medium-color);
+}
+
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="1"] .col-3 button:hover,
+body[data-dark-mode="1"] .note-row[data-color="1"] .note a:link,
+body[data-dark-mode="1"] .note-row[data-color="1"] .note a:visited,
+body[data-dark-mode="1"] .note-row[data-color="1"] .note a:active {
+	color: var(--dark-gray-light-color);
+}
+
+body[data-dark-mode="1"] .note-row[data-color="1"] .note span::selection,
+body[data-dark-mode="1"] .note-row[data-color="1"] .note a::selection,
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="1"] button:hover {
+	background-color: var(--dark-gray-light-color);
+}
+
+body[data-dark-mode="1"] .note-row[data-color="2"] {
+	background-color: var(--dark-yellow-color);
+}
+
+body[data-dark-mode="1"] .note-row[data-color="2"] button {
+	background-color: var(--dark-yellow-medium-color);
+}
+
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="2"] .col-3 button:hover,
+body[data-dark-mode="1"] .note-row[data-color="2"] .note a:link,
+body[data-dark-mode="1"] .note-row[data-color="2"] .note a:visited,
+body[data-dark-mode="1"] .note-row[data-color="2"] .note a:active {
+	color: var(--dark-yellow-light-color);
+}
+
+body[data-dark-mode="1"] .note-row[data-color="2"] .note span::selection,
+body[data-dark-mode="1"] .note-row[data-color="2"] .note a::selection,
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="2"] button:hover {
+	background-color: var(--dark-yellow-light-color);
+}
+
+body[data-dark-mode="1"] .note-row[data-color="3"] {
+	background-color: var(--dark-green-color);
+}
+
+body[data-dark-mode="1"] .note-row[data-color="3"] button {
+	background-color: var(--dark-green-medium-color);
+}
+
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="3"] .col-3 button:hover,
+body[data-dark-mode="1"] .note-row[data-color="3"] .note a:link,
+body[data-dark-mode="1"] .note-row[data-color="3"] .note a:visited,
+body[data-dark-mode="1"] .note-row[data-color="3"] .note a:active {
+	color: var(--dark-green-light-color);
+}
+
+body[data-dark-mode="1"] .note-row[data-color="3"] .note span::selection,
+body[data-dark-mode="1"] .note-row[data-color="3"] .note a::selection,
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="3"] button:hover {
+	background-color: var(--dark-green-light-color);
+}
+
+body[data-dark-mode="1"] .note-row[data-color="4"] {
+	background-color: var(--dark-cyan-color);
+}
+
+body[data-dark-mode="1"] .note-row[data-color="4"] button {
+	background-color: var(--dark-cyan-medium-color);
+}
+
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="4"] .col-3 button:hover,
+body[data-dark-mode="1"] .note-row[data-color="4"] .note a:link,
+body[data-dark-mode="1"] .note-row[data-color="4"] .note a:visited,
+body[data-dark-mode="1"] .note-row[data-color="4"] .note a:active {
+	color: var(--dark-cyan-light-color);
+}
+
+body[data-dark-mode="1"] .note-row[data-color="4"] .note span::selection,
+body[data-dark-mode="1"] .note-row[data-color="4"] .note a::selection,
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="4"] button:hover {
+	background-color: var(--dark-cyan-light-color);
+}
+
+body[data-dark-mode="1"] .note-row[data-color="5"] {
+	background-color: var(--dark-blue-color);
+}
+
+body[data-dark-mode="1"] .note-row[data-color="5"] button {
+	background-color: var(--dark-blue-medium-color);
+}
+
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="5"] .col-3 button:hover,
+body[data-dark-mode="1"] .note-row[data-color="5"] .note a:link,
+body[data-dark-mode="1"] .note-row[data-color="5"] .note a:visited,
+body[data-dark-mode="1"] .note-row[data-color="5"] .note a:active {
+	color: var(--dark-blue-light-color);
+}
+
+body[data-dark-mode="1"] .note-row[data-color="5"] .note span::selection,
+body[data-dark-mode="1"] .note-row[data-color="5"] .note a::selection,
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="5"] button:hover {
+	background-color: var(--dark-blue-light-color);
+}
+
+body[data-dark-mode="1"] .note-row[data-color="6"] {
+	background-color: var(--dark-purple-color);
+}
+
+body[data-dark-mode="1"] .note-row[data-color="6"] button {
+	background-color: var(--dark-purple-medium-color);
+}
+
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="6"] .col-3 button:hover,
+body[data-dark-mode="1"] .note-row[data-color="6"] .note a:link,
+body[data-dark-mode="1"] .note-row[data-color="6"] .note a:visited,
+body[data-dark-mode="1"] .note-row[data-color="6"] .note a:active {
+	color: var(--dark-purple-light-color);
+}
+
+body[data-dark-mode="1"] .note-row[data-color="6"] .note span::selection,
+body[data-dark-mode="1"] .note-row[data-color="6"] .note a::selection,
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="6"] button:hover {
+	background-color: var(--dark-purple-light-color);
+}
+
+body[data-dark-mode="1"] .note-row[data-color="7"] {
+	background-color: var(--dark-red-color);
+}
+
+body[data-dark-mode="1"] .note-row[data-color="7"] button {
+	background-color: var(--dark-red-medium-color);
+}
+
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="7"] .col-3 button:hover,
+body[data-dark-mode="1"] .note-row[data-color="7"] .note a:link,
+body[data-dark-mode="1"] .note-row[data-color="7"] .note a:visited,
+body[data-dark-mode="1"] .note-row[data-color="7"] .note a:active {
+	color: var(--dark-red-light-color);
+}
+
+body[data-dark-mode="1"] .note-row[data-color="7"] .note span::selection,
+body[data-dark-mode="1"] .note-row[data-color="7"] .note a::selection,
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="7"] button:hover {
+	background-color: var(--dark-red-light-color);
+}
+
+body[data-dark-mode="1"] .note-row[data-color="8"] {
+	background-color: var(--dark-orange-color);
+}
+
+body[data-dark-mode="1"] .note-row[data-color="8"] button {
+	background-color: var(--dark-orange-medium-color);
+}
+
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="8"] .col-3 button:hover,
+body[data-dark-mode="1"] .note-row[data-color="8"] .note a:link,
+body[data-dark-mode="1"] .note-row[data-color="8"] .note a:visited,
+body[data-dark-mode="1"] .note-row[data-color="8"] .note a:active {
+	color: var(--dark-orange-light-color);
+}
+
+body[data-dark-mode="1"] .note-row[data-color="8"] .note span::selection,
+body[data-dark-mode="1"] .note-row[data-color="8"] .note a::selection,
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="8"] button:hover {
+	background-color: var(--dark-orange-light-color);
+}
+
+.no-touchevents body[data-dark-mode="1"] .note-row .note a:hover {
+	color: #fff;
 }

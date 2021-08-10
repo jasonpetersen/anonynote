@@ -6,11 +6,11 @@
  * -------------------------- */
 @font-face {
 	font-family: 'icomoon';
-	src: url('/fonts/icomoon.eot?8lhkqg');
-	src: url('/fonts/icomoon.eot?8lhkqg#iefix') format('embedded-opentype'),
-		url('/fonts/icomoon.ttf?8lhkqg') format('truetype'),
-		url('/fonts/icomoon.woff?8lhkqg') format('woff'),
-		url('/fonts/icomoon.svg?8lhkqg#icomoon') format('svg');
+	src: url('/fonts/icomoon.eot?gnutvz');
+	src: url('/fonts/icomoon.eot?gnutvz#iefix') format('embedded-opentype'),
+		url('/fonts/icomoon.ttf?gnutvz') format('truetype'),
+		url('/fonts/icomoon.woff?gnutvz') format('woff'),
+		url('/fonts/icomoon.svg?gnutvz#icomoon') format('svg');
 	font-weight: normal;
 	font-style: normal;
 }
@@ -199,7 +199,22 @@
 }
 /* Font Awesome uses the Unicode Private Use Area (PUA) to ensure screen
 	 readers do not read off random characters that represent icons */
-.fa-code:before {
+.fa-bulb-outline:before {
+	content: "\1f4a1";
+}
+.fa-bulb-fill:before {
+	content: "\1f4a3";
+}
+ .fa-notepad:before {
+	content: "\229b";
+}
+.fa-notepad-add:before {
+	content: "\2295";
+}
+.fa-notepad-delete:before {
+	content: "\2296";
+}
+ .fa-code:before {
 	content: "\2260";
 }
 .fa-toggle-on:before {
@@ -215,7 +230,7 @@
 	content: "\2616";
 }
 .fa-sort:before {
-	content: "\26fc";
+	content: "\2635";
 }
 .fa-sort-az:before {
 	content: "\25e8";
@@ -257,7 +272,7 @@
 	content: "\2925";
 }
 .fa-enter:before {
-	content: "\2ba0";
+	content: "\23ce";
 }
 .fa-pencil:before {
 	content: "\270f";
@@ -290,7 +305,7 @@
 	content: "\2212";
 }
 .fa-trash:before {
-	content: "\1f571";
+	content: "\1f5d1";
 }
 .fa-palette:before {
 	content: "\2728";
@@ -299,7 +314,7 @@
 	content: "\1f5cd";
 }
 .fa-info:before {
-	content: "\1f6c8";
+	content: "\1f4ac";
 }
 .fa-unlock:before {
 	content: "\1f513";
@@ -310,11 +325,14 @@
 .fa-warning:before {
 	content: "\26a0";
 }
+.fa-cog:before {
+	content: "\2699";
+}
 .fa-times:before {
 	content: "\2716";
 }
 .fa-refresh:before {
-	content: "\1f5d8";
+	content: "\2941";
 }
 .fa-repeat:before {
 	content: "\27f3";

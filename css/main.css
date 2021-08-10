@@ -20,7 +20,7 @@ body {
 	overscroll-behavior: contain;
 	color: #282828;
 	padding: 0;
-	margin: 0 0 50px 0;/* Must correspond to footer height */
+	margin: 0 0 60px 0;/* Must correspond to footer height */
 }
 
 body.noscroll {
@@ -29,13 +29,12 @@ body.noscroll {
 }
 
 #container {
-	margin-bottom: 80px;/* Up far enough to create distance from the footer */
+	margin: 100px 0;
 }
 
 @media screen and (max-width: 767px) {
 	#container {
 		padding: 0 10px;
-		margin-top: 70px;/* Down far enough to create distance from the header */
 	}
 }
 
@@ -43,7 +42,6 @@ body.noscroll {
 	#container {
 		max-width: 80%;
 		padding: 0 10%;
-		margin-top: 90px;/* Larger margin equivalent to header increase */
 	}
 	#app #container {
 		max-width: none;
@@ -52,7 +50,7 @@ body.noscroll {
 }
 
 #footer {
-	height: 50px;/* Must correspond to body margin-bottom */
+	height: 60px;/* Must correspond to body margin-bottom */
 }
 
 a:link,
@@ -104,6 +102,10 @@ h6, .h6 { font-size: 0.75em; }
 
 .smaller {
 	font-size: 80%;
+}
+
+.uppercase {
+	text-transform: uppercase;
 }
 
 .larger {
@@ -316,7 +318,7 @@ textarea {
 	position: fixed;
 	top: 0;
 	width: 100%;
-	height: 40px;
+	height: 60px;
 	color: #ffffff;
 	background-color: #0099cc;
 	z-index: 9000;
@@ -339,11 +341,11 @@ body.noscroll #header {
 #header #logo-header {
 	display: inline-block;
 	position: fixed;
-	top: 7px;
+	top: 9px;
 	left: 10px;
-	width: 122px;
-	height: 32px;
-	background-size: 122px 32px;
+	width: 190px;
+	height: 50px;
+	background-size: 190px 50px;
 }
 
 #header #logo-header .logo-header-path,
@@ -363,14 +365,14 @@ body.noscroll #header {
 
 #menu-button {
 	position: fixed;
-	top: 3px;
-	right: 10px;
+	top: 6px;
+	right: 20px;
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	font-size: 30px;
-	width: 30px;
-	height: 30px;
+	font-size: 40px;
+	width: 40px;
+	height: 40px;
 	color: #ffffff;
 	cursor: pointer;
 	z-index: 10001;
@@ -382,25 +384,6 @@ body.noscroll #header {
 
 body.noscroll #menu-button {
 	transform: translate3d(0,0,0);/*without this, this button will not initially appear when the menu displays on iOS*/
-}
-
-@media screen and (min-width: 768px) {
-	#header {
-		height: 60px;
-	}
-	#header #logo-header {
-		top: 9px;
-		width: 190px;
-		height: 50px;
-		background-size: 190px 50px;
-	}
-	#menu-button {
-		top: 6px;
-		right: 20px;
-		font-size: 40px;
-		width: 40px;
-		height: 40px;
-	}
 }
 
 /* FOOTER */
@@ -725,7 +708,7 @@ body.noscroll #menu-button {
 
 .no-touchevents .button:hover {
 	color: #fff;
-	background-color: #545454;
+	background-color: #404040;
 }
 
 .button:active {
@@ -739,20 +722,20 @@ body.noscroll #menu-button {
 .button[disabled], 
 .no-touchevents .button[disabled]:hover, 
 .button[disabled]:active {
-	background: #e5e5e5;
+	background: #545454;
 	cursor: default;
 	position: static;
 	color: #999999;
 	pointer-events: none;
 }
 
-/* Smaller buttons styles */
+/* Smaller button styles */
 
 .button.small {
 	padding: 4px 12px;
 }
 
-/* Larger buttons styles */
+/* Larger button styles */
 
 .button.large {
 	padding: 12px 30px;
@@ -761,6 +744,13 @@ body.noscroll #menu-button {
 
 .button.large:active {
 	top: 2px;
+}
+
+/* Full width button styles */
+
+.button.full-width {
+	width: 100%;
+	padding: 20px;
 }
 
 /* Larger responsive label button styles */
@@ -832,9 +822,42 @@ body.noscroll #menu-button {
 	background-color: #fff;
 }
 
+.button.white.empty,
+.button.white.empty:active {
+	color: #fff;
+}
+
 .no-touchevents .button.white:hover {
 	background-color: #aaa;
 	color: #282828;
+}
+
+.no-touchevents .button.white.empty:hover {
+	color: #aaa;
+}
+
+/* Black colored button */
+
+.button.black {
+	color: #fff;
+}
+
+.button.black,
+.button.black:active {
+	background-color: #282828;
+}
+
+.button.black.empty,
+.button.black.empty:active {
+	color: #282828;
+}
+
+.no-touchevents .button.black:hover {
+	background-color: #404040;
+}
+
+.no-touchevents .button.black.empty:hover {
+	color: #404040;
 }
 
 /* Colored buttons styles */
@@ -850,9 +873,17 @@ body.noscroll #menu-button {
 	background-color: #c43c35;
 }
 
+.button.red.empty,
+.button.red.empty:active {
+	color: #c43c35;
+}
+
 .no-touchevents .button.red:hover {
 	background-color: #ee5f5b;
-	color: #fff;
+}
+
+.no-touchevents .button.red.empty:hover {
+	color: #ee5f5b;
 }
 
 /* */
@@ -862,9 +893,17 @@ body.noscroll #menu-button {
 	background-color: #57a957;
 }
 
+.button.green.empty,
+.button.green.empty:active {
+	color: #57a957;
+}
+
 .no-touchevents .button.green:hover {
 	background-color: #62c462;
-	color: #fff;
+}
+
+.no-touchevents .button.green.empty:hover {
+	color: #62c462;
 }
 
 /* */
@@ -874,9 +913,17 @@ body.noscroll #menu-button {
 	background-color: #3c35c4;
 }
 
+.button.blue.empty,
+.button.blue.empty:active {
+	color: #3c35c4;
+}
+
 .no-touchevents .button.blue:hover {
 	background-color: #605bee;
-	color: #fff;
+}
+
+.no-touchevents .button.blue.empty:hover {
+	color: #605bee;
 }
 
 /* */
@@ -886,9 +933,17 @@ body.noscroll #menu-button {
 	background-color: #269ce9;
 }
 
+.button.cyan.empty,
+.button.cyan.empty:active {
+	color: #269ce9;
+}
+
 .no-touchevents .button.cyan:hover {
 	background-color: #70b9e8;
-	color: #fff;
+}
+
+.no-touchevents .button.cyan.empty:hover {
+	color: #70b9e8;
 }
 
 /* */
@@ -898,9 +953,17 @@ body.noscroll #menu-button {
 	background-color: #c435bd;
 }
 
+.button.magenta.empty,
+.button.magenta.empty:active {
+	color: #c435bd;
+}
+
 .no-touchevents .button.magenta:hover {
 	background-color: #ee5be8;
-	color: #fff;
+}
+
+.no-touchevents .button.magenta.empty:hover {
+	color: #ee5be8;
 }
 
 /* */
@@ -910,9 +973,17 @@ body.noscroll #menu-button {
 	background-color: #bdc435;
 }
 
+.button.yellow.empty,
+.button.yellow.empty:active {
+	color: #bdc435;
+}
+
 .no-touchevents .button.yellow:hover {
 	background-color: #e9ee5b;
-	color: #fff;
+}
+
+.no-touchevents .button.yellow.empty:hover {
+	color: #e9ee5b;
 }
 
 /* */
@@ -922,9 +993,17 @@ body.noscroll #menu-button {
 	background-color: #c48335;
 }
 
+.button.orange.empty,
+.button.orange.empty:active {
+	color: #c48335;
+}
+
 .no-touchevents .button.orange:hover {
 	background-color: #eea95b;
-	color: #fff;
+}
+
+.no-touchevents .button.orange.empty:hover {
+	color: #eea95b;
 }
 
 /* Colored buttons disabled states */
@@ -1015,4 +1094,165 @@ input[type="reset"],
 input[type="file"]::-webkit-file-upload-button,
 button {
 	border-radius: 0;
+}
+
+/* DARK MODE */
+
+body[data-dark-mode="1"] {
+	background: #282828;
+	color: #fff;
+}
+
+body[data-dark-mode="1"] input {
+	background-color: #000;
+	color: #fff;
+}
+
+body[data-dark-mode="1"] #header,
+body[data-dark-mode="1"] #footer {
+	background-color: #004d66;
+	-webkit-box-shadow: none;
+		-moz-box-shadow: none;
+			box-shadow: none;
+}
+
+.no-touchevents body[data-dark-mode="1"] #header a:hover #logo-header .logo-header-path {
+	fill: #6e99a8;
+}
+
+.no-touchevents body[data-dark-mode="1"] #menu a:hover,
+body[data-dark-mode="1"] #menu a:active,
+.no-touchevents body[data-dark-mode="1"] #menu-button:hover,
+.no-touchevents body[data-dark-mode="1"] #copyright a:hover,
+body[data-dark-mode="1"] #copyright a:active {
+	color: #6e99a8;
+}
+
+body[data-dark-mode="1"] .article p a:link, body[data-dark-mode="1"] .article p a:visited, .no-touchevents body[data-dark-mode="1"] .article p a:hover, body[data-dark-mode="1"] .article p a:active, body[data-dark-mode="1"] .article ul a:link, body[data-dark-mode="1"] .article ul a:visited, .no-touchevents body[data-dark-mode="1"] .article ul a:hover, body[data-dark-mode="1"] .article ul a:active {
+	color: #fff;
+}
+
+body[data-dark-mode="1"] .quform-input textarea {
+	background-color: #000;
+	color: #fff;
+}
+
+body[data-dark-mode="1"] .button:not(.white):not(.red):not(.green):not(.blue):not(.cyan):not(.magenta):not(.yellow):not(.orange):not(.transparent):not(.empty):not(.circle) {
+	background-color: #fff;
+	color: #282828;
+}
+
+.no-touchevents body[data-dark-mode="1"] .button:not(.white):not(.red):not(.green):not(.blue):not(.cyan):not(.magenta):not(.yellow):not(.orange):not(.transparent):not(.empty):not(.circle):hover {
+	background-color: #545454;
+	color: #fff;
+}
+
+body[data-dark-mode="1"] .button.white {
+	color: #fff;
+}
+
+body[data-dark-mode="1"] .button.white,
+body[data-dark-mode="1"] .button.white:active {
+	background-color: #000;
+}
+
+body[data-dark-mode="1"] .button.white.empty,
+body[data-dark-mode="1"] .button.white.empty:active {
+	color: #000;
+}
+
+.no-touchevents body[data-dark-mode="1"] .button.white.empty:hover {
+	color: #545454;
+}
+
+body[data-dark-mode="1"] .button.black {
+	color: #282828;
+}
+
+body[data-dark-mode="1"] .button.black,
+body[data-dark-mode="1"] .button.black:active {
+	background-color: #fff;
+}
+
+body[data-dark-mode="1"] .button.black.empty,
+body[data-dark-mode="1"] .button.black.empty:active {
+	color: #fff;
+}
+
+.no-touchevents body[data-dark-mode="1"] .button.black:hover {
+	background-color: #aaa;
+}
+
+.no-touchevents body[data-dark-mode="1"] .button.black.empty:hover {
+	color: #aaa;
+}
+
+body[data-dark-mode="1"] .red.disabled, 
+.no-touchevents body[data-dark-mode="1"] .red.disabled:hover, 
+body[data-dark-mode="1"] .red.disabled:active, 
+body[data-dark-mode="1"] .red[disabled], 
+.no-touchevents body[data-dark-mode="1"] .red[disabled]:hover, 
+body[data-dark-mode="1"] .red[disabled]:active {
+	background: #473635;
+	color: #716d6d;
+}
+
+body[data-dark-mode="1"] .green.disabled, 
+.no-touchevents body[data-dark-mode="1"] .green.disabled:hover, 
+body[data-dark-mode="1"] .green.disabled:active, 
+body[data-dark-mode="1"] .green[disabled], 
+.no-touchevents body[data-dark-mode="1"] .green[disabled]:hover, 
+body[data-dark-mode="1"] .green[disabled]:active {
+	background: #3b453b;
+	color: #6e716e;
+}
+
+body[data-dark-mode="1"] .blue.disabled, 
+.no-touchevents body[data-dark-mode="1"] .blue.disabled:hover, 
+body[data-dark-mode="1"] .blue.disabled:active, 
+body[data-dark-mode="1"] .blue[disabled], 
+.no-touchevents body[data-dark-mode="1"] .blue[disabled]:hover, 
+body[data-dark-mode="1"] .blue[disabled]:active {
+	background: #363547;
+	color: #6d6d71;
+}
+
+body[data-dark-mode="1"] .cyan.disabled, 
+.no-touchevents body[data-dark-mode="1"] .cyan.disabled:hover, 
+body[data-dark-mode="1"] .cyan.disabled:active, 
+body[data-dark-mode="1"] .cyan[disabled], 
+.no-touchevents body[data-dark-mode="1"] .cyan[disabled]:hover, 
+body[data-dark-mode="1"] .cyan[disabled]:active {
+	background: #384650;
+	color: #6e7174;
+}
+
+body[data-dark-mode="1"] .magenta.disabled, 
+.no-touchevents body[data-dark-mode="1"] .magenta.disabled:hover, 
+body[data-dark-mode="1"] .magenta.disabled:active, 
+body[data-dark-mode="1"] .magenta[disabled], 
+.no-touchevents body[data-dark-mode="1"] .magenta[disabled]:hover, 
+body[data-dark-mode="1"] .magenta[disabled]:active {
+	background: #473546;
+	color: #716d71;
+}
+
+body[data-dark-mode="1"] .yellow.disabled, 
+.no-touchevents body[data-dark-mode="1"] .yellow.disabled:hover, 
+body[data-dark-mode="1"] .yellow.disabled:active, 
+body[data-dark-mode="1"] .yellow[disabled], 
+.no-touchevents body[data-dark-mode="1"] .yellow[disabled]:hover, 
+body[data-dark-mode="1"] .yellow[disabled]:active {
+	background: #464735;
+	color: #71716d;
+}
+
+body[data-dark-mode="1"] .orange.disabled, 
+.no-touchevents body[data-dark-mode="1"] .orange.disabled:hover, 
+body[data-dark-mode="1"] .orange.disabled:active, 
+body[data-dark-mode="1"] .orange[disabled], 
+.no-touchevents body[data-dark-mode="1"] .orange[disabled]:hover, 
+body[data-dark-mode="1"] .orange[disabled]:active {
+	background: #473f35;
+	color: #716f6d;
 }

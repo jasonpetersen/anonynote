@@ -34,10 +34,16 @@ define("PAGEDESC", $locale["app"]["meta_desc"]);
 <?php include realpath($_SERVER['DOCUMENT_ROOT']) . '/includes/top.php'; ?>
 		<div id="app-toolbar" class="hide">
 			<div id="app-toolbar-handle-background"></div>
-			<div id="app-toolbar-handle-wrapper"><button id="app-toolbar-handle" type="button" class="button empty" title="<?php echo $locale["toolbar"]["toggle"]; ?>" onclick="appToolbarToggle();"><i class="fa"></i></button></div>
-			<div id="icon-cloud" title="<?php echo $locale["toolbar"]["cloud"]; ?>"><i class="fa fa-cloud-online"></i></div>
-			<div id="icon-database" title="<?php echo $locale["toolbar"]["idb"]; ?>"><i class="fa fa-database"></i></div>
-			<button id="advanced-modal-button" type="button" class="button white small" onclick="advancedModal();"><?php echo $locale["toolbar"]["advanced"]; ?></button>
+			<div id="app-toolbar-handle-wrapper"><button id="app-toolbar-handle" type="button" class="button empty white" title="<?php echo $locale["toolbar"]["toggle"]; ?>" onclick="appToolbarToggle();"><i class="fa"></i></button></div>
+			<div id="app-toolbar-status-wrapper">
+				<span class="uppercase"><?php echo $locale["toolbar"]["status"]; ?></span>
+				<div id="icon-wrapper">
+					<div id="icon-cloud" title="<?php echo $locale["toolbar"]["cloud"]; ?>"><i class="fa fa-cloud-online"></i></div>
+					<div id="icon-database" title="<?php echo $locale["toolbar"]["idb"]; ?>"><i class="fa fa-database"></i></div>
+				</div>
+			</div>
+			<button id="light-dark-modal-button" type="button" class="button empty yellow" title="<?php echo $locale["toolbar"]["light_dark"]; ?>" onclick="lightDarkModal();"><i class="fa fa-bulb-fill"></i></button>
+			<button id="advanced-modal-button" type="button" class="button empty white" title="<?php echo $locale["toolbar"]["advanced"]; ?>" onclick="advancedModal();"><i class="fa fa-cog"></i></button>
 		</div>
 		<div id="popup-status"><span id="popup-msg"></span></div>
 		<div id="container">
@@ -45,16 +51,21 @@ define("PAGEDESC", $locale["app"]["meta_desc"]);
 				<i id="logo-homepage"><?php echo file_get_contents(realpath($_SERVER['DOCUMENT_ROOT']) . '/img/logo-homepage.svg'); ?></i>
 				<h1 class="hidden"><?php echo $locale["core"]["app_name"]; ?></h1>
 				<h2 class="hidden"><?php echo $locale["app"]["tagline"]; ?></h2>
-				<form>
+				<form id="notepad-input-wrapper">
 					<input id="notepad-input" type="text" onkeypress="return event.keyCode!=13;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-					<div class="label">
-						<span class="label-text"><?php echo $locale["app"]["input_label"]; ?></span>
-						<div class="label-info">
-							<button type="button" class="button transparent" title="<?php echo $locale["app"]["info"]; ?>" onclick="popupMsg('<?php echo $locale["app"]["info"]; ?>');"><i class="fa fa-info"></i></button>
-						</div>
-					</div>
-					<button id="find-notepad-button" type="submit" class="button large disabled" onclick="findNotepadByName($('#notepad-input').val());"><?php echo $locale["app"]["open_button"]; ?></button>
+					<button id="find-notepad-button" type="submit" class="button color cyan square disabled" onclick="findNotepadByName($('#notepad-input').val());"><i class="fa fa-enter"></i></button>
 				</form>
+				<div id="notepad-input-label" class="label">
+					<span class="label-text"><?php echo $locale["app"]["input_label"]; ?></span>
+					<div class="label-info">
+						<button type="button" class="button transparent" title="<?php echo $locale["app"]["info"]; ?>" onclick="popupMsg('<?php echo $locale["app"]["info"]; ?>');"><i class="fa fa-info"></i></button>
+					</div>
+				</div>
+				<div id="recent-notepads-wrapper">
+					<div id="recent-notepads-label" class="label"><span class="label-text"><?php echo $locale["app"]["recent_label"]; ?></span></div>
+					<button id="recent-notepads-button" class="button large full-width"><?php echo $locale["app"]["recent"]; ?></button>
+					<div id="recent-notepads"></div>
+				</div>
 			</div>
 			<div id="notepad"></div>
 			<div id="edit"></div>

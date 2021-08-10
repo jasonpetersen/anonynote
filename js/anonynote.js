@@ -1,6 +1,6 @@
 //** GLOBAL APPLICATION VARIABLES **//
 
-var appVer = "5.1.2";// the application version number
+var appVer = "5.2.0";// the application version number
 
 $.holdReady( true );// hold document ready
 var holdReleaseCurrent = 0;// number; 0 to start; increment upward until we hit holdReleaseTarget
@@ -15,6 +15,7 @@ var localPadCounter = 0;// local notepad counter; default to 0, unless later pul
 var localNoteCounter = 0;// local note counter; default to 0, unless later pulled from an IndexedDB stored value
 var langCode = "en-US";// current language code; default (and only language ATM) is 'en-US'
 var globalSync = true;// boolean; set to false if anything at all is out-of-sync between IndexedDB and MySQL
+var darkMode = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? true : false;// boolean; initially set based upon OS preference; possibly override later from IndexedDB or user selection
 var catalog = {};// an object that holds information on every notepad opened on this device
 var notepads = {};// an object that holds all the notes for all the notepads opened on this device
 
@@ -226,6 +227,7 @@ function prepLaunchState() {
 							'nphash': notepadHash,
 							'npdesc': ((postData.npdesc == "") || (postData.npdesc == null) || (typeof postData.npdesc === 'undefined')) ? void 0 : postData.npdesc,
 							'lastEdit': postData.lastEdit,
+							'lastOpen': getUnixTimestamp(),
 							'synced': 1
 						}
 						idbCatalogUpdate();
@@ -646,7 +648,6 @@ function updateState(appLocation, pushAction) {
 	idbSnapshotUpdate("pos");
 }
 
-
 //** INDEXEDDB FUNCTIONS **//
 
 // either build the core IDB object stores on first use, or retrieve the stored values, or determine IDB is unsupported
@@ -686,6 +687,7 @@ function idbInit() {
 					if (snapshotArray[s]["entry"] == "conn") offlineState = snapshotArray[s]["offline"];
 					if (snapshotArray[s]["entry"] == "lang") langCode = snapshotArray[s]["lang"];
 					if (snapshotArray[s]["entry"] == "sync") globalSync = Boolean(snapshotArray[s]["synced"]);
+					if (snapshotArray[s]["entry"] == "mode") darkMode = Boolean(snapshotArray[s]["darkMode"]);
 					if (snapshotArray[s]["entry"] == "count") {
 						localPadCounter = snapshotArray[s]["padCount"];
 						localNoteCounter = snapshotArray[s]["noteCount"];
@@ -709,6 +711,7 @@ function idbInit() {
 								'nphash': catalogArray[c]["nphash"],
 								'npdesc': catalogArray[c]["npdesc"],
 								'lastEdit': catalogArray[c]["lastEdit"],
+								'lastOpen': catalogArray[c]["lastOpen"],
 								'synced': catalogArray[c]["synced"]
 							}
 						}
@@ -752,11 +755,13 @@ function idbInit() {
 			snapshotOS.createIndex('noteCount', 'noteCount', {unique: false});
 			snapshotOS.createIndex('lang', 'lang', {unique: false});
 			snapshotOS.createIndex('synced', 'synced', {unique: false});
+			snapshotOS.createIndex('darkMode', 'darkMode', {unique: false});
 			var catalogOS = upgradeDb.createObjectStore('catalog', {keyPath: 'npidLocal'});
 			catalogOS.createIndex('npname', 'npname', {unique: false});
 			catalogOS.createIndex('nphash', 'nphash', {unique: false});
 			catalogOS.createIndex('npdesc', 'npdesc', {unique: false});
 			catalogOS.createIndex('lastEdit', 'lastEdit', {unique: false});
+			catalogOS.createIndex('lastOpen', 'lastOpen', {unique: false});
 			catalogOS.createIndex('synced', 'synced', {unique: false});
 		});
 		dbPromise.then(function(db) {
@@ -766,10 +771,12 @@ function idbInit() {
 			var itemCount = { entry: "count", padCount: localPadCounter, noteCount: localNoteCounter };
 			var itemLang = { entry: "lang", lang: langCode };
 			var itemSync = { entry: "sync", synced: (globalSync) ? 1 : 0 };
+			var itemMode = { entry: "mode", darkMode: (darkMode) ? 1 : 0 };
 			store.put(itemConn);
 			store.put(itemCount);
 			store.put(itemLang);
 			store.put(itemSync);
+			store.put(itemMode);
 			db.close();
 			return tx.complete;
 		}).then(function() {
@@ -813,6 +820,10 @@ function idbSnapshotUpdate(whichEntry) {
 			var item = { entry: "sync", synced: (globalSync) ? 1 : 0 };
 			var verbiage = "data sync";
 			break;
+		case "mode":
+			var item = { entry: "mode", darkMode: (darkMode) ? 1 : 0 };
+			var verbiage = "dark mode";
+			break;
 		default:
 			return;
 			break;
@@ -840,6 +851,7 @@ function idbCatalogUpdate() {
 		nphash: catalog[notepadIdLocal]["nphash"],
 		npdesc: catalog[notepadIdLocal]["npdesc"],
 		lastEdit: catalog[notepadIdLocal]["lastEdit"],
+		lastOpen: catalog[notepadIdLocal]["lastOpen"],
 		synced: catalog[notepadIdLocal]["synced"]
 	};
 	var dbPromise = idb.open(idbDB);
@@ -1076,6 +1088,7 @@ function findNotepadByName(pad) {
 						'nphash': postData.nphash,
 						'npdesc': ((postData.npdesc == "") || (postData.npdesc == null) || (typeof postData.npdesc === 'undefined')) ? void 0 : postData.npdesc,
 						'lastEdit': postData.lastEdit,
+						'lastOpen': getUnixTimestamp(),
 						'synced': 1
 					}
 					idbCatalogUpdate();
@@ -1095,6 +1108,7 @@ function findNotepadByName(pad) {
 				'nphash': undefined,
 				'npdesc': undefined,
 				'lastEdit': getUnixTimestamp(),
+				'lastOpen': getUnixTimestamp(),
 				'synced': 0
 			}
 			globalSync = false;
@@ -1106,6 +1120,34 @@ function findNotepadByName(pad) {
 		}
 		buildNotepad("forward");
 	}
+}
+
+// build or re-build the recently opened notepads list
+// home page, web app mode only, max 10
+function buildRecentNotepads() {
+	if (!isInWebApp) return;
+	if (Object.keys(catalog).length == 0) {
+		$('#recent-notepads-wrapper').hide();
+		return;
+	} else {
+		$('#recent-notepads-wrapper').show();
+	}
+	$('#recent-notepads').empty();
+	var catalogOrdered = [];
+	$.each(catalog, function(key, value) {
+		catalogOrdered[key] = {
+			"npidLocal": key,
+			"npname": value["npname"],
+			"lastOpen": value["lastOpen"]
+		}
+	});
+	catalogOrdered.sort(function(a, b){return b.lastOpen - a.lastOpen}).slice(0, 10).forEach(function(c) {
+		$('#recent-notepads').append(
+			'<button type="button" class="button large full-width white" onclick="notepadIdLocal='+c.npidLocal+';catalog['+c.npidLocal+'][\'lastOpen\']=getUnixTimestamp();idbCatalogUpdate();buildNotepad(\'forward\');">'+ c.npname +'</button>'
+		);
+	});
+	$('#recent-notepads-button').removeClass('active');
+	$('#recent-notepads').css('max-height', '0px');
 }
 
 // open the specified notepad
@@ -1314,6 +1356,7 @@ function buildNotepad(arg, scrPos, elem) {
 				$('#notepad').addClass('active-loc');
 				stickyButtonsToggle("show");
 				updateState("notepad", "jump");
+				buildRecentNotepads();
 				break;
 			case "forward":
 				$('#home').css({ opacity: 1, x: 0 }).transition({ opacity: 0, x: '-50%' }, speed, function() {
@@ -1328,6 +1371,7 @@ function buildNotepad(arg, scrPos, elem) {
 						duration: speed,
 						complete: function() {
 							$('#notepad').removeAttr('style');//fixes sortable bug
+							buildRecentNotepads();
 						}
 					});
 				});
@@ -2696,7 +2740,45 @@ function checkAllBox() {
 	}
 }
 
-// display the advanced modal window
+// display the light / dark mode modal window
+function lightDarkModal() {
+	if (idbSupport) {
+		var thisMode = (darkMode) ? locale.modal.light_dark.dark_mode : locale.modal.light_dark.light_mode;
+		var otherMode = (darkMode) ? locale.modal.light_dark.light_mode : locale.modal.light_dark.dark_mode;
+		var otherBool = (darkMode) ? false : true;
+		var bulb = (darkMode) ? "outline" : "fill";
+		var extraStyle = (darkMode) ? "" : " color: #bdc435;";
+		var buttonColor = (darkMode) ? "yellow" : "black";
+		var modalContent = [
+			'<i id="modal-close" class="fa fa-times" title="'+ locale.general.close +'" onclick="modalToggle(\'off\');"></i>',
+			'<div class="row modal-window-wrapper-top">',
+			'	<span class="center"><i class="fa fa-bulb-'+ bulb +'" style="font-size: 5em;'+ extraStyle +'"></i></span>',
+			'	<div class="spacer10"></div>',
+			'	<p class="bold">'+ locale.modal.light_dark.prompt +' '+ thisMode +'</p>',
+			'	<p>'+ locale.modal.light_dark.prompt_detail +'</p>',
+			'	<p class="smaller ital">'+ locale.modal.light_dark.additional_notice +'</p>',
+			'</div>',
+			'<div class="row modal-window-wrapper-bottom">',
+			'	<button type="button" class="button color '+ buttonColor +' large" aria-label="'+ locale.modal.light_dark.change_mode +' '+ otherMode +'" onclick="darkMode='+ otherBool +';idbSnapshotUpdate(\'mode\').then(function() { window.location.replace(window.location.href+\'?override=1\'); });">'+ locale.modal.light_dark.change_mode +' '+ otherMode +'</button>',
+			'	<button type="button" class="button large" aria-label="'+ locale.general.cancel +'" onclick="modalToggle(\'off\');">'+ locale.general.cancel +'</button>',
+			'</div>'
+		].join("\n");
+	} else {
+		var modalContent = [
+			'<i id="modal-close" class="fa fa-times" title="'+ locale.general.close +'" onclick="modalToggle(\'off\');"></i>',
+			'<div class="row modal-window-wrapper-top">',
+			'	<p class="bold">'+ locale.modal.light_dark.error +'</p>',
+			'</div>',
+			'<div class="row modal-window-wrapper-bottom">',
+				'	<button type="button" class="button large" aria-label="'+ locale.general.close +'" onclick="modalToggle(\'off\');">'+ locale.general.close +'</button>',
+			'</div>'
+		].join("\n");
+	}
+	$('#modal-window').empty().append(modalContent);
+	modalToggle("on");
+}
+
+// display the advanced settings modal window
 function advancedModal() {
 	var modalContent = [
 		'<i id="modal-close" class="fa fa-times" title="'+ locale.general.close +'" onclick="modalToggle(\'off\');"></i>',
@@ -2872,13 +2954,13 @@ function notepadRoot(ntpdstate) {
 				'		<div class="col-1"></div>',
 				'		<div class="col-2">',
 				'			<div id="spectrum-change-all">',
-				'				<button type="button" class="button empty palette color-selector" aria-label="'+ locale.notepad.change_colors +'" title="'+ locale.notepad.change_colors +'">',
+				'				<button type="button" class="button empty white palette color-selector" aria-label="'+ locale.notepad.change_colors +'" title="'+ locale.notepad.change_colors +'">',
 				'					<i class="fa fa-palette"></i>',
 				'				</button>',
 				'			</div>',
 				'		</div>',
 				'		<div class="col-3">',
-				'			<button type="button" class="button empty checkbox" aria-label="'+ locale.notepad.check_all +'" title="'+ locale.notepad.check_all +'" data-check-state="0" onclick="checkAllBox();">',
+				'			<button type="button" class="button empty white checkbox" aria-label="'+ locale.notepad.check_all +'" title="'+ locale.notepad.check_all +'" data-check-state="0" onclick="checkAllBox();">',
 				'					<i class="fa fa-checkbox"></i>',
 				'			</button>',
 				'		</div>',
@@ -2893,8 +2975,8 @@ function notepadRoot(ntpdstate) {
 			// initiate Spectrum color selector plugin for the change all color button
 			$('#spectrum-change-all .color-selector').spectrum({
 				showPaletteOnly: true,
-				showSelectionPalette: false,
 				hideAfterPaletteSelect: true,
+				allowEmpty: true,
 				preferredFormat: 'hex',
 				change: function(color) {
 					changeAllColors();
@@ -2955,7 +3037,7 @@ function fillNotepadName() {
 // fill in notepad description element
 function fillNotepadDesc() {
 	var npdescContent = [
-		'<span id="np-desc-textarea" class="break-word" contenteditable="true" data-placeholder="'+ locale.notepad.desc_placeholder +'"></span>',
+		'<span id="np-desc-textarea" class="break-word" contenteditable="true" spellcheck="false" data-placeholder="'+ locale.notepad.desc_placeholder +'"></span>',
 		'<span id="np-desc-label"><span id="np-desc-char">'+ charSplitter.countGraphemes($('#np-desc-textarea').text()) +'</span>/'+ npdescMaxChar +' '+ locale.notepad.desc_char +'</span>'
 	].join("\n");
 	$('#np-desc').empty().append(npdescContent);
@@ -3096,7 +3178,7 @@ function rowBuilder(thisLocalId, thisRemoteId, thisColor, thisChecked, thisNote)
 		... desktopTools ? ['		</div>'] : [],
 		'	</div>',
 		'	<div class="col-3">',
-		'		<button type="button" class="button empty checkbox" aria-label="'+ locale.notepad.check +'" title="'+ locale.notepad.check +'"><i class="fa fa-checkbox"></i></button>',
+		'		<button type="button" class="button empty black checkbox" aria-label="'+ locale.notepad.check +'" title="'+ locale.notepad.check +'"><i class="fa fa-checkbox"></i></button>',
 		'	</div>',
 		'	<div class="col-4">',
 		'		<div class="note break-word">'+ noteContent +'</div>',
@@ -3348,18 +3430,21 @@ $(document).ready(function() {
 		setOfflineState("system", 1);
 	}
 	$('body').attr('data-internet', (internetConn) ? 1 : 0);
+	// now that we've determined whether we're in dark mode or not, set it as a body tag attribute
+	$('body').attr('data-dark-mode', (darkMode) ? 1 : 0);
 	// pull color palette from anonynote.css
 	var root = document.querySelector(':root');
 	var rootStyles = getComputedStyle(root);
-	var colorWhite = hexReturnFull(rootStyles.getPropertyValue('--white-color'));
-	var colorGray = hexReturnFull(rootStyles.getPropertyValue('--gray-color'));
-	var colorYellow = hexReturnFull(rootStyles.getPropertyValue('--yellow-color'));
-	var colorGreen = hexReturnFull(rootStyles.getPropertyValue('--green-color'));
-	var colorCyan = hexReturnFull(rootStyles.getPropertyValue('--cyan-color'));
-	var colorBlue = hexReturnFull(rootStyles.getPropertyValue('--blue-color'));
-	var colorPurple = hexReturnFull(rootStyles.getPropertyValue('--purple-color'));
-	var colorRed = hexReturnFull(rootStyles.getPropertyValue('--red-color'));
-	var colorOrange = hexReturnFull(rootStyles.getPropertyValue('--orange-color'));
+	var d = (darkMode) ? 'dark-' : '';
+	var colorWhite = hexReturnFull(rootStyles.getPropertyValue('--'+d+'white-color'));
+	var colorGray = hexReturnFull(rootStyles.getPropertyValue('--'+d+'gray-color'));
+	var colorYellow = hexReturnFull(rootStyles.getPropertyValue('--'+d+'yellow-color'));
+	var colorGreen = hexReturnFull(rootStyles.getPropertyValue('--'+d+'green-color'));
+	var colorCyan = hexReturnFull(rootStyles.getPropertyValue('--'+d+'cyan-color'));
+	var colorBlue = hexReturnFull(rootStyles.getPropertyValue('--'+d+'blue-color'));
+	var colorPurple = hexReturnFull(rootStyles.getPropertyValue('--'+d+'purple-color'));
+	var colorRed = hexReturnFull(rootStyles.getPropertyValue('--'+d+'red-color'));
+	var colorOrange = hexReturnFull(rootStyles.getPropertyValue('--'+d+'orange-color'));
 	// populate color arrays
 	colors[0] = { "name" : "White", "hex" : colorWhite };
 	colors[1] = { "name" : "Gray", "hex" : colorGray };
@@ -3401,6 +3486,20 @@ $(document).ready(function() {
 			}
 		}
 	});
+	// set the web app mode status as a body tag attribute; if web app, add listener
+	$('body').attr('data-web-app', (isInWebApp) ? 1 : 0);
+	if (isInWebApp) {
+		$('#recent-notepads-button').on({
+			'click touchend': function() {
+				$(this).toggleClass('active');
+				if ($('#recent-notepads').css('max-height') != '0px') {
+					$('#recent-notepads').css('max-height', '0px');
+				} else {
+					$('#recent-notepads').css('max-height', $('#recent-notepads').prop('scrollHeight'));
+				}
+			}
+		});
+	}
 	// IndexedDB snapshot includes scroll position. Keep that updated on scroll.
 	$(window).scroll($.debounce(500, false, function() { idbSnapshotUpdate("pos"); }));
 	// run dispStickyExpand() now and also on screen scroll and resize
@@ -3450,7 +3549,7 @@ $(document).ready(function() {
 		return false;
 	});
 	// define the onclick actions for all the buttons on the notes
-	// these events are binded to document; they are not binded to any particular note and hence does not need to be called again
+	// these events are binded to document; they are not binded to any particular note and hence do not need to be called again
 	$(document).on("click", '.note-row .move-up-button', function() {
 		moveUp('#'+$(this).closest('.note-row').attr('id'));
 	});
@@ -3500,6 +3599,8 @@ $(document).ready(function() {
 			switch (state.loc) {
 				case "notepad":
 					notepadIdLocal = state.npidLocal;
+					catalog[notepadIdLocal]["lastOpen"] = getUnixTimestamp();
+					idbCatalogUpdate();
 					buildNotepad("jump");
 					break;
 				case "home":
@@ -3509,6 +3610,8 @@ $(document).ready(function() {
 			}
 		}
 	});
+	// build a list of recently opened notepads
+	buildRecentNotepads();
 	// execute launch state
 	if (appLoc == "notepad") {
 		if (typeof npScroll !== 'undefined') {
