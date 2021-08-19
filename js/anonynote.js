@@ -86,7 +86,7 @@ $.ajaxSetup({
 				internetConn = false;
 				$('body').attr('data-internet', 0);
 				setOfflineState("system", 1);
-				recheckInternet(90, 60);
+				recheckInternet(120, 30);
 			}
 		} else {
 			errorModal(xhr.status);
@@ -158,7 +158,7 @@ function recheckInternet(maxTimes, intervalSeconds) {
 		$.ajax({
 			type: "GET",
 			dataType: "text",
-			timeout: (1000 * (intervalSeconds - 1)) - timeoutInternet,
+			timeout: timeoutInternet,
 			url: "/ajax/is-connected",
 			success: function() {
 				internetConn = true;
@@ -317,7 +317,7 @@ function updateOnlineStatus(event) {
 				internetConn = false;
 				$('body').attr('data-internet', 0);
 				setOfflineState("system", 1);
-				recheckInternet(90, 60);
+				recheckInternet(120, 30);
 			}
 		});
 	}
@@ -3431,7 +3431,7 @@ $(document).ready(function() {
 	} else {
 		console.log('Internet connection not detected. Turning on Offline Mode.');
 		setOfflineState("system", 1);
-		recheckInternet(90, 60);
+		recheckInternet(120, 30);
 	}
 	$('body').attr('data-internet', (internetConn) ? 1 : 0);
 	// now that we've determined whether we're in dark mode or not, set it as a body tag attribute
