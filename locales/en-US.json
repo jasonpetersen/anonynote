@@ -104,7 +104,7 @@
 		"light_dark": {
 			"prompt": "You are currently in",
 			"prompt_detail": "The mode/theme of this app is based upon your OS preference. To override that, use the button below.",
-			"additional_notice": "Please note that the page will reload during this change.",
+			"additional_notice": "Please note that the application will reload during this change.",
 			"change_mode": "Change to",
 			"dark_mode": "Dark Mode",
 			"light_mode": "Light Mode",
@@ -118,7 +118,7 @@
 		},
 		"sync": {
 			"dialog": {
-				"prompt": "Would you like to sync offline data to the remote server?",
+				"prompt": "You are now online. Would you like to sync offline data to the remote server?",
 				"prompt_detail": "Your notes must be synced to access them from other devices. You can either remain in Offline Mode or sync your data now.",
 				"prompt_warning": "After a successful synchronization, the application will reload.",
 				"sync_confirm": "Sync my data",

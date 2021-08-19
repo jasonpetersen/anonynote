@@ -1,6 +1,6 @@
 //** GLOBAL APPLICATION VARIABLES **//
 
-var appVer = "5.2.0";// the application version number
+var appVer = "5.2.1";// the application version number
 
 $.holdReady( true );// hold document ready
 var holdReleaseCurrent = 0;// number; 0 to start; increment upward until we hit holdReleaseTarget
@@ -86,7 +86,7 @@ $.ajaxSetup({
 				internetConn = false;
 				$('body').attr('data-internet', 0);
 				setOfflineState("system", 1);
-				recheckInternet(3, 45);
+				recheckInternet(90, 60);
 			}
 		} else {
 			errorModal(xhr.status);
@@ -152,12 +152,13 @@ $.ajax({
 
 // re-check for an internet connection at an interval
 function recheckInternet(maxTimes, intervalSeconds) {
+	clearInterval(window.internetCheck);
 	var internetCheckCount = 0;
-	var internetCheck = setInterval(function(){
+	function checkIsConnected() {
 		$.ajax({
 			type: "GET",
 			dataType: "text",
-			timeout: 1000 * (intervalSeconds - 1),
+			timeout: (1000 * (intervalSeconds - 1)) - timeoutInternet,
 			url: "/ajax/is-connected",
 			success: function() {
 				internetConn = true;
@@ -167,10 +168,12 @@ function recheckInternet(maxTimes, intervalSeconds) {
 			},
 			error: function(xhr, status, errorThrown) {
 				internetCheckCount++;
-				if (internetCheckCount >= maxTimes) clearInterval(internetCheck);
+				if (internetCheckCount >= maxTimes) clearInterval(window.internetCheck);
 			}
 		});
-	}, 1000 * intervalSeconds);
+	}
+	setTimeout(checkIsConnected, timeoutInternet);
+	window.internetCheck = setInterval(checkIsConnected, 1000 * intervalSeconds);
 }
 
 // load the locale JSON file
@@ -314,7 +317,7 @@ function updateOnlineStatus(event) {
 				internetConn = false;
 				$('body').attr('data-internet', 0);
 				setOfflineState("system", 1);
-				recheckInternet(3, 45);
+				recheckInternet(90, 60);
 			}
 		});
 	}
@@ -3428,6 +3431,7 @@ $(document).ready(function() {
 	} else {
 		console.log('Internet connection not detected. Turning on Offline Mode.');
 		setOfflineState("system", 1);
+		recheckInternet(90, 60);
 	}
 	$('body').attr('data-internet', (internetConn) ? 1 : 0);
 	// now that we've determined whether we're in dark mode or not, set it as a body tag attribute
