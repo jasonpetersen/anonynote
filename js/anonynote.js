@@ -319,7 +319,7 @@ function updateOnlineStatus(event) {
 				internetConn = false;
 				$('body').attr('data-internet', 0);
 				setOfflineState("system", 1);
-				recheckInternet(15, 8);
+				recheckInternet(15, 4);
 			}
 		});
 	}
@@ -410,7 +410,7 @@ function splashHandler(toggle) {
 	}
 }
 
-// used to limit IDB function puts for quick transactions that are likely to succeed @@@
+// used to limit IDB function puts for quick transactions that are likely to succeed
 function npCommitHandler(toggle, sync, ts) {
 	recheckInternet(15, 4);// if the internet connection is poor or nonexistent, check it again
 	if (toggle == "offline") {
@@ -3435,7 +3435,7 @@ $(document).ready(function() {
 	} else {
 		console.log('Internet connection not detected. Turning on Offline Mode.');
 		setOfflineState("system", 1);
-		recheckInternet(15, 8);
+		recheckInternet(15, 12);
 	}
 	$('body').attr('data-internet', (internetConn) ? 1 : 0);
 	// now that we've determined whether we're in dark mode or not, set it as a body tag attribute
