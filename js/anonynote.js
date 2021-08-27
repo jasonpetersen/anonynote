@@ -1,6 +1,6 @@
 //** GLOBAL APPLICATION VARIABLES **//
 
-var appVer = "5.2.1";// the application version number
+var appVer = "5.2.2";// the application version number
 
 $.holdReady( true );// hold document ready
 var holdReleaseCurrent = 0;// number; 0 to start; increment upward until we hit holdReleaseTarget
@@ -86,7 +86,7 @@ $.ajaxSetup({
 				internetConn = false;
 				$('body').attr('data-internet', 0);
 				setOfflineState("system", 1);
-				recheckInternet(120, 30);
+				recheckInternet(15, 8);
 			}
 		} else {
 			errorModal(xhr.status);
@@ -152,6 +152,8 @@ $.ajax({
 
 // re-check for an internet connection at an interval
 function recheckInternet(maxTimes, intervalSeconds) {
+	if ((internetConn) || (!networkConn)) return;// conditions for early bailing
+	clearTimeout(window.internetCheckFirst);
 	clearInterval(window.internetCheck);
 	var internetCheckCount = 0;
 	function checkIsConnected() {
@@ -172,7 +174,7 @@ function recheckInternet(maxTimes, intervalSeconds) {
 			}
 		});
 	}
-	setTimeout(checkIsConnected, timeoutInternet);
+	window.internetCheckFirst = setTimeout(checkIsConnected, timeoutInternet);
 	window.internetCheck = setInterval(checkIsConnected, 1000 * intervalSeconds);
 }
 
@@ -317,7 +319,7 @@ function updateOnlineStatus(event) {
 				internetConn = false;
 				$('body').attr('data-internet', 0);
 				setOfflineState("system", 1);
-				recheckInternet(120, 30);
+				recheckInternet(15, 8);
 			}
 		});
 	}
@@ -408,8 +410,9 @@ function splashHandler(toggle) {
 	}
 }
 
-// used to limit IDB function puts for quick transactions that are likely to succeed
+// used to limit IDB function puts for quick transactions that are likely to succeed @@@
 function npCommitHandler(toggle, sync, ts) {
+	recheckInternet(15, 4);// if the internet connection is poor or nonexistent, check it again
 	if (toggle == "offline") {
 		idbCatalogUpdate();
 		if (sync) {
@@ -434,6 +437,7 @@ function npCommitHandler(toggle, sync, ts) {
 	}
 }
 function noteCommitHandler(toggle, whichid, sync, ts, option) {
+	recheckInternet(15, 4);// if the internet connection is poor or nonexistent, check it again
 	switch (toggle) {
 		case "offline":
 			if ((sync) && (option == "delete")) { idbNoteDelete(whichid); } else { idbNoteUpdate(whichid);	}
@@ -3431,7 +3435,7 @@ $(document).ready(function() {
 	} else {
 		console.log('Internet connection not detected. Turning on Offline Mode.');
 		setOfflineState("system", 1);
-		recheckInternet(120, 30);
+		recheckInternet(15, 8);
 	}
 	$('body').attr('data-internet', (internetConn) ? 1 : 0);
 	// now that we've determined whether we're in dark mode or not, set it as a body tag attribute
