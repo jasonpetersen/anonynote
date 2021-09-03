@@ -1,4 +1,4 @@
 <?php
-echo 'online';
+echo '200';
 exit;
 ?>

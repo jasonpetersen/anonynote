@@ -1,6 +1,6 @@
 //** GLOBAL APPLICATION VARIABLES **//
 
-var appVer = "5.2.2";// the application version number
+var appVer = "5.2.3";// the application version number
 
 $.holdReady( true );// hold document ready
 var holdReleaseCurrent = 0;// number; 0 to start; increment upward until we hit holdReleaseTarget
@@ -412,8 +412,8 @@ function splashHandler(toggle) {
 
 // used to limit IDB function puts for quick transactions that are likely to succeed
 function npCommitHandler(toggle, sync, ts) {
-	recheckInternet(15, 4);// if the internet connection is poor or nonexistent, check it again
 	if (toggle == "offline") {
+		recheckInternet(15, 4);// if the internet connection is poor or nonexistent, check it again
 		idbCatalogUpdate();
 		if (sync) {
 			globalSync = false;
@@ -437,9 +437,9 @@ function npCommitHandler(toggle, sync, ts) {
 	}
 }
 function noteCommitHandler(toggle, whichid, sync, ts, option) {
-	recheckInternet(15, 4);// if the internet connection is poor or nonexistent, check it again
 	switch (toggle) {
 		case "offline":
+			recheckInternet(15, 4);// if the internet connection is poor or nonexistent, check it again
 			if ((sync) && (option == "delete")) { idbNoteDelete(whichid); } else { idbNoteUpdate(whichid);	}
 			if (sync) {
 				globalSync = false;
