@@ -3468,6 +3468,8 @@ $(document).ready(function() {
 	for (var c = 0; c < colors.length; c++) {
 		colorHexToId[colors[c]["hex"]] = c;
 	}
+	// add styles that utilize JSON data
+	document.styleSheets[2].insertRule('.sp-container.sp-clear-enabled .sp-palette-container:before { content: "'+ locale.notepad.change_colors +'"; }');
 	// prevent all form submits from reloading the page
 	$(document).on("submit", 'form', function(e) {
 		e.preventDefault();

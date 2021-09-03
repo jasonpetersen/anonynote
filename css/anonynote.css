@@ -1961,6 +1961,21 @@ body.noscroll #sticky-buttons {
 	border: solid 1px #c0c0c0;
 }
 
+.sp-container.sp-clear-enabled .sp-palette-container {
+	width: 90px;
+}
+
+.sp-container.sp-clear-enabled .sp-palette-container:before {
+	display: block;
+	color: #000;
+	line-height: 14px;
+	font-size: 14px;
+	font-weight: bold;
+	text-align: center;
+	text-transform: uppercase;
+	margin-bottom: 5px;
+}
+
 /* PRIMER TOOLTIPS v2.7.0 */
 /* https://github.com/orbitbot/primer-precompiled */
 
