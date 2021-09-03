@@ -2986,8 +2986,10 @@ function notepadRoot(ntpdstate) {
 				allowEmpty: true,
 				preferredFormat: 'hex',
 				change: function(color) {
-					changeAllColors();
-					$(this).spectrum("set", "");
+					if (color != null) {// null indicates a clickout; if so, take no action
+						changeAllColors();
+						$(this).spectrum("set", "");
+					}
 				},
 				palette: [
 					[colors[0]['hex'], colors[1]['hex'], colors[2]['hex']],
