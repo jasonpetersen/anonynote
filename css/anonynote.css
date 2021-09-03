@@ -1929,6 +1929,38 @@ body.noscroll #sticky-buttons {
 	)
 }
 
+/* SPECTRUM MODS */
+
+.sp-container {
+	border: solid 1px #999999;
+}
+
+.sp-replacer {
+	border: solid 1px #000000;
+}
+
+.sp-replacer:hover, .sp-replacer.sp-active {
+	border-color: #999999;
+}
+
+.sp-dd {
+	height: 24px;
+	line-height: 24px;
+}
+
+.sp-preview {
+	width: 24px;
+	height: 24px;
+	margin-top: 1px;
+}
+
+.sp-palette .sp-thumb-el {
+	width: 24px;
+	height: 24px;
+	margin: 2px;
+	border: solid 1px #c0c0c0;
+}
+
 /* PRIMER TOOLTIPS v2.7.0 */
 /* https://github.com/orbitbot/primer-precompiled */
 
@@ -2393,10 +2425,10 @@ body[data-dark-mode="1"] .tooltipped::before {
 body[data-dark-mode="1"] #notepad-table .note-row[data-is-checked="1"][data-color="0"] {
 	background-image: repeating-linear-gradient(
 		45deg,
-		rgba(0, 0, 0, 0.2),
-		rgba(0, 0, 0, 0.2) 10px,
-		rgba(255, 255, 255, 0.2) 10px,
-		rgba(255, 255, 255, 0.2) 20px
+		rgba(0, 0, 0, 0.15),
+		rgba(0, 0, 0, 0.15) 10px,
+		rgba(255, 255, 255, 0.15) 10px,
+		rgba(255, 255, 255, 0.15) 20px
 	)
 }
 
