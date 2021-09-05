@@ -1,6 +1,6 @@
 //** GLOBAL APPLICATION VARIABLES **//
 
-var appVer = "5.2.3";// the application version number
+var appVer = "5.2.4";// the application version number
 
 $.holdReady( true );// hold document ready
 var holdReleaseCurrent = 0;// number; 0 to start; increment upward until we hit holdReleaseTarget
@@ -3469,7 +3469,10 @@ $(document).ready(function() {
 		colorHexToId[colors[c]["hex"]] = c;
 	}
 	// add styles that utilize JSON data
-	document.styleSheets[1].insertRule('.sp-container.sp-clear-enabled .sp-palette-container:before { content: "'+ locale.notepad.change_colors +'"; }');
+	var styleEl = document.createElement('style'), jsSheet;
+	document.head.appendChild(styleEl);
+	jsSheet = styleEl.sheet;
+	jsSheet.insertRule('.sp-container.sp-clear-enabled .sp-palette-container:before { content: "'+ locale.notepad.change_colors +'"; }');
 	// prevent all form submits from reloading the page
 	$(document).on("submit", 'form', function(e) {
 		e.preventDefault();

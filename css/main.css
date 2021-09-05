@@ -1138,7 +1138,7 @@ body[data-dark-mode="1"] .quform-input textarea {
 }
 
 body[data-dark-mode="1"] .button:not(.white):not(.red):not(.green):not(.blue):not(.cyan):not(.magenta):not(.yellow):not(.orange):not(.transparent):not(.empty):not(.circle) {
-	background-color: #fff;
+	background-color: #eee;
 	color: #282828;
 }
 
@@ -1171,7 +1171,7 @@ body[data-dark-mode="1"] .button.black {
 
 body[data-dark-mode="1"] .button.black,
 body[data-dark-mode="1"] .button.black:active {
-	background-color: #fff;
+	background-color: #eee;
 }
 
 body[data-dark-mode="1"] .button.black.empty,

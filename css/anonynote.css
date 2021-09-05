@@ -391,6 +391,10 @@ body[data-idb-support="0"] #app-toolbar .fa-database {
 	margin-bottom: 5px;
 }
 
+#app-toolbar #light-dark-modal-button i {
+	text-shadow: 0 0 20px #bdc435;
+}
+
 /* POP UP MESSAGE */
 
 #popup-status {
@@ -1269,7 +1273,6 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 #notepad-table .col-4 .spectrum {
 	display: inline-block;
 	vertical-align: top;
-	margin-top: 2px;
 }
 
 #notepad-table .col-4 a {
@@ -1487,6 +1490,9 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 /* NOTE EDIT */
 
 #color-selector-wrapper {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
 	margin-bottom: 20px;
 }
 
@@ -1494,6 +1500,14 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 	float: left;
 	line-height: 35px;
 	margin-right: 10px;
+}
+
+#color-selector-wrapper .sp-replacer {
+	background-color: var(--white-medium-color);
+}
+
+.no-touchevents #color-selector-wrapper .sp-replacer:hover {
+	background-color: var(--white-dark-color);
 }
 
 #note-text {
@@ -1677,6 +1691,7 @@ body.noscroll #sticky-buttons {
 	background-color: var(--white-color);
 }
 
+.note-row[data-color="0"] .sp-replacer,
 .note-row[data-color="0"] button {
 	background-color: var(--white-medium-color);
 }
@@ -1690,6 +1705,7 @@ body.noscroll #sticky-buttons {
 
 .note-row[data-color="0"] .note span::selection,
 .note-row[data-color="0"] .note a::selection,
+.no-touchevents .note-row[data-color="0"] .sp-replacer:hover,
 .no-touchevents .note-row[data-color="0"] button:hover {
 	background-color: var(--white-dark-color);
 }
@@ -1700,6 +1716,7 @@ body.noscroll #sticky-buttons {
 	background-color: var(--gray-color);
 }
 
+.note-row[data-color="1"] .sp-replacer,
 .note-row[data-color="1"] button {
 	background-color: var(--gray-medium-color);
 }
@@ -1713,6 +1730,7 @@ body.noscroll #sticky-buttons {
 
 .note-row[data-color="1"] .note span::selection,
 .note-row[data-color="1"] .note a::selection,
+.no-touchevents .note-row[data-color="1"] .sp-replacer:hover,
 .no-touchevents .note-row[data-color="1"] button:hover {
 	background-color: var(--gray-dark-color);
 }
@@ -1723,6 +1741,7 @@ body.noscroll #sticky-buttons {
 	background-color: var(--yellow-color);
 }
 
+.note-row[data-color="2"] .sp-replacer,
 .note-row[data-color="2"] button {
 	background-color: var(--yellow-medium-color);
 }
@@ -1736,6 +1755,7 @@ body.noscroll #sticky-buttons {
 
 .note-row[data-color="2"] .note span::selection,
 .note-row[data-color="2"] .note a::selection,
+.no-touchevents .note-row[data-color="2"] .sp-replacer:hover,
 .no-touchevents .note-row[data-color="2"] button:hover {
 	background-color: var(--yellow-dark-color);
 }
@@ -1746,6 +1766,7 @@ body.noscroll #sticky-buttons {
 	background-color: var(--green-color);
 }
 
+.note-row[data-color="3"] .sp-replacer,
 .note-row[data-color="3"] button {
 	background-color: var(--green-medium-color);
 }
@@ -1759,6 +1780,7 @@ body.noscroll #sticky-buttons {
 
 .note-row[data-color="3"] .note span::selection,
 .note-row[data-color="3"] .note a::selection,
+.no-touchevents .note-row[data-color="3"] .sp-replacer:hover,
 .no-touchevents .note-row[data-color="3"] button:hover {
 	background-color: var(--green-dark-color);
 }
@@ -1769,6 +1791,7 @@ body.noscroll #sticky-buttons {
 	background-color: var(--cyan-color);
 }
 
+.note-row[data-color="4"] .sp-replacer,
 .note-row[data-color="4"] button {
 	background-color: var(--cyan-medium-color);
 }
@@ -1782,6 +1805,7 @@ body.noscroll #sticky-buttons {
 
 .note-row[data-color="4"] .note span::selection,
 .note-row[data-color="4"] .note a::selection,
+.no-touchevents .note-row[data-color="4"] .sp-replacer:hover,
 .no-touchevents .note-row[data-color="4"] button:hover {
 	background-color: var(--cyan-dark-color);
 }
@@ -1792,6 +1816,7 @@ body.noscroll #sticky-buttons {
 	background-color: var(--blue-color);
 }
 
+.note-row[data-color="5"] .sp-replacer,
 .note-row[data-color="5"] button {
 	background-color: var(--blue-medium-color);
 }
@@ -1805,6 +1830,7 @@ body.noscroll #sticky-buttons {
 
 .note-row[data-color="5"] .note span::selection,
 .note-row[data-color="5"] .note a::selection,
+.no-touchevents .note-row[data-color="5"] .sp-replacer:hover,
 .no-touchevents .note-row[data-color="5"] button:hover {
 	background-color: var(--blue-dark-color);
 }
@@ -1815,6 +1841,7 @@ body.noscroll #sticky-buttons {
 	background-color: var(--purple-color);
 }
 
+.note-row[data-color="6"] .sp-replacer,
 .note-row[data-color="6"] button {
 	background-color: var(--purple-medium-color);
 }
@@ -1828,6 +1855,7 @@ body.noscroll #sticky-buttons {
 
 .note-row[data-color="6"] .note span::selection,
 .note-row[data-color="6"] .note a::selection,
+.no-touchevents .note-row[data-color="6"] .sp-replacer:hover,
 .no-touchevents .note-row[data-color="6"] button:hover {
 	background-color: var(--purple-dark-color);
 }
@@ -1838,6 +1866,7 @@ body.noscroll #sticky-buttons {
 	background-color: var(--red-color);
 }
 
+.note-row[data-color="7"] .sp-replacer,
 .note-row[data-color="7"] button {
 	background-color: var(--red-medium-color);
 }
@@ -1851,6 +1880,7 @@ body.noscroll #sticky-buttons {
 
 .note-row[data-color="7"] .note span::selection,
 .note-row[data-color="7"] .note a::selection,
+.no-touchevents .note-row[data-color="7"] .sp-replacer:hover,
 .no-touchevents .note-row[data-color="7"] button:hover {
 	background-color: var(--red-dark-color);
 }
@@ -1861,6 +1891,7 @@ body.noscroll #sticky-buttons {
 	background-color: var(--orange-color);
 }
 
+.note-row[data-color="8"] .sp-replacer,
 .note-row[data-color="8"] button {
 	background-color: var(--orange-medium-color);
 }
@@ -1874,6 +1905,7 @@ body.noscroll #sticky-buttons {
 
 .note-row[data-color="8"] .note span::selection,
 .note-row[data-color="8"] .note a::selection,
+.no-touchevents .note-row[data-color="8"] .sp-replacer:hover,
 .no-touchevents .note-row[data-color="8"] button:hover {
 	background-color: var(--orange-dark-color);
 }
@@ -1931,45 +1963,148 @@ body.noscroll #sticky-buttons {
 
 /* SPECTRUM MODS */
 
-.sp-container {
-	border: solid 1px #999999;
-}
+/* buttons */
 
 .sp-replacer {
-	border: solid 1px #000000;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	padding: 0;
+	margin: 0;
+	border: none;
+	-webkit-border-radius: 50%;
+	-moz-border-radius: 50%;
+	border-radius: 50%;
+	transition: all .1s linear;
 }
 
-.sp-replacer:hover, .sp-replacer.sp-active {
-	border-color: #999999;
+.sp-replacer:active {
+	position: relative;
+	top: 1px;
 }
 
 .sp-dd {
-	height: 24px;
-	line-height: 24px;
+	display: none;
 }
 
 .sp-preview {
-	width: 24px;
-	height: 24px;
-	margin-top: 1px;
+	font-family: 'icomoon' !important;
+	font-size: 30px;
+	width: 30px;
+	height: 30px;
+	margin: 0;
+	border: none;
+	color: #000;
+}
+
+.sp-preview:before {
+	content: "\2728";
+}
+
+.sp-preview, .sp-alpha, .sp-thumb-el {
+	background-image: none;
+}
+
+.sp-preview-inner {
+	display: none;
+}
+
+/* palette */
+
+.sp-container {
+	background-color: #282828;
+	border: none;
+	visibility: visible;
+	opacity: 1;
+	-webkit-transition: opacity 0.3s linear;
+	-moz-transition: opacity 0.3s linear;
+	-o-transition: opacity 0.3s linear;
+	-ms-transition: opacity 0.3s linear;
+	transition: opacity 0.3s linear;
+}
+
+.sp-container.sp-hidden {
+	visibility: hidden;
+	opacity: 0;
+}
+
+#app .sp-hidden {
+	display: inline-block !important;
+}
+
+.sp-container .sp-palette-container {
+	-webkit-transform: scale(1);
+	-moz-transform: scale(1);
+	-o-transform: scale(1);
+	-ms-transform: scale(1);
+	transform: scale(1);
+	transform-origin: top center;
+	-webkit-transition: -webkit-transform 0.4s cubic-bezier(.47,1.64,.41,.8);
+	-moz-transition: -moz-transform 0.4s cubic-bezier(.47,1.64,.41,.8);
+	-o-transition: -o-transform 0.4s cubic-bezier(.47,1.64,.41,.8);
+	-ms-transition: -ms-transform 0.4s cubic-bezier(.47,1.64,.41,.8);
+	transition: transform 0.4s cubic-bezier(.47,1.64,.41,.8);
+	transition-delay: 0.2s;
+}
+
+.sp-container.sp-hidden .sp-palette-container {
+	-webkit-transform: scale(0);
+	-moz-transform: scale(0);
+	-o-transform: scale(0);
+	-ms-transform: scale(0);
+	transform: scale(0);
 }
 
 .sp-palette .sp-thumb-el {
-	width: 24px;
-	height: 24px;
-	margin: 2px;
-	border: solid 1px #c0c0c0;
+	width: 35px;
+	height: 35px;
+	margin: 7px;
+	border: none;
 }
 
+.sp-palette .sp-thumb-inner {
+	width: 37px;
+	height: 37px;
+	margin: -1px 0 0 -1px;
+	border: none;
+	box-sizing: border-box;
+}
+
+.no-touchevents .sp-palette .sp-thumb-inner:hover {
+	border: 3px solid #ff0000;
+}
+
+.sp-palette .sp-thumb-light.sp-thumb-active .sp-thumb-inner,
+.sp-palette .sp-thumb-dark.sp-thumb-active .sp-thumb-inner {
+	background-image: none;
+	font-family: 'icomoon' !important;
+	font-size: 25px;
+}
+
+.sp-palette .sp-thumb-active .sp-thumb-inner:before {
+	content: "\2714";
+	display: block;
+	margin: 6px;
+}
+
+.no-touchevents .sp-palette .sp-thumb-active .sp-thumb-inner:hover:before {
+	margin: 3px;
+}
+
+/* change all container */
+
 .sp-container.sp-clear-enabled .sp-palette-container {
-	width: 90px;
+	width: 147px;
 }
 
 .sp-container.sp-clear-enabled .sp-palette-container:before {
 	display: block;
-	color: #000;
-	line-height: 14px;
-	font-size: 14px;
+	color: #fff;
+	line-height: 18px;
+	font-size: 18px;
 	font-weight: bold;
 	text-align: center;
 	text-transform: uppercase;
@@ -2283,24 +2418,6 @@ body.noscroll #sticky-buttons {
 	}
 }
 
-/* MISCELLANEOUS OVERRIDES */
-
-.sp-preview-inner {
-	width: 26px;
-	height: 26px;
-	margin: -1px 0 0 -1px;
-	border: solid 1px #222;
-	box-sizing: border-box;
-}
-
-.sp-palette .sp-thumb-inner {
-	width: 26px;
-	height: 26px;
-	margin: -1px 0 0 -1px;
-	border: solid 1px silver;
-	box-sizing: border-box;
-}
-
 /* DARK MODE */
 
 body[data-dark-mode="1"] .logo-homepage-path {
@@ -2339,16 +2456,16 @@ body[data-dark-mode="1"] #modal #modal-window #json-wrapper a {
 }
 
 body[data-dark-mode="1"] #popup-status {
-	background-color: #fff;
+	background-color: #eee;
 	color: #282828;
 }
 
 body#app[data-dark-mode="1"] #app-toolbar {
-	background-color: #fff;
+	background-color: #eee;
 }
 
 body[data-dark-mode="1"] #app-toolbar #app-toolbar-handle-background {
-	border-right: 20px solid #fff;
+	border-right: 20px solid #eee;
 }
 
 body[data-dark-mode="1"] #app-toolbar #app-toolbar-status-wrapper {
@@ -2413,6 +2530,7 @@ body[data-dark-mode="1"] #notepad-table .note-row {
 	border: 1pt solid #fff;
 }
 
+body[data-dark-mode="1"] .sp-preview,
 body[data-dark-mode="1"] .note-row button,
 .no-touchevents body[data-dark-mode="1"] .note-row button:hover,
 .no-touchevents body[data-dark-mode="1"] .note-row .note a:hover,
@@ -2451,6 +2569,7 @@ body[data-dark-mode="1"] .note-row[data-color="0"] {
 	background-color: var(--dark-white-color);
 }
 
+body[data-dark-mode="1"] .note-row[data-color="0"] .sp-replacer,
 body[data-dark-mode="1"] .note-row[data-color="0"] button {
 	background-color: var(--dark-white-medium-color);
 }
@@ -2464,6 +2583,7 @@ body[data-dark-mode="1"] .note-row[data-color="0"] .note a:active {
 
 body[data-dark-mode="1"] .note-row[data-color="0"] .note span::selection,
 body[data-dark-mode="1"] .note-row[data-color="0"] .note a::selection,
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="0"] .sp-replacer:hover,
 .no-touchevents body[data-dark-mode="1"] .note-row[data-color="0"] button:hover {
 	background-color: var(--dark-white-light-color);
 }
@@ -2472,7 +2592,9 @@ body[data-dark-mode="1"] .note-row[data-color="1"] {
 	background-color: var(--dark-gray-color);
 }
 
-body[data-dark-mode="1"] .note-row[data-color="1"] button {
+body[data-dark-mode="1"] .note-row[data-color="1"] .sp-replacer,
+body[data-dark-mode="1"] .note-row[data-color="1"] button,
+body[data-dark-mode="1"] #color-selector-wrapper .sp-replacer {
 	background-color: var(--dark-gray-medium-color);
 }
 
@@ -2485,7 +2607,9 @@ body[data-dark-mode="1"] .note-row[data-color="1"] .note a:active {
 
 body[data-dark-mode="1"] .note-row[data-color="1"] .note span::selection,
 body[data-dark-mode="1"] .note-row[data-color="1"] .note a::selection,
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="1"] button:hover {
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="1"] .sp-replacer:hover,
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="1"] button:hover,
+.no-touchevents body[data-dark-mode="1"] #color-selector-wrapper .sp-replacer:hover {
 	background-color: var(--dark-gray-light-color);
 }
 
@@ -2493,6 +2617,7 @@ body[data-dark-mode="1"] .note-row[data-color="2"] {
 	background-color: var(--dark-yellow-color);
 }
 
+body[data-dark-mode="1"] .note-row[data-color="2"] .sp-replacer,
 body[data-dark-mode="1"] .note-row[data-color="2"] button {
 	background-color: var(--dark-yellow-medium-color);
 }
@@ -2506,6 +2631,7 @@ body[data-dark-mode="1"] .note-row[data-color="2"] .note a:active {
 
 body[data-dark-mode="1"] .note-row[data-color="2"] .note span::selection,
 body[data-dark-mode="1"] .note-row[data-color="2"] .note a::selection,
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="2"] .sp-replacer:hover,
 .no-touchevents body[data-dark-mode="1"] .note-row[data-color="2"] button:hover {
 	background-color: var(--dark-yellow-light-color);
 }
@@ -2514,6 +2640,7 @@ body[data-dark-mode="1"] .note-row[data-color="3"] {
 	background-color: var(--dark-green-color);
 }
 
+body[data-dark-mode="1"] .note-row[data-color="3"] .sp-replacer,
 body[data-dark-mode="1"] .note-row[data-color="3"] button {
 	background-color: var(--dark-green-medium-color);
 }
@@ -2527,6 +2654,7 @@ body[data-dark-mode="1"] .note-row[data-color="3"] .note a:active {
 
 body[data-dark-mode="1"] .note-row[data-color="3"] .note span::selection,
 body[data-dark-mode="1"] .note-row[data-color="3"] .note a::selection,
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="3"] .sp-replacer:hover,
 .no-touchevents body[data-dark-mode="1"] .note-row[data-color="3"] button:hover {
 	background-color: var(--dark-green-light-color);
 }
@@ -2535,6 +2663,7 @@ body[data-dark-mode="1"] .note-row[data-color="4"] {
 	background-color: var(--dark-cyan-color);
 }
 
+body[data-dark-mode="1"] .note-row[data-color="4"] .sp-replacer,
 body[data-dark-mode="1"] .note-row[data-color="4"] button {
 	background-color: var(--dark-cyan-medium-color);
 }
@@ -2548,6 +2677,7 @@ body[data-dark-mode="1"] .note-row[data-color="4"] .note a:active {
 
 body[data-dark-mode="1"] .note-row[data-color="4"] .note span::selection,
 body[data-dark-mode="1"] .note-row[data-color="4"] .note a::selection,
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="4"] .sp-replacer:hover,
 .no-touchevents body[data-dark-mode="1"] .note-row[data-color="4"] button:hover {
 	background-color: var(--dark-cyan-light-color);
 }
@@ -2556,6 +2686,7 @@ body[data-dark-mode="1"] .note-row[data-color="5"] {
 	background-color: var(--dark-blue-color);
 }
 
+body[data-dark-mode="1"] .note-row[data-color="5"] .sp-replacer,
 body[data-dark-mode="1"] .note-row[data-color="5"] button {
 	background-color: var(--dark-blue-medium-color);
 }
@@ -2569,6 +2700,7 @@ body[data-dark-mode="1"] .note-row[data-color="5"] .note a:active {
 
 body[data-dark-mode="1"] .note-row[data-color="5"] .note span::selection,
 body[data-dark-mode="1"] .note-row[data-color="5"] .note a::selection,
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="5"] .sp-replacer:hover,
 .no-touchevents body[data-dark-mode="1"] .note-row[data-color="5"] button:hover {
 	background-color: var(--dark-blue-light-color);
 }
@@ -2577,6 +2709,7 @@ body[data-dark-mode="1"] .note-row[data-color="6"] {
 	background-color: var(--dark-purple-color);
 }
 
+body[data-dark-mode="1"] .note-row[data-color="6"] .sp-replacer,
 body[data-dark-mode="1"] .note-row[data-color="6"] button {
 	background-color: var(--dark-purple-medium-color);
 }
@@ -2590,6 +2723,7 @@ body[data-dark-mode="1"] .note-row[data-color="6"] .note a:active {
 
 body[data-dark-mode="1"] .note-row[data-color="6"] .note span::selection,
 body[data-dark-mode="1"] .note-row[data-color="6"] .note a::selection,
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="6"] .sp-replacer:hover,
 .no-touchevents body[data-dark-mode="1"] .note-row[data-color="6"] button:hover {
 	background-color: var(--dark-purple-light-color);
 }
@@ -2598,6 +2732,7 @@ body[data-dark-mode="1"] .note-row[data-color="7"] {
 	background-color: var(--dark-red-color);
 }
 
+body[data-dark-mode="1"] .note-row[data-color="7"] .sp-replacer,
 body[data-dark-mode="1"] .note-row[data-color="7"] button {
 	background-color: var(--dark-red-medium-color);
 }
@@ -2611,6 +2746,7 @@ body[data-dark-mode="1"] .note-row[data-color="7"] .note a:active {
 
 body[data-dark-mode="1"] .note-row[data-color="7"] .note span::selection,
 body[data-dark-mode="1"] .note-row[data-color="7"] .note a::selection,
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="7"] .sp-replacer:hover,
 .no-touchevents body[data-dark-mode="1"] .note-row[data-color="7"] button:hover {
 	background-color: var(--dark-red-light-color);
 }
@@ -2619,6 +2755,7 @@ body[data-dark-mode="1"] .note-row[data-color="8"] {
 	background-color: var(--dark-orange-color);
 }
 
+body[data-dark-mode="1"] .note-row[data-color="8"] .sp-replacer,
 body[data-dark-mode="1"] .note-row[data-color="8"] button {
 	background-color: var(--dark-orange-medium-color);
 }
@@ -2632,10 +2769,19 @@ body[data-dark-mode="1"] .note-row[data-color="8"] .note a:active {
 
 body[data-dark-mode="1"] .note-row[data-color="8"] .note span::selection,
 body[data-dark-mode="1"] .note-row[data-color="8"] .note a::selection,
+.no-touchevents body[data-dark-mode="1"] .note-row[data-color="8"] .sp-replacer:hover,
 .no-touchevents body[data-dark-mode="1"] .note-row[data-color="8"] button:hover {
 	background-color: var(--dark-orange-light-color);
 }
 
 .no-touchevents body[data-dark-mode="1"] .note-row .note a:hover {
 	color: #fff;
+}
+
+body[data-dark-mode="1"] .sp-container {
+	background-color: #eee;
+}
+
+body[data-dark-mode="1"] .sp-container.sp-clear-enabled .sp-palette-container:before {
+	color: #000;
 }
