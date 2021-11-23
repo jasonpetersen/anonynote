@@ -118,8 +118,8 @@
 		},
 		"sync": {
 			"dialog": {
-				"prompt": "You are now online. Would you like to sync offline data to the remote server?",
-				"prompt_detail": "Your notes must be synced to access them from other devices. You can either remain in Offline Mode or sync your data now.",
+				"prompt": "You are now online. Would you like to sync offline changes to the remote server?",
+				"prompt_detail": "During this process, your local database will be purged. Your recently opened notepads list will be cleared. Preferences will be reset.",
 				"prompt_warning": "After a successful synchronization, the application will reload.",
 				"sync_confirm": "Sync my data",
 				"sync_decline": "Return to Offline Mode"
