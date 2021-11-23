@@ -1,6 +1,6 @@
 //** GLOBAL APPLICATION VARIABLES **//
 
-var appVer = "5.2.4";// the application version number
+var appVer = "5.2.5";// the application version number
 
 $.holdReady( true );// hold document ready
 var holdReleaseCurrent = 0;// number; 0 to start; increment upward until we hit holdReleaseTarget
@@ -43,6 +43,7 @@ var npLaunchFail;// boolean; set to true if there was a failed attempt to launch
 var appLoc = "home";// holds the current application location (home, notepad, or edit); "home" by default
 var appLaunched = false;// boolean; set to true when the application is finished prepping and actually running
 var actionQueue = [];// an array for temporary storage, used in the delay and execution of IDB puts
+var quickAddFocusOut = void 0;// // holds a timer from the setTimeout() function
 var colors = [];// an array that will later hold the palette for the color picker
 var colorHexToId = [];// another array that will later hold the palette for the color picker
 
@@ -1036,7 +1037,12 @@ function buildHome(dir) {
 			updateState("home", "jump");
 			break;
 		case "backward":
-			stickyButtonsToggle("hide");
+			if (typeof quickAddFocusOut !== 'undefined') {
+				clearTimeout(quickAddFocusOut);
+				quickAddFocusOut = void 0;
+			} else {
+				stickyButtonsToggle("hide");
+			}
 			$('#notepad').css({ opacity: 1, x: 0 }).transition({ opacity: 0, x: '50%' }, speed, function() {
 				updateState("home", "push");
 				$('.color-selector').spectrum("destroy");// destroy all color picker instances
@@ -1295,7 +1301,6 @@ function buildNotepad(arg, scrPos, elem) {
 		fillNotepadName();
 		fillNotepadDesc();
 		// add listeners to quick add input
-		var quickAddFocusOut;
 		$('#quick-add-input').on({
 			'input': function() {
 				if ($(this).val() == "") {
@@ -1310,11 +1315,15 @@ function buildNotepad(arg, scrPos, elem) {
 				}
 			},
 			'focusin': function() {
-				clearTimeout(quickAddFocusOut);
-				stickyButtonsToggle("hide");
+				if (typeof quickAddFocusOut !== 'undefined') {
+					clearTimeout(quickAddFocusOut);
+					quickAddFocusOut = void 0;
+				} else {
+					stickyButtonsToggle("hide");
+				}
 			},
 			'focusout': function() {
-				quickAddFocusOut = setTimeout(function() { stickyButtonsToggle("show"); }, 100);
+				quickAddFocusOut = setTimeout(function() { stickyButtonsToggle("show"); quickAddFocusOut = void 0; }, 100);
 			}
 		});
 		// lock the notepad if specified in database
@@ -1417,7 +1426,12 @@ function renameNotepad(action) {
 				}
 			});
 			$('#np-rename-input').focus();
-			stickyButtonsToggle("hide");
+			if (typeof quickAddFocusOut !== 'undefined') {
+				clearTimeout(quickAddFocusOut);
+				quickAddFocusOut = void 0;
+			} else {
+				stickyButtonsToggle("hide");
+			}
 			break;
 		case "save":
 			// variables, objects, arrays; conditions for early bailing
@@ -1937,7 +1951,12 @@ function buildEdit(domID) {
 				[colors[6]['hex'], colors[7]['hex'], colors[8]['hex']]
 			]
 		});
-		stickyButtonsToggle("hide");
+		if (typeof quickAddFocusOut !== 'undefined') {
+			clearTimeout(quickAddFocusOut);
+			quickAddFocusOut = void 0;
+		} else {
+			stickyButtonsToggle("hide");
+		}
 		$('#notepad').css({ opacity: 1, x: 0 }).transition({ opacity: 0, x: '-50%' }, speed, function() {
 			removeAllToolOverlays();// if any options overlays were visible back in the notepad we've now left, turn them off now
 			$('#notepad').removeClass('active-loc').removeAttr('style');
@@ -3090,7 +3109,12 @@ function fillNotepadDesc() {
 		'focusin': function() {
 			$('#np-desc-char').text(charSplitter.countGraphemes($('#np-desc-textarea').text()));
 			$('#np-desc-label').addClass("show");
-			stickyButtonsToggle("hide");
+			if (typeof quickAddFocusOut !== 'undefined') {
+				clearTimeout(quickAddFocusOut);
+				quickAddFocusOut = void 0;
+			} else {
+				stickyButtonsToggle("hide");
+			}
 			if ($(this).text().length == 0) $(this).empty();// clear any stray tags
 		},
 		'focusout': function() {
