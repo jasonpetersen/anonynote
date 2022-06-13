@@ -7,17 +7,17 @@ This is a mobile-first Progressive Web App that puts a single input field betwee
 1. [Use cases](#use-cases)
 1. [History](#history)
 
-# URL
+## URL
 
 Visit [anonynote.org](https://anonynote.org) to use the application.
 
-# A Progressive Web App
+## A Progressive Web App
 
 Anonynote is a certified Progressive Web App, scoring between 90% - 100% in all categories on [Google's Lighthouse](https://developers.google.com/web/tools/lighthouse/).
 
 Like all Progressive Web Apps, it is designed to function even when you are offline. Install it to the home screen on your mobile device, tablet, or even desktop computer (running Chrome) to take advantage of this feature.
 
-# Use cases
+## Use cases
 
 I keep numerous notepads for different purposes.
 
@@ -31,7 +31,7 @@ My partner and I share a grocery list. Previously, we used post-it notes. Now, w
 
 What could you use Anonynote for?
 
-# History
+## History
 
 Anonynote began life in 2014 on [Peterscene 1.0](https://peterscene.com), the first iteration of my personal website. I was constantly emailing myself data to access on other computers, and created this app out of that need. After continued use, I decided to spin it off onto its own website.
 
