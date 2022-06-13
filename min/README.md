@@ -1,3 +1,3 @@
 # Minify
 
-This is a clone of the [Minify repository that lives here](https://github.com/mrclay/minify).
+Clone the [Minify repository](https://github.com/mrclay/minify) into this folder. The installation of Minify requires that you also install [Composer](https://getcomposer.org/download/).
