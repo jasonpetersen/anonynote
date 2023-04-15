@@ -1,6 +1,6 @@
 //** GLOBAL APPLICATION VARIABLES **//
 
-var appVer = "5.2.5";// the application version number
+var appVer = "5.2.6";// the application version number
 
 $.holdReady( true );// hold document ready
 var holdReleaseCurrent = 0;// number; 0 to start; increment upward until we hit holdReleaseTarget
@@ -1216,6 +1216,13 @@ function buildNotepad(arg, scrPos, elem) {
 					}
 					delete notepads[notepadIdLocal];
 					notepads[notepadIdLocal] = {};
+					var npdescCheck = ((postData["npdesc"] == "") || (postData["npdesc"] == null) || (typeof postData["npdesc"] === 'undefined')) ? void 0 : postData["npdesc"];
+					if ((catalog[notepadIdLocal]["npname"] != postData["npname"]) || (catalog[notepadIdLocal]["npdesc"] != npdescCheck)) {
+						catalog[notepadIdLocal]["npname"] = postData["npname"];
+						catalog[notepadIdLocal]["npdesc"] = npdescCheck;
+						catalog[notepadIdLocal]["lastEdit"] = postData["lastEdit"];
+						idbCatalogUpdate();
+					}
 					if (postData["lockstatus"] == true) lockStatus = true;
 					if (postData["size"] != 0) {// if there are any notes, parse through them
 						hasNotes = true;
