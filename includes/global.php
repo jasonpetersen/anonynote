@@ -46,7 +46,7 @@ function loadLocale($inputCode) {
 
 $queryAppJS = $queryAboutJS = $queryCreditsJS = $queryContactJS = $query404JS = [];
 foreach (AVAILABLE_LANGS as $lang) {
-	$queryAppJS[$lang] = "b=js&f=jquery-3.4.1.min.js,jquery-ui.min.js,jquery.transit.min.js,jquery.ba-throttle-debounce.min.js,anime.min.js,idb.js,webfont-1.6.26.min.js,linkify.min.js,linkify-jquery.min.js,spectrum.min.js,clipboard.min.js,grapheme-splitter.js,main.js,anonynote.js";
+	$queryAppJS[$lang] = "b=js&f=jquery-3.4.1.min.js,jquery-ui.min.js,jquery.transit.min.js,jquery.ba-throttle-debounce.min.js,anime.min.js,idb.js,webfont-1.6.26.min.js,linkify.min.js,linkify-jquery.min.js,spectrum.min.js,grapheme-splitter.js,main.js,anonynote.js";
 	$queryAboutJS[$lang] = $queryCreditsJS[$lang] = $query404JS[$lang] = "b=js&f=jquery-3.4.1.min.js,jquery.ba-throttle-debounce.min.js,main.js";
 	$queryContactJS[$lang] = "b=js&f=jquery-3.4.1.min.js,jquery.ba-throttle-debounce.min.js,quform-plugins.js,quform-scripts.js,main.js";
 }

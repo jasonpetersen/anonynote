@@ -1,6 +1,6 @@
 //** GLOBAL APPLICATION VARIABLES **//
 
-var appVer = "5.2.6";// the application version number
+var appVer = "5.2.7";// the application version number
 
 $.holdReady( true );// hold document ready
 var holdReleaseCurrent = 0;// number; 0 to start; increment upward until we hit holdReleaseTarget
@@ -26,6 +26,7 @@ var locale;// holds all the language for the app
 var npScroll;// holds notepad scroll position for notepad <--> edit movement
 var modalScroll;// holds notepad scroll position when toggling the modal window
 var modalForce = false;// boolean; set to true to prevent escaping and clicking to turn off the modal window
+var touchStatus = void 0;// holds the most recent touch event
 var statusQueue = 0;// number; increments up and down for actions triggering the status icon
 var statusComplete = 1;// boolean (1 or 0); indicates whether the statusQueue is clear or not
 var speed = 400;// milliseconds; transition speed
@@ -47,8 +48,8 @@ var quickAddFocusOut = void 0;// // holds a timer from the setTimeout() function
 var colors = [];// an array that will later hold the palette for the color picker
 var colorHexToId = [];// another array that will later hold the palette for the color picker
 
-var isInWebApp = false;// assume we're not operating from within an iOS or Android web app environment...
-if ((window.navigator.standalone == true) || (window.matchMedia('(display-mode: standalone)').matches)) isInWebApp = true;// ...unless we are!
+var isInWebApp = ((window.navigator.standalone == true) || (window.matchMedia('(display-mode: standalone)').matches)) ? true : false;// boolean; whether we're operating from within an iOS or Android web app environment
+var clipboardAccess = (typeof navigator.clipboard === 'undefined') ? false : true;// boolean; whether there is access to the clipboard
 var idbSupport;// boolean; holds whether there is IDB support
 
 var networkConn, internetConn;
@@ -3125,15 +3126,6 @@ function fillNotepadDesc() {
 			if ($(this).text().length == 0) $(this).empty();// clear any stray tags
 		},
 		'focusout': function() {
-			if (!document.queryCommandSupported("insertText")) {// belated content control for IE, because, IE
-				var descUpdate = $(this).text().replace(/(\r\n|\n|\r)/gm, "");// strip out the line breaks
-				if (charSplitter.countGraphemes(descUpdate) > npdescMaxChar) {
-					var descUpdateSlice = charSplitter.splitGraphemes(descUpdate).slice(0, npdescMaxChar).join('');// split characters into an array, enforce the limit, and merge it back into one string
-					$(this).text(descUpdateSlice);
-				} else {
-					$(this).text(descUpdate);
-				}
-			}
 			$('#np-desc-label').removeClass("show");
 			stickyButtonsToggle("show");
 			changeNotepadDesc();
@@ -3144,18 +3136,23 @@ function fillNotepadDesc() {
 		}
 	});
 	document.getElementById('np-desc-textarea').addEventListener("paste", function(e) {
-		if (document.queryCommandSupported("insertText")) {
+		if (clipboardAccess) {
 			e.preventDefault();
-			var text = e.clipboardData.getData("text/plain");
-			document.execCommand("insertText", false, text);
-			var descUpdate = $('#np-desc-textarea').text().replace(/(\r\n|\n|\r)/gm, "");// strip out the line breaks
-			if (charSplitter.countGraphemes(descUpdate) > npdescMaxChar) {
-				var descUpdateSlice = charSplitter.splitGraphemes(descUpdate).slice(0, npdescMaxChar).join('');// split characters into an array, enforce the limit, and merge it back into one string
-				$('#np-desc-textarea').text(descUpdateSlice);
-			} else {
-				$('#np-desc-textarea').text(descUpdate);
-			}
-			placeCaretAtEnd(this);
+			navigator.clipboard.readText().then(function(clipText) {
+				var clipboard = clipText;
+				var originalDesc = document.getElementById('np-desc-textarea').textContent;
+				var originalCount = charSplitter.countGraphemes(originalDesc);
+				var pasteCount = charSplitter.countGraphemes(clipText);
+				if ((originalCount + pasteCount) > npdescMaxChar) {
+					var clipboardMax = npdescMaxChar - originalCount;
+					clipboard = charSplitter.splitGraphemes(clipText).slice(0, clipboardMax).join('');
+				}
+				var selection = window.getSelection();
+				if (!selection.rangeCount) return;
+				selection.deleteFromDocument();
+				selection.getRangeAt(0).insertNode(document.createTextNode(clipboard));
+				selection.collapseToEnd();
+			});
 		}
 	});
 }
@@ -3223,7 +3220,7 @@ function rowBuilder(thisLocalId, thisRemoteId, thisColor, thisChecked, thisNote)
 		'	<div class="col-4">',
 		'		<div class="note break-word">'+ noteContent +'</div>',
 		'	</div>',
-		'	<button class="copy-button" aria-label="'+ locale.notepad.note_copy +'" title="'+ locale.notepad.note_copy +'"><i class="fa fa-copy"></i></button>',
+		... clipboardAccess ? ['	<button class="copy-button" aria-label="'+ locale.notepad.note_copy +'" title="'+ locale.notepad.note_copy +'"><i class="fa fa-copy"></i></button>'] : [],
 		'</div>'
 	].join("\n");
 	return thisRow;
@@ -3426,25 +3423,6 @@ function rgb2hex(rgb) {
 	return "#" + hex(rgb[1]) + hex(rgb[2]) + hex(rgb[3]);
 }
 
-// caret set function, by Tim Down: http://stackoverflow.com/questions/4233265/contenteditable-set-caret-at-the-end-of-the-text-cross-browser
-function placeCaretAtEnd(el) {
-	el.focus();
-	if (typeof window.getSelection != "undefined"
-			&& typeof document.createRange != "undefined") {
-		var range = document.createRange();
-		range.selectNodeContents(el);
-		range.collapse(false);
-		var sel = window.getSelection();
-		sel.removeAllRanges();
-		sel.addRange(range);
-	} else if (typeof document.body.createTextRange != "undefined") {
-		var textRange = document.body.createTextRange();
-		textRange.moveToElementText(el);
-		textRange.collapse(false);
-		textRange.select();
-	}
-}
-
 function getUnixTimestamp() {
 	var clientDate = new Date();
 	var secondsUnix = Math.floor(clientDate.getTime()/1000);// number of seconds since Unix epoch
@@ -3536,13 +3514,22 @@ $(document).ready(function() {
 	$('body').attr('data-web-app', (isInWebApp) ? 1 : 0);
 	if (isInWebApp) {
 		$('#recent-notepads-button').on({
-			'click touchend': function() {
-				$(this).toggleClass('active');
-				if ($('#recent-notepads').css('max-height') != '0px') {
-					$('#recent-notepads').css('max-height', '0px');
-				} else {
-					$('#recent-notepads').css('max-height', $('#recent-notepads').prop('scrollHeight'));
+			'touchstart': function() {
+				touchStatus = 'touchstart';
+			},
+			'touchmove': function() {
+				touchStatus = 'touchmove';
+			},
+			'click touchend': function(event) {
+				if ((event.type == 'click') || ((event.type == 'touchend') && (touchStatus == 'touchstart'))) {
+					$(this).toggleClass('active');
+					if ($('#recent-notepads').css('max-height') != '0px') {
+						$('#recent-notepads').css('max-height', '0px');
+					} else {
+						$('#recent-notepads').css('max-height', $('#recent-notepads').prop('scrollHeight'));
+					}
 				}
+				if (event.type == 'touchend') touchStatus = void 0;
 			}
 		});
 	}
@@ -3617,25 +3604,19 @@ $(document).ready(function() {
 	$(document).on("click", '.note-row .read-more', function() {
 		readMore('#'+$(this).closest('.note-row').attr('id'));
 	});
-	// initialize ClipboardJS, attach its event handler to every '.copy-button'
-	// this only has to be defined once -- not again for any dynamically created content.
-	window.clipboard = new ClipboardJS('.copy-button', {
-		target: function() {
-			return document.querySelector(window.clipboardTarget);
+	$(document).on("click", '.note-row .copy-button', function(e) {
+		if (clipboardAccess) {
+			var thisId = $(this).closest('.note-row').attr('id');
+			window.clipboardButton = "#" + thisId + " .copy-button";
+			window.clipboardTarget = "#" + thisId + " .note-full";
+			navigator.clipboard.writeText(document.querySelector(window.clipboardTarget).textContent);
+			$(this).addClass('tooltipped tooltipped-w');
+			$(this).attr('aria-label', locale.notepad.note_copy_success);
+			window.setTimeout(function() {
+				$(window.clipboardButton).removeClass('tooltipped tooltipped-w');
+				$(window.clipboardButton).removeAttr('aria-label');
+			}, 1000);
 		}
-	});
-	clipboard.on('success', function(e) {
-		e.clearSelection();
-		$(e.trigger).addClass('tooltipped tooltipped-w');
-		$(e.trigger).attr('aria-label', locale.notepad.note_copy_success);
-		window.setTimeout(function() {
-			$(e.trigger).removeClass('tooltipped tooltipped-w');
-			$(e.trigger).removeAttr('aria-label');
-		}, 1000);
-	});
-	// this is a roundabout way to dynamically get the copy button's root note text selector, because apparently ClipboardJS doesn't understand the "this" selector
-	$(document).on("mouseenter", '.note-row .copy-button', function() {
-		window.clipboardTarget = "#" + $(this).closest('.note-row').attr('id') + " .note-full";
 	});
 	// listen for browser back and forward buttons
 	$(window).on("popstate", function(event) {

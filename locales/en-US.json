@@ -114,7 +114,7 @@
 			"prompt_detail": "To troubleshoot any problems, or to clear note data off of your local device, you may want to purge the IndexedDB database. Doing so will delete all unsynced notes created in Offline Mode.",
 			"local_version": "Local app version",
 			"current_version": "Current app version",
-			"idb": "Purge IndexedDB"
+			"idb": "Purge Local Database"
 		},
 		"sync": {
 			"dialog": {
