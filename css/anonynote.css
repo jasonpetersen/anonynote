@@ -1115,6 +1115,7 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 	min-height: 70px;
 	border: 1px solid #000000;
 	margin: -1pt 0 0 -1pt;
+	overflow: hidden;
 	-webkit-transition: background-color 0.1s linear;
 	-moz-transition: background-color 0.1s linear;
 	-o-transition: background-color 0.1s linear;
@@ -1156,6 +1157,7 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 	flex: 0 0 40px;
 	width: 40px;
 	min-width: 40px;
+	z-index: 101;
 }
 
 #notepad-table .col-1 button {
@@ -1167,17 +1169,20 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 
 #notepad-table .col-2 {
 	white-space: nowrap;
+	z-index: 102;
 }
 
 #notepad-table .col-3 {
 	flex: 0 0 40px;
 	width: 40px;
 	min-width: 40px;
+	z-index: 103;
 }
 
 #notepad-table .col-4 {
 	flex-grow: 1;
 	padding: 10px;
+	z-index: 104;
 }
 
 @media screen and (max-width: 767px) {
@@ -1421,6 +1426,7 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 	top: 0;
 	right: 0;
 	cursor: pointer;
+	z-index: 105;
 }
 
 #notepad-table .note-row .copy-button:focus {
@@ -1429,6 +1435,53 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 
 #notepad-table .note-row .copy-button .fa {
 	font-size: 18px;
+}
+
+#notepad-table .circle-1, #notepad-table .circle-2, #notepad-table .circle-3 {
+	position: absolute !important;
+	background-color: rgba(0,0,0,.25);
+	border-radius: 50%;
+	width: 150%;
+	height: 150%;
+	top: -25%;
+    left: -25%;
+	opacity: 0;
+	animation: growAndFade 1500ms infinite ease-out;
+}
+
+#notepad-table .circle-1 {
+	animation-delay: 500ms;
+	z-index: 91;
+}
+
+#notepad-table .circle-2 {
+	animation-delay: 1000ms;
+	z-index: 92;
+}
+
+#notepad-table .circle-3 {
+	animation-delay: 1500ms;
+	z-index: 93;
+}
+
+@keyframes growAndFade {
+	0% {
+		opacity: 0.50;
+		transform: scale(0);
+	}
+	100% {
+		opacity: 0;
+		transform: scale(1);
+	}
+}
+
+.disable-select {
+	user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	-webkit-user-select: none;
+	-webkit-touch-callout: none;
 }
 
 /* NOTEPAD LOCK MODIFICATIONS */
@@ -2544,6 +2597,12 @@ body[data-dark-mode="1"] #note-text {
 .no-touchevents body[data-dark-mode="1"] #sticky-add:hover .fa-inverse,
 body[data-dark-mode="1"] #sticky-buttons-expand-group .fa-inverse {
 	color: #282828;
+}
+
+body[data-dark-mode="1"] #notepad-table .circle-1,
+body[data-dark-mode="1"] #notepad-table .circle-2,
+body[data-dark-mode="1"] #notepad-table .circle-3 {
+	background-color: rgba(255,255,255,.5);
 }
 
 body[data-dark-mode="1"] .tooltipped::after {

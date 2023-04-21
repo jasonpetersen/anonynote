@@ -1,6 +1,6 @@
 //** GLOBAL APPLICATION VARIABLES **//
 
-var appVer = "5.2.7";// the application version number
+var appVer = "5.2.8";// the application version number
 
 $.holdReady( true );// hold document ready
 var holdReleaseCurrent = 0;// number; 0 to start; increment upward until we hit holdReleaseTarget
@@ -26,7 +26,7 @@ var locale;// holds all the language for the app
 var npScroll;// holds notepad scroll position for notepad <--> edit movement
 var modalScroll;// holds notepad scroll position when toggling the modal window
 var modalForce = false;// boolean; set to true to prevent escaping and clicking to turn off the modal window
-var touchStatus = void 0;// holds the most recent touch event
+var touchStatus = touchTime = touchCoorStart = touchCoorMove = touchId = void 0;// variables that hold data on the most recent touch event
 var statusQueue = 0;// number; increments up and down for actions triggering the status icon
 var statusComplete = 1;// boolean (1 or 0); indicates whether the statusQueue is clear or not
 var speed = 400;// milliseconds; transition speed
@@ -3386,6 +3386,23 @@ function dispStickyExpand() {
 	}
 }
 
+// start & stop long touch copy animation on notes
+function noteCopyAnimation(target, action) {
+	switch (action) {
+		case "start":
+			$(target).append('<div class="circle-1"></div><div class="circle-2"></div><div class="circle-3"></div>');
+			break;
+		case "end":
+			$('.circle-1').remove();
+			$('.circle-2').remove();
+			$('.circle-3').remove();
+			break;
+		default:
+			return;
+			break;
+	}
+}
+
 // display video modal
 function videoModal() {
 	var modalContent = [
@@ -3604,20 +3621,70 @@ $(document).ready(function() {
 	$(document).on("click", '.note-row .read-more', function() {
 		readMore('#'+$(this).closest('.note-row').attr('id'));
 	});
-	$(document).on("click", '.note-row .copy-button', function(e) {
-		if (clipboardAccess) {
+	if (clipboardAccess) {
+		$(document).on("click", '.note-row .copy-button', function() {
 			var thisId = $(this).closest('.note-row').attr('id');
 			window.clipboardButton = "#" + thisId + " .copy-button";
 			window.clipboardTarget = "#" + thisId + " .note-full";
-			navigator.clipboard.writeText(document.querySelector(window.clipboardTarget).textContent);
-			$(this).addClass('tooltipped tooltipped-w');
-			$(this).attr('aria-label', locale.notepad.note_copy_success);
-			window.setTimeout(function() {
-				$(window.clipboardButton).removeClass('tooltipped tooltipped-w');
-				$(window.clipboardButton).removeAttr('aria-label');
-			}, 1000);
-		}
-	});
+			var ntText = document.querySelector(window.clipboardTarget).textContent;
+			navigator.clipboard.writeText(ntText).then(
+				() => {
+					$(this).addClass('tooltipped tooltipped-w');
+					$(this).attr('aria-label', locale.notepad.note_copy_success);
+					window.setTimeout(function() {
+						$(window.clipboardButton).removeClass('tooltipped tooltipped-w');
+						$(window.clipboardButton).removeAttr('aria-label');
+					}, 1000);
+				},
+				() => {
+					$(this).addClass('tooltipped tooltipped-w');
+					$(this).attr('aria-label', locale.general.error);
+					window.setTimeout(function() {
+						$(window.clipboardButton).removeClass('tooltipped tooltipped-w');
+						$(window.clipboardButton).removeAttr('aria-label');
+					}, 1000);
+				}
+			);
+		});
+		$(document).on("touchstart", '#notepad-table .col-4', function(e) {
+			touchStatus = 'touchstart';
+			touchTime = getUnixTimestamp();
+			touchCoorStart = e.originalEvent.targetTouches[0].clientY;
+			touchId = '#' + $(this).closest('.note-row').attr('id');
+			$(touchId + ' .col-4 .note').addClass('disable-select');
+			noteCopyAnimation(touchId, "start");
+		});
+		$(document).on("touchmove", '#notepad-table .col-4', function(e) {
+			touchCoorMove = e.originalEvent.targetTouches[0].clientY;
+			if ((touchCoorMove > (touchCoorStart + 7)) || (touchCoorMove < (touchCoorStart - 7))) {
+				touchStatus = 'touchmove';
+				noteCopyAnimation(touchId, "end");
+			}
+		});
+		$(document).on("touchend", '#notepad-table .col-4', function() {
+			noteCopyAnimation(touchId, "end");
+			if (((getUnixTimestamp() - touchTime) >= 1) && (touchStatus == 'touchstart')) {
+				window.noteCopyText = document.querySelector(touchId + ' .note-full').textContent;
+				navigator.clipboard.writeText(window.noteCopyText).then(
+					() => {
+						popupMsg(locale.popup.note_copied);
+					},
+					() => {
+						var modalContent = [
+							'<i id="modal-close" class="fa fa-times" title="'+ locale.general.close +'" onclick="modalToggle(\'off\');"></i>',
+							'<div class="row modal-window-wrapper-top">',
+							'	<button type="button" class="color red button large" aria-label="'+ locale.notepad.note_copy +'" onclick="navigator.clipboard.writeText(window.noteCopyText);$(this).removeClass(\'red\');$(this).addClass(\'green\');$(this).text(locale.notepad.note_copy_success);">'+ locale.notepad.note_copy +'</button>',
+							'</div>'
+						].join("\n");
+						$('#modal-window').empty().append(modalContent);
+						modalToggle("on");
+					}
+				);
+			}
+			$(touchId + ' .col-4 .note').removeClass('disable-select');
+			touchStatus = touchTime = touchCoorStart = touchCoorMove = touchId = void 0;
+		});
+	}
 	// listen for browser back and forward buttons
 	$(window).on("popstate", function(event) {
 		if ($('#splash').is(":visible")) splashHandler("clear");// the back button on Chrome for Android is doing strange things, like putting the splash screen back up and not clearing it

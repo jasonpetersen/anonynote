@@ -82,6 +82,7 @@
 		"find_notepad_launch_fail": "Unable to locate notepad. Falling back to home page.",
 		"notepad_launch_timeout": "Timeout loading notepad.",
 		"rename": "Notepad name already in use. Please choose another.",
+		"note_copied": "Note copied to clipboard.",
 		"offline": {
 			"enabled_user": "Offline mode enabled.",
 			"disabled_user": "Offline mode disabled.",
