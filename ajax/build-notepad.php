@@ -20,12 +20,16 @@ if (count($npDecodeArray) == 0) {
 	goto bail;
 } else {
 	$npid = implode($npDecodeArray);
+	$npname = $npdesc = $lastEdit = null;
 	$isLocked = false;
 	$database = new Database();
 	$database->query('SELECT * FROM notepads WHERE id = :npid');
 	$database->bind(':npid', $npid);
 	$row = $database->single();
 	if ($database->rowCount() != 0) {
+		$npname = $row["npname"];
+		if (!is_null($row["npdesc"])) $npdesc = $row["npdesc"];
+		$lastEdit = strtotime($row["lastedit"]);
 		if (!is_null($row["lockdate"])) {
 			$dateLock = DateTime::createFromFormat('Y-m-d H:i:s', $row["lockdate"]);
 			$dateNow = new DateTime("now");
@@ -44,6 +48,9 @@ if (count($npDecodeArray) == 0) {
 	$postData = array(
 		'result' => "success",
 		'size' => $database->rowCount(),
+		'npname' => $npname,
+		'npdesc' => $npdesc,
+		'lastEdit' => $lastEdit,
 		'lockstatus' => $isLocked
 	);
 	if ($database->rowCount() > 0) {

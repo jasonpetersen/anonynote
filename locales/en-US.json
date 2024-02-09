@@ -82,6 +82,7 @@
 		"find_notepad_launch_fail": "Unable to locate notepad. Falling back to home page.",
 		"notepad_launch_timeout": "Timeout loading notepad.",
 		"rename": "Notepad name already in use. Please choose another.",
+		"note_copied": "Note copied to clipboard.",
 		"offline": {
 			"enabled_user": "Offline mode enabled.",
 			"disabled_user": "Offline mode disabled.",
@@ -114,7 +115,7 @@
 			"prompt_detail": "To troubleshoot any problems, or to clear note data off of your local device, you may want to purge the IndexedDB database. Doing so will delete all unsynced notes created in Offline Mode.",
 			"local_version": "Local app version",
 			"current_version": "Current app version",
-			"idb": "Purge IndexedDB"
+			"idb": "Purge Local Database"
 		},
 		"sync": {
 			"dialog": {

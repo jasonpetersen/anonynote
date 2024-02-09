@@ -34,7 +34,6 @@ define("PAGEDESC", $locale["credits"]["meta_desc"]);
 			<p><a href="https://github.com/typekit/webfontloader" target="_blank">Web Font Loader</a> asynchronously calls the Google Fonts in use here.</p>
 			<p><a href="https://bgrins.github.io/spectrum/" target="_blank">Spectrum</a> is a very smart, lightweight, and customizable jQuery color picker. It is capable of so much more than I'm using it for here.</p>
 			<p><a href="http://soapbox.github.io/linkifyjs/" target="_blank">Linkify</a> is a straightforward JavaScript plugin that is hard at work turning all of your plain-text URLs into clickable hyperlinks.</p>
-			<p><a href="https://clipboardjs.com/" target="_blank">Clipboard.js</a> is a tiny plugin for one-click copying of data to the clipboard, with very broad cross-browser support.</p>
 			<p>Many web technologies were not made with emojis in mind. To properly enforce character limits on an any-character-goes web app, I really needed the <a href="https://github.com/orling/grapheme-splitter" target="_blank">Grapheme Splitter</a> JavaScript library.</p>
 			<p>The contact form is courtesy of <a href="https://codecanyon.net/item/quform-responsive-ajax-contact-form/148273" target="_blank">Quform</a>. Although this is a basic implementation, it's feature-rich.</p>
 			<p>Google's <a href="https://developers.google.com/web/tools/workbox/" target="_blank">Workbox</a> is used for offline file caching.</p>
