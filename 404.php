@@ -1,11 +1,8 @@
 <?php
 require_once realpath($_SERVER['DOCUMENT_ROOT']) . '/includes/global.php';
-require_once realpath($_SERVER['DOCUMENT_ROOT']) . '/min/static/lib.php';
 
 $thisLang = ($_GET['lang'] != "") ? $_GET['lang'] : DEFAULT_LANG_CODE;
 loadLocale($thisLang);
-
-$minify = minify("404", $locale["core"]["lang_code"]);
 
 define("PAGETITLE", $locale["error"]["title"] . " - " . $locale["core"]["app_name"]);
 define("PAGEDESC", $locale["error"]["meta_desc"]);
@@ -17,7 +14,8 @@ header("HTTP/1.0 404 Not Found");
 <html lang="<?php echo $locale["core"]["lang_code"]; ?>" class="no-touchevents">
 	<head>
 <?php include realpath($_SERVER['DOCUMENT_ROOT']) . '/includes/head.php'; ?>
-		<link rel="stylesheet" type="text/css" href="<?php echo $minify["css"]; ?>">
+		<link rel="stylesheet" href="/css/icomoon.css?v=<?php echo APP_VERSION; ?>">
+		<link rel="stylesheet" href="/css/main.css?v=<?php echo APP_VERSION; ?>">
 	</head>
 	<body id="error">
 <?php include realpath($_SERVER['DOCUMENT_ROOT']) . '/includes/top.php'; ?>
@@ -30,6 +28,6 @@ header("HTTP/1.0 404 Not Found");
 			</div>
 		</div>
 <?php include realpath($_SERVER['DOCUMENT_ROOT']) . '/includes/bottom.php'; ?>
-		<script src="<?php echo $minify["js"]; ?>"></script>
+		<script src="/js/main.js?v=<?php echo APP_VERSION; ?>"></script>
 	</body>
 </html>

@@ -1,0 +1,181 @@
+{
+	"core": {
+		"app_name": "Anonynote",
+		"lang": "Italiano",
+		"lang_code": "it-IT"
+	},
+	"themes": {
+		"light": "Chiaro",
+		"dark": "Scuro",
+		"desert_sunset": "Tramonto nel deserto"
+	},
+	"header": {
+		"menu": "Menu",
+		"settings": "Impostazioni",
+		"offline_mode": "Modalità offline"
+	},
+	"app": {
+		"title": "App",
+		"tagline": "Una Progressive Web App gratuita per prendere appunti",
+		"meta_desc": "Una Progressive Web App gratuita per salvare, recuperare e organizzare note in modo anonimo. Nessun account o accesso richiesto! Accedi rapidamente ai dati importanti da tutti i tuoi dispositivi.",
+		"input_label": "Inserisci un nome di taccuino <br class='visible-sm'/>nuovo o esistente",
+		"info": "Distingue maiuscole/minuscole, qualsiasi carattere accettato, max 16",
+		"recent": "Taccuini recenti",
+		"recent_label": "Oppure seleziona un taccuino aperto di recente"
+	},
+	"about": {
+		"title": "Informazioni",
+		"meta_desc": "Una Progressive Web App al 100% gratuita, pensata per un mondo in rapido movimento e multi-dispositivo. Crediamo che salvare, recuperare e organizzare le note debba essere rapido e semplice."
+	},
+	"credits": {
+		"title": "Crediti",
+		"meta_desc": "È stato un lavoro enorme. Il contributo di molte persone ha fatto la differenza. Qui il creatore si inchina e offre riconoscimento e gratitudine."
+	},
+	"contact": {
+		"title": "Contatti",
+		"meta_desc": "Complimenti, critiche o provocazioni: mi fa sempre piacere sentirti! Voglio rendere questa app la migliore possibile. Il tuo contributo ci aiuterebbe ad arrivarci."
+	},
+	"error": {
+		"title": "404",
+		"meta_desc": "Qualcosa è andato storto."
+	},
+	"notepad": {
+		"home": "Home",
+		"refresh": "Aggiorna",
+		"lock": "Attiva/disattiva blocco",
+		"api": "API",
+		"sort": "Ordina",
+		"sort_az": "Dalla A alla Z",
+		"sort_za": "Dalla Z alla A",
+		"sort_color": "Colore",
+		"sort_checked": "Selezionati",
+		"sort_unchecked": "Non selezionati",
+		"quick_add_placeholder": "Inserisci una nota breve",
+		"quick_add_label": "Crea nota rapida",
+		"save": "Salva modifiche",
+		"desc_placeholder": "Inserisci una descrizione del taccuino",
+		"desc_char": "caratteri",
+		"empty_msg": "Non ci sono note",
+		"empty_tip": "Suggerimento: torna qui digitando di nuovo il nome del taccuino o aggiungendo questa pagina ai preferiti",
+		"expand": "Leggi tutto",
+		"moveup": "Sposta su",
+		"movedown": "Sposta giù",
+		"options": "Opzioni",
+		"reorder": "Trascina per riordinare",
+		"delete_all": "Elimina tutto",
+		"edit": "Modifica",
+		"check": "Seleziona",
+		"check_all": "Seleziona tutto",
+		"change_color": "Cambia colore",
+		"change_colors": "Cambia tutti i colori",
+		"note_copy": "Copia negli appunti",
+		"note_copy_success": "Copiato",
+		"add_new": "Aggiungi nota",
+		"sticky_toggle": "Mostra/nascondi strumenti",
+		"go_to_top": "Vai in cima"
+	},
+	"popup": {
+		"empty": "Devi inserire qualcosa qui.",
+		"install": "Aggiungi Anonynote alla schermata iniziale",
+		"find_notepad_launch_fail": "Impossibile trovare il taccuino. Reindirizzamento alla home page.",
+		"notepad_launch_timeout": "Timeout durante il caricamento del taccuino.",
+		"rename": "Nome del taccuino già in uso. Scegline un altro.",
+		"note_copied": "Nota copiata negli appunti.",
+		"offline": {
+			"enabled_user": "Modalità offline attivata.",
+			"disabled_user": "Modalità offline disattivata.",
+			"enabled_sys": "Errore di connessione. Modalità offline attivata.",
+			"disabled_sys": "Connessione ristabilita. Modalità offline disattivata."
+		},
+		"sync": {
+			"already": "Tutti i dati locali sono già sincronizzati. Modalità offline disattivata.",
+			"error": "Sincronizzazione non riuscita. Errore di connessione. Modalità offline ancora attiva."
+		}
+	},
+	"modal": {
+		"delete_all": "Sei sicuro di voler eliminare tutte le note da questo taccuino?",
+		"api": {
+			"prompt": "API JSON",
+			"prompt_detail": "Accedi ai dati di questo taccuino in modo programmatico all'URL seguente"
+		},
+		"sort": "Ordina il taccuino con il metodo seguente",
+		"settings": {
+			"title": "Impostazioni",
+			"about": "Informazioni",
+			"app_version": "Versione app",
+			"appearance": "Aspetto",
+			"language": "Lingua",
+			"data": "Dati",
+			"data_detail": "Per risolvere eventuali problemi o per cancellare i dati delle note dal dispositivo locale, potresti voler svuotare il database IndexedDB. In questo modo verranno eliminate tutte le note non sincronizzate create in modalità offline.",
+			"purge_idb": "Svuota database locale"
+		},
+		"sync": {
+			"dialog": {
+				"prompt": "Sei di nuovo online. Vuoi sincronizzare le modifiche offline con il server remoto?",
+				"prompt_warning": "Dopo una sincronizzazione riuscita, l'applicazione verrà ricaricata.",
+				"sync_confirm": "Sincronizza i miei dati",
+				"sync_decline": "Rimani in modalità offline"
+			},
+			"error": {
+				"prompt": "Si sono verificati errori critici durante la sincronizzazione dei dati",
+				"prompt_detail": "Esamina i dettagli qui sotto. Se scegli di sincronizzare comunque, alcuni o tutti i tuoi dati verranno eliminati. In alternativa, puoi annullare ora e correggere i problemi prima di riprovare.",
+				"override": "Sincronizza comunque",
+				"npnamefail": "Questo taccuino non può essere creato perché ne esiste già uno con lo stesso nome. Se procedi, l'intero taccuino verrà eliminato. Annulla e prova a rinominarlo.",
+				"nprenamefail": "Questo taccuino non può essere rinominato perché un altro taccuino ha già questo nome. Se procedi, verrà mantenuto il nome precedente. Puoi annullare e provare a rinominarlo.",
+				"lockfail": "Questo taccuino è bloccato. Le modifiche non sono consentite. Se procedi, tutte le tue modifiche in questo taccuino verranno eliminate.",
+				"hashfail": "Si è verificato un errore critico. Contattaci se il problema persiste. Se procedi, tutte le tue modifiche in questo taccuino verranno eliminate.",
+				"findfail": "Questo taccuino non esiste più. Se procedi, tutte le tue modifiche in questo taccuino verranno eliminate."
+			}
+		},
+		"lock": {
+			"prompt": "Per bloccare questo taccuino, inserisci una password",
+			"prompt_detail": "Un taccuino bloccato è ancora visibile, ma non può essere modificato",
+			"password_detail": "Distingue maiuscole/minuscole, qualsiasi carattere accettato, max 16",
+			"password_placeholder": "Inserisci la password",
+			"reenter_placeholder": "Reinserisci la password",
+			"mismatch": "Le password non corrispondono",
+			"success": "Il taccuino è ora bloccato!",
+			"success_detail": "Puoi sbloccarlo in qualsiasi momento con la tua password. I taccuini si sbloccano automaticamente dopo 30 giorni.",
+			"locked_already": "Il taccuino è già bloccato. Ricarica la pagina."
+		},
+		"unlock": {
+			"prompt": "Inserisci la password usata per bloccare questo taccuino",
+			"prompt_detail": "Ricorda che tutti i taccuini si sbloccano automaticamente dopo 30 giorni",
+			"incorrect": "Password errata",
+			"success": "Il taccuino è ora sbloccato!",
+			"not_locked": "Il taccuino non è bloccato. Ricarica la pagina."
+		},
+		"error": {
+			"retry": "Riprova.",
+			"timeout": "Errore di connessione. Riprova.",
+			"http_code_403": "Errore di connessione. Accesso negato.",
+			"http_code_404": "Errore di connessione. File mancante.",
+			"http_code_408": "Errore di connessione. Timeout della richiesta.",
+			"http_code_500": "Errore di connessione al database o nella query.",
+			"catchall": "Qualcosa è andato storto.",
+			"critical": "Errore di sistema. Contattaci se il problema persiste.",
+			"locked": "Il taccuino è bloccato. Ricarica la pagina."
+		}
+	},
+	"edit": {
+		"pick": "Scegli un colore",
+		"placeholder": "Inserisci la nota qui"
+	},
+	"general": {
+		"yes": "Sì",
+		"no": "No",
+		"cancel": "Annulla",
+		"continue": "Continua",
+		"reload": "Ricarica",
+		"retry": "Riprova",
+		"close": "Chiudi",
+		"save": "Salva",
+		"delete": "Elimina",
+		"next": "Avanti",
+		"previous": "Precedente",
+		"back": "Indietro",
+		"error": "Errore",
+		"online": "Online",
+		"offline": "Offline"
+	}
+}

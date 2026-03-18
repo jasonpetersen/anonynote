@@ -2,11 +2,16 @@
 	"core": {
 		"app_name": "Anonynote",
 		"lang": "English",
-		"lang_code": "en-US",
-		"root": "/"
+		"lang_code": "en-US"
+	},
+	"themes": {
+		"light": "Light",
+		"dark": "Dark",
+		"desert_sunset": "Desert Sunset"
 	},
 	"header": {
 		"menu": "Menu",
+		"settings": "Settings",
 		"offline_mode": "Offline mode"
 	},
 	"app": {
@@ -38,7 +43,7 @@
 		"home": "Home",
 		"refresh": "Refresh",
 		"lock": "Toggle lock",
-		"json": "JSON",
+		"api": "API",
 		"sort": "Sort",
 		"sort_az": "A to Z",
 		"sort_za": "Z to A",
@@ -69,16 +74,9 @@
 		"sticky_toggle": "Toggle tools",
 		"go_to_top": "Go to top"
 	},
-	"toolbar": {
-		"toggle": "Toggle toolbar",
-		"status": "Status",
-		"cloud": "Internet status",
-		"idb": "IndexedDB status",
-		"light_dark": "Set light or dark mode",
-		"advanced": "Advanced settings"
-	},
 	"popup": {
 		"empty": "You must enter something here.",
+		"install": "Add Anonynote to your home screen",
 		"find_notepad_launch_fail": "Unable to locate notepad. Falling back to home page.",
 		"notepad_launch_timeout": "Timeout loading notepad.",
 		"rename": "Notepad name already in use. Please choose another.",
@@ -96,31 +94,24 @@
 	},
 	"modal": {
 		"delete_all": "Are you sure you want to delete all notes from this notepad?",
-		"json": {
-			"prompt": "Use this notepad in webhooks",
-			"prompt_detail": "This notepad data is available in JSON format at the following URL:",
-			"url": "JSON URL"
+		"api": {
+			"prompt": "JSON API",
+			"prompt_detail": "Access this notepad's data programmatically at the following URL"
 		},
 		"sort": "Sort the notepad by the method below",
-		"light_dark": {
-			"prompt": "You are currently in",
-			"prompt_detail": "The mode/theme of this app is based upon your OS preference. To override that, use the button below.",
-			"additional_notice": "Please note that the application will reload during this change.",
-			"change_mode": "Change to",
-			"dark_mode": "Dark Mode",
-			"light_mode": "Light Mode",
-			"error": "This feature is only available in browsers with IndexedDB support"
-		},
-		"advanced": {
-			"prompt_detail": "To troubleshoot any problems, or to clear note data off of your local device, you may want to purge the IndexedDB database. Doing so will delete all unsynced notes created in Offline Mode.",
-			"local_version": "Local app version",
-			"current_version": "Current app version",
-			"idb": "Purge Local Database"
+		"settings": {
+			"title": "Settings",
+			"about": "About",
+			"app_version": "App version",
+			"appearance": "Appearance",
+			"language": "Language",
+			"data": "Data",
+			"data_detail": "To troubleshoot any problems, or to clear note data off of your local device, you may want to purge the IndexedDB database. Doing so will delete all unsynced notes created in Offline Mode.",
+			"purge_idb": "Purge Local Database"
 		},
 		"sync": {
 			"dialog": {
 				"prompt": "You are now online. Would you like to sync offline changes to the remote server?",
-				"prompt_detail": "During this process, your local database will be purged. Your recently opened notepads list will be cleared. Preferences will be reset.",
 				"prompt_warning": "After a successful synchronization, the application will reload.",
 				"sync_confirm": "Sync my data",
 				"sync_decline": "Return to Offline Mode"

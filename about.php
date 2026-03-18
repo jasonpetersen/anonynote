@@ -1,11 +1,8 @@
 <?php
 require_once realpath($_SERVER['DOCUMENT_ROOT']) . '/includes/global.php';
-require_once realpath($_SERVER['DOCUMENT_ROOT']) . '/min/static/lib.php';
 
 $thisLang = ($_GET['lang'] != "") ? $_GET['lang'] : DEFAULT_LANG_CODE;
 loadLocale($thisLang);
-
-$minify = minify("about", $locale["core"]["lang_code"]);
 
 define("PAGETITLE", $locale["about"]["title"] . " - " . $locale["core"]["app_name"]);
 define("PAGEDESC", $locale["about"]["meta_desc"]);
@@ -15,7 +12,8 @@ define("PAGEDESC", $locale["about"]["meta_desc"]);
 <html lang="<?php echo $locale["core"]["lang_code"]; ?>" class="no-touchevents">
 	<head>
 <?php include realpath($_SERVER['DOCUMENT_ROOT']) . '/includes/head.php'; ?>
-		<link rel="stylesheet" type="text/css" href="<?php echo $minify["css"]; ?>">
+		<link rel="stylesheet" href="/css/icomoon.css?v=<?php echo APP_VERSION; ?>">
+		<link rel="stylesheet" href="/css/main.css?v=<?php echo APP_VERSION; ?>">
 	</head>
 	<body id="about">
 <?php include realpath($_SERVER['DOCUMENT_ROOT']) . '/includes/top.php'; ?>
@@ -44,6 +42,6 @@ define("PAGEDESC", $locale["about"]["meta_desc"]);
 			<p>This site takes no responsibility for the data that its users enter here. As there are no user accounts, no one owns any of the user-inputted data. An overly simplistic notepad name may be discovered at any time and its notes edited or deleted. It is your responsibility to prevent this by using unique notepad names.</p>
 		</div>
 <?php include realpath($_SERVER['DOCUMENT_ROOT']) . '/includes/bottom.php'; ?>
-		<script src="<?php echo $minify["js"]; ?>"></script>
+		<script src="/js/main.js?v=<?php echo APP_VERSION; ?>"></script>
 	</body>
 </html>

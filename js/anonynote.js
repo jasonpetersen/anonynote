@@ -1,172 +1,213 @@
-//** GLOBAL APPLICATION VARIABLES **//
+//** CONSTANTS & CONFIGURATION **//
 
-var appVer = "5.2.8";// the application version number
+let _appReady; const _appReadyPromise = new Promise(function(resolve) { _appReady = resolve; });// hold document ready
+let holdReleaseCurrent = 0;// number; 0 to start, then increment upward until we hit holdReleaseTarget
+const holdReleaseTarget = 6;// how many checks are needed before we release the hold on document ready. 1) Check internet connection, 2) Google Fonts loaded, 3) CSS loaded, 4) Locale loaded, 5) Core app variables set, 6) IndexedDB initialized
 
-$.holdReady( true );// hold document ready
-var holdReleaseCurrent = 0;// number; 0 to start; increment upward until we hit holdReleaseTarget
-var holdReleaseTarget = 6;// how many checks are needed before we release the hold on document ready. 1) Check internet connection, 2) Google Fonts loaded, 3) CSS loaded, 4) Locale loaded, 5) Core app variables set, 6) IndexedDB initialized
+const speed = 400;// milliseconds; transition speed
+const timeoutInternet = 5000;// milliseconds; how long to wait before bailing on an internet connection check
+const timeoutPopup = 5000;// milliseconds; how long to wait before auto-dismissing the bottom screen popup
+const timeoutApi = 7500;// milliseconds; how long to wait before bailing on an API call
+const funcThrottle = 3000;// milliseconds; certain functions are throttled so as to not rapid-fire, but will trigger after no more than the provided number of milliseconds
+const charSplitter = new Intl.Segmenter();// used for accurate character counting, correctly handling emojis and multi-byte characters
+const desktopWidth = 768;// number; the pixel width at which desktop screen size begins
+const noteColorCount = 9;// number; total colors in the color palette
+const npnameMaxChar = 16;// number; notepad name character limit, also applies to lock password limit -- also defined in global.php
+const npdescMaxChar = 160;// number; notepad description character limit, also defined in global.php
+const truncateNote = 150;// number; note characters to show before hiding the rest behind a 'read more' link (on mobile only)
+const notePrefix = "note-";// string; prefix for note ids
+
+const isInWebApp = ((window.navigator.standalone == true) || (window.matchMedia('(display-mode: standalone)').matches)) ? true : false;// boolean; whether we're operating from within an iOS or Android web app environment
+const clipboardAccess = (typeof navigator.clipboard === 'undefined') ? false : true;// boolean; whether there is access to the clipboard
+const themeRegistry = [
+	{ id: 0, key: 'light'         },
+	{ id: 1, key: 'dark'          },
+	{ id: 2, key: 'desert_sunset' }
+];// ordered list of available themes; id matches data-theme attribute and localStorage value; key maps to locale.themes[key]
+
+//** STATE VARIABLES **//
 
 // variables stored in and retrieved from IndexedDB object stores
-var idbVersion;// holds the current database version number
-var idbDB = "anonynote";// the IDB database name
-var notepadIdLocal;// number; if in notepad location, holds that notepad local ID
-var offlineState = 0;// 0 = offline mode off (default); 1 = offline mode on; 2 = offline mode on by user choice; 3 = unavailable (no IDB support)
-var localPadCounter = 0;// local notepad counter; default to 0, unless later pulled from an IndexedDB stored value
-var localNoteCounter = 0;// local note counter; default to 0, unless later pulled from an IndexedDB stored value
-var langCode = "en-US";// current language code; default (and only language ATM) is 'en-US'
-var globalSync = true;// boolean; set to false if anything at all is out-of-sync between IndexedDB and MySQL
-var darkMode = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? true : false;// boolean; initially set based upon OS preference; possibly override later from IndexedDB or user selection
-var catalog = {};// an object that holds information on every notepad opened on this device
-var notepads = {};// an object that holds all the notes for all the notepads opened on this device
+const idbDB = "anonynote";// the IDB database name
+let idbVersion;// holds the current database version number
+let notepadIdLocal;// number; if in notepad location, holds that notepad local ID
+let offlineState = 0;// 0 = offline mode off (default); 1 = offline mode on; 2 = offline mode on by user choice; 3 = unavailable (no IDB support)
+let localPadCounter = 0;// local notepad counter; default to 0, unless later pulled from an IndexedDB stored value
+let localNoteCounter = 0;// local note counter; default to 0, unless later pulled from an IndexedDB stored value
+let _storedLang = localStorage.getItem('_language');
+let langCode = (_storedLang && (typeof availableLangs !== 'undefined') && (_storedLang in availableLangs)) ? _storedLang : 'en-US';// current language code
+let globalSync = true;// boolean; set to false if anything at all is out-of-sync between IndexedDB and MySQL
+const _storedTheme = localStorage.getItem('_theme');
+let currentTheme;
+if (_storedTheme !== null && themeRegistry[parseInt(_storedTheme)] !== undefined) {
+	currentTheme = parseInt(_storedTheme);
+} else {
+	currentTheme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 1 : 0;
+	localStorage.setItem('_theme', String(currentTheme));
+}// number; current theme ID — 0 = light (OS default), 1 = dark (OS default), 2+ = user selection only
+let catalog = {};// object; holds information on every notepad opened on this device
+let notepads = {};// object; holds all the notes for all the notepads opened on this device
 
 // declare IndexedDB snapshot object store variables; temp variables to use or discard depending on conditions
-var snapshotLoc, snapshotNotepadIdLocal, snapshotScroll;
+let snapshotLoc, snapshotNotepadIdLocal, snapshotScroll;
 
-var locale;// holds all the language for the app
-var npScroll;// holds notepad scroll position for notepad <--> edit movement
-var modalScroll;// holds notepad scroll position when toggling the modal window
-var modalForce = false;// boolean; set to true to prevent escaping and clicking to turn off the modal window
-var touchStatus = touchTime = touchCoorStart = touchCoorMove = touchId = void 0;// variables that hold data on the most recent touch event
-var statusQueue = 0;// number; increments up and down for actions triggering the status icon
-var statusComplete = 1;// boolean (1 or 0); indicates whether the statusQueue is clear or not
-var speed = 400;// milliseconds; transition speed
-$.fx.speeds._default = 400;// milliseconds; jQuery speed
-var timeoutInternet = 5000;// milliseconds; how long to wait before bailing on an internet connection check
-var timeoutAjax = 7500;// milliseconds; how long to wait before bailing any other Ajax call
-var funcThrottle = 3000;// milliseconds; certain functions are throttled so as to not rapid-fire, but will trigger after no more than the provided number of milliseconds
-var charSplitter = new GraphemeSplitter();// initialize the Grapheme Splitter library, used for accurate character counting
-var desktopWidth = 768;// number; the pixel width at which desktop screen size begins
-var npnameMaxChar = 16;// number; notepad name character limit, also applies to lock password limit -- also defined in global.php
-var npdescMaxChar = 160;// number; notepad description character limit, also defined in global.php
-var truncateNote = 150;// number; note characters to show before hiding the rest behind a 'read more' link (on mobile only)
-var notePrefix = "note-";// string; prefix for note ids
-var npLaunchFail;// boolean; set to true if there was a failed attempt to launch directly to a notepad page
-var appLoc = "home";// holds the current application location (home, notepad, or edit); "home" by default
-var appLaunched = false;// boolean; set to true when the application is finished prepping and actually running
-var actionQueue = [];// an array for temporary storage, used in the delay and execution of IDB puts
-var quickAddFocusOut = void 0;// // holds a timer from the setTimeout() function
-var colors = [];// an array that will later hold the palette for the color picker
-var colorHexToId = [];// another array that will later hold the palette for the color picker
+let locale;// holds all the language for the app
+let npScroll;// holds notepad scroll position for notepad <--> edit movement
+let editDomId;// holds the domID of the note currently open in the edit screen
+let modalScroll;// holds notepad scroll position when toggling the modal window
+let modalForce = false;// boolean; set to true to prevent escaping and clicking to turn off the modal window
+let touchStatus, touchTime, touchCoorStart, touchCoorMove, touchId;// variables that hold data on the most recent touch event
+let statusQueue = 0;// number; increments up and down for actions triggering the status icon
+let statusComplete = 1;// boolean (1 or 0); indicates whether the statusQueue is clear or not
 
-var isInWebApp = ((window.navigator.standalone == true) || (window.matchMedia('(display-mode: standalone)').matches)) ? true : false;// boolean; whether we're operating from within an iOS or Android web app environment
-var clipboardAccess = (typeof navigator.clipboard === 'undefined') ? false : true;// boolean; whether there is access to the clipboard
-var idbSupport;// boolean; holds whether there is IDB support
+let npLaunchFail;// boolean; set to true if there was a failed attempt to launch directly to a notepad page
+let appLoc = "home";// holds the current application location (home, notepad, or edit); "home" by default
+let appLaunched = false;// boolean; set to true when the application is finished prepping and actually running
+let actionQueue = [];// array; for temporary storage, used in the delay and execution of IDB puts
+let quickAddFocusOut = void 0;// holds a timer from the setTimeout() function
+let _renameSaving = false;// boolean; guard to prevent concurrent rename save calls (focusout + Enter can both trigger save)
+let notepadSortable = null;// holds the SortableJS instance for the notepad
 
-var networkConn, internetConn;
+let idbSupport;// boolean; holds whether there is IDB support
+let deferredPrompt = null;// holds the beforeinstallprompt event for the PWA install prompt
+
+let networkConn, internetConn;
 networkConn = internetConn = (navigator.onLine) ? true : false;// boolean; whether network and internet connections are detected. assume their statuses are the same unless proven otherwise
 
-var urlParams = {};// an object that holds all URL parameters
-var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,val) {
+const urlParams = {};// object; holds all URL parameters
+window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m, key, val) {
 	urlParams[key] = val;
 });
 
-
-//** GLOBAL AJAX SETTINGS **//
-
-$.ajaxSetup({
-	cache: false,// do not allow AJAX requests to be cached
-	contentType: "application/json",//the type of data we're sending
-	dataType : "json",// the type of data we expect to get back
-	timeout: timeoutAjax,// when to give up (in milliseconds)
-	error: function(xhr, status, errorThrown) {
-		userControl("open");
-		cloudIndicator("error");
-		statusIndicator("error");
-		if (appLaunched == false) {
-			if (appLoc == "notepad") {
-				$('#notepad').empty().removeAttr('style').removeClass('active-loc');
-				$('#home').removeAttr('style').addClass('active-loc');
-				updateState("home", "replace");
-				popupMsg(locale.popup.notepad_launch_timeout, "red");
-			}
-			$('#notepad-input').focus();
-			splashHandler("clear");
-		} else if (status == "timeout") {
-			if (offlineState == 3) {
-				errorModal("timeout");
-			} else {
-				internetConn = false;
-				$('body').attr('data-internet', 0);
-				setOfflineState("system", 1);
-				recheckInternet(15, 8);
-			}
-		} else {
-			errorModal(xhr.status);
-		}
-	}
+window.addEventListener('beforeinstallprompt', function(e) {
+	e.preventDefault();
+	deferredPrompt = e;
+});
+window.addEventListener('appinstalled', function() {
+	deferredPrompt = null;
 });
 
+//** UTILITIES **//
 
-//** CORE FUNCTIONS **//
-
-// increment holdReleaseCurrent until it hits the target, then allow document ready
-function holdRelease() {
-	holdReleaseCurrent++;
-	if (holdReleaseCurrent >= holdReleaseTarget) {
-		$.holdReady( false );
-	}
+// throttle: execute fn at most once per delay ms (trailing)
+function throttle(fn, delay) {
+	let timer;
+	return function() {
+		if (!timer) {
+			let ctx = this, args = arguments;
+			timer = setTimeout(function() { timer = null; fn.apply(ctx, args); }, delay);
+		}
+	};
 }
 
-WebFont.load({// document hold release #2: asynchronously load the Google Fonts
-	google: { families: ['Mukta:400,700', 'Lora:700'] },
-	active: function() { holdRelease(); },// hold release on success...
-	inactive: function() { holdRelease(); },// ...or failure
-	timeout: 3000
-});
+// debounce: execute fn after delay ms of inactivity
+function debounce(fn, delay) {
+	let timer;
+	return function() {
+		let ctx = this, args = arguments;
+		clearTimeout(timer);
+		timer = setTimeout(function() { fn.apply(ctx, args); }, delay);
+	};
+}
 
-var cssCheck = setInterval(function(){// document hold release #3: CSS is being loaded asynchronously on the index.php page; wait for the presence of one of its styles to confirm it's ready
-	if (getComputedStyle(document.querySelector(':root')).getPropertyValue('--white-color') != "") {
-		holdRelease();
-		clearInterval(cssCheck);
+function getUnixTimestamp() {
+	let clientDate = new Date();
+	let secondsUnix = Math.floor(clientDate.getTime()/1000);// number of seconds since Unix epoch
+	return secondsUnix;
+}
+
+function getUnixTimestampMS() {
+	let clientDate = new Date();
+	let msUnix = clientDate.getTime();// number of milliseconds since Unix epoch
+	return msUnix;
+}
+
+//** NETWORK **//
+
+function apiFetch(opts) {
+	let method = (opts.type || "GET").toUpperCase();
+	let url = opts.url;
+	let dataType = opts.dataType || "json";
+	let timeout = opts.timeout || timeoutApi;
+	let controller = new AbortController();
+	let timeoutId = setTimeout(function() { controller.abort(); }, timeout);
+	let fetchOpts = { method: method, signal: controller.signal, headers: { "X-Requested-With": "XMLHttpRequest" } };
+	if (method === "POST") {
+		fetchOpts.headers["Content-Type"] = "application/json";
+		if (opts.data) fetchOpts.body = (typeof opts.data === "string") ? opts.data : JSON.stringify(opts.data);
+	} else if (opts.data && typeof opts.data === "object") {
+		url += `?${new URLSearchParams(opts.data).toString()}`;
 	}
-}, 250);
-
-// determine internet connection status
-$.ajax({
-	type: "GET",
-	dataType: "text",
-	timeout: timeoutInternet,
-	url: "/ajax/is-connected",
-	success: function() {
-		internetConn = true;// we are probably online
-	},
-	error: function(xhr, status, errorThrown) {
-		internetConn = false;// we are either offline, or have a poor connection -- the latter to be treated the same as the former
-	},
-	complete: function() {
-		holdRelease();// document hold release #1: determine whether there is a functional internet connection
-		if (!('indexedDB' in window)) {// check for IndexedDB support
-			if (internetConn) {
-				idbSupport = false;
-				$('body').attr('data-idb-support', 0);
-				setOfflineState("system", 3);// without IDB support, offline mode is unavailable
-				loadLocale();// document hold release #4: load the default language code locale
-				prepLaunchState();// document hold release #5: set core app variables
-				holdRelease();// document hold release #6: no IDB to initialize, so skip it
+	if (opts.beforeSend) opts.beforeSend();
+	fetch(url, fetchOpts)
+		.then(function(response) {
+			clearTimeout(timeoutId);
+			if (!response.ok) throw { status: response.status, type: "error" };
+			return (dataType === "text") ? response.text() : response.json();
+		})
+		.then(function(data) {
+			if (opts.success) opts.success(data);
+			if (opts.complete) opts.complete();
+		})
+		.catch(function(err) {
+			clearTimeout(timeoutId);
+			// Re-throw JS runtime errors so they surface in the console as unhandled rejections.
+			// Only plain network errors ({status, type}), AbortError, and TypeError (offline/CORS) belong here.
+			if (err instanceof Error && err.name !== "AbortError" && !(err instanceof TypeError)) throw err;
+			let isTimeout = (err && err.name === "AbortError");
+			let status = isTimeout ? "timeout" : "error";
+			let xhr = { status: isTimeout ? 0 : (err.status || 0) };
+			if (opts.error) {
+				opts.error(xhr, status, "");
 			} else {
-				splashHandler("doa");// without either IndexedDB or an internet connection, this app can't run
+				userControl("open");
+				statusIndicator("error");
+				if (appLaunched == false) {
+					if (appLoc == "notepad") {
+						let _np = document.getElementById('notepad');
+						_np.innerHTML = '';
+						_np.removeAttribute('style');
+						_np.classList.remove('active-loc');
+						let _home = document.getElementById('home');
+						_home.removeAttribute('style');
+						_home.classList.add('active-loc');
+						updateState("home", "replace");
+						popupMsg(locale.popup.notepad_launch_timeout, "red");
+					}
+					document.getElementById('notepad-input').focus();
+					splashHandler("clear");
+				} else if (status == "timeout") {
+					if (offlineState == 3) {
+						errorModal("timeout");
+					} else {
+						internetConn = false;
+						document.body.setAttribute('data-internet', 0);
+						setOfflineState("system", 1);
+						recheckInternet(15, 8);
+					}
+				} else {
+					errorModal(xhr.status);
+				}
 			}
-		} else {
-			idbInit();// initialize IndexedDB
-		}
-	}
-});
+			if (opts.complete) opts.complete();
+		});
+}
 
 // re-check for an internet connection at an interval
 function recheckInternet(maxTimes, intervalSeconds) {
 	if ((internetConn) || (!networkConn)) return;// conditions for early bailing
 	clearTimeout(window.internetCheckFirst);
 	clearInterval(window.internetCheck);
-	var internetCheckCount = 0;
+	let internetCheckCount = 0;
 	function checkIsConnected() {
-		$.ajax({
+		apiFetch({
 			type: "GET",
 			dataType: "text",
 			timeout: timeoutInternet,
-			url: "/ajax/is-connected",
+			url: "/api/is-connected",
 			success: function() {
 				internetConn = true;
-				$('body').attr('data-internet', 1);
+				document.body.setAttribute('data-internet', 1);
 				setOfflineState("system", 0);
 				clearInterval(internetCheck);
 			},
@@ -182,21 +223,648 @@ function recheckInternet(maxTimes, intervalSeconds) {
 
 // load the locale JSON file
 function loadLocale() {
-	var xobj = new XMLHttpRequest();
-	xobj.overrideMimeType("application/json");
-	xobj.open('GET', '/locales/' + langCode + '.json', true);
-	xobj.onreadystatechange = function () {
-		if (xobj.readyState == 4) {
-			if (xobj.status == "200") {
-				locale = JSON.parse(xobj.responseText);
-				holdRelease();
-			} else {
-				splashHandler("doa");// an app without language is unusable
-			}
+	apiFetch({
+		type: "GET",
+		url: `/locales/${langCode}.json?v=${appVer}`,
+		dataType: "json",
+		success: function(data) {
+			locale = data;
+			holdRelease();
+		},
+		error: function() {
+			splashHandler("doa");// an app without language is unusable
 		}
-	};
-	xobj.send(null);
+	});
 }
+
+// trigger on changes to network connection status
+function updateOnlineStatus(event) {
+	console.log(`Network connection status change: ${event.type}.`);
+	networkConn = navigator.onLine ? true : false;
+	if (!networkConn) {// if the network connection has been lost
+		internetConn = false;
+		document.body.setAttribute('data-internet', 0);
+		setOfflineState("system", 1);
+		if (!idbSupport) splashHandler("doa");// without either IndexedDB or a network connection, this app can't run
+	} else {// if the network connection has been re-established
+		apiFetch({
+			type: "GET",
+			dataType: "text",
+			timeout: timeoutInternet,
+			url: "/api/is-connected",
+			success: function() {
+				internetConn = true;
+				document.body.setAttribute('data-internet', 1);
+				setOfflineState("system", 0);
+			},
+			error: function(xhr, status, errorThrown) {
+				internetConn = false;
+				document.body.setAttribute('data-internet', 0);
+				setOfflineState("system", 1);
+				recheckInternet(15, 4);
+			}
+		});
+	}
+}
+window.addEventListener('online',  updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+
+// toggle offline mode state
+// 0 = offline mode off (online); 1 = offline mode on via system coercion; 2 = offline mode on by user choice; 3 = unavailable (no IDB support)
+function setOfflineState(userSystem, num, override) {
+	if (override == "override") {
+		// disregard all of the logic below and execute the request silently
+		offlineState = num;
+		document.body.setAttribute('data-offline-mode', offlineState);
+		idbSnapshotUpdate("conn");
+		return offlineState;
+	}
+	if (offlineState == 3) return null;// this variable can never be other than "3" in the absence of IDB support; bail
+	let originalState = offlineState;
+	if (typeof num !== 'undefined') {
+		if (num == offlineState) return null;// the offline state is already the specified value; bail
+		if ((offlineState == 2) && (num == 0) && (userSystem == "system")) {
+			return null;// the user turned on offline mode and the system is trying to turn it off; don't let it
+		} else if ((offlineState == 2) && (num == 1)) {
+			return null;// the user had already turned offline mode on; don't let the system claim credit for it
+		} else {
+			offlineState = num;
+		}
+	} else {
+		switch (offlineState) {
+			case 0:
+				offlineState = (userSystem == "user") ? 2 : 1;
+				break;
+			case 1:
+				offlineState = 0;
+				break;
+			case 2:
+				if (userSystem == "user") {
+					offlineState = 0;
+				} else {
+					return null;// the user turned on offline mode and the system is trying to turn it off; don't let it
+				}
+				break;
+		}
+	}
+	// if we weren't online, but now we are -- and there's any data out of sync -- revert this change and bring up the sync modal now
+	// or, if the application is still launching, flag the sync modal to appear later, right as the splash screen is cleared
+	if ((originalState != 0) && (offlineState == 0) && (globalSync == false)) {
+		offlineState = originalState;
+		if (appLaunched == true) {
+			syncModal("dialog");
+		} else {
+			window.syncOnLaunch = true;
+		}
+	} else {
+		// otherwise, commit the change to DOM attribute and IndexedDB
+		document.body.setAttribute('data-offline-mode', offlineState);
+		idbSnapshotUpdate("conn");
+		// convey messaging via pop ups
+		if (offlineState == 0) {
+			if (userSystem == "user") popupMsg(locale.popup.offline.disabled_user, "green");
+			if (userSystem == "system") popupMsg(locale.popup.offline.disabled_sys, "green");
+		} else if (offlineState == 1) {
+			popupMsg(locale.popup.offline.enabled_sys, "red");
+		} else if (offlineState == 2) {
+			popupMsg(locale.popup.offline.enabled_user, "red");
+		}
+	}
+	return offlineState;
+}
+
+//** INDEXEDDB **//
+
+// either build the core IDB object stores on first use, or retrieve the stored values, or determine IDB is unsupported
+// then call holdRelease() to proceed with releasing the hold on document ready
+function idbInit() {
+	let os = 'snapshot';
+	let dbCheckPromise = idb.openDB(idbDB);
+	dbCheckPromise.catch(function() {
+		// IndexedDB is supported but not accessible, probably as a result of private browsing mode.
+		// Effectively, it's unsupported. Flag it as such. Proceed with application.
+		if (!internetConn) {
+			splashHandler("doa");// without either IndexedDB or an internet connection, this app can't run
+		} else {
+			idbSupport = false;
+			document.body.setAttribute('data-idb-support', 0);
+			setOfflineState("system", 3);// without IDB support, offline mode is unavailable
+			loadLocale();// document hold release #4: load the default language code locale
+			prepLaunchState();// document hold release #5: set core app variables
+			holdRelease();// document hold release #6: no IDB to initialize, so skip it
+		}
+	});
+	dbCheckPromise.then(function(db) {
+		idbSupport = true;
+		document.body.setAttribute('data-idb-support', 1);
+		idbVersion = db.version;
+		db.close();
+		if (idbVersion == 1) {
+			// V1 means application is running for the first time. Proceed to the build function where we upgrade to V2 and create core object stores.
+			document.body.setAttribute('data-offline-mode', offlineState);
+			loadLocale();// document hold release #4: load the default language code locale
+			prepLaunchState();// document hold release #5: set core app variables
+			idbBuild();
+		} else {
+			// any other version, pull stored variables
+			idbGetAll(os).then(function(snapshotArray) {
+				for (let s=0; s<snapshotArray.length; s++) {
+					if (snapshotArray[s]["entry"] == "conn") offlineState = snapshotArray[s]["offline"];
+					if (snapshotArray[s]["entry"] == "sync") globalSync = Boolean(snapshotArray[s]["synced"]);
+					if (snapshotArray[s]["entry"] == "count") {
+						localPadCounter = snapshotArray[s]["padCount"];
+						localNoteCounter = snapshotArray[s]["noteCount"];
+					}
+					if (snapshotArray[s]["entry"] == "pos") {
+						snapshotLoc = snapshotArray[s]["loc"];
+						snapshotNotepadIdLocal = snapshotArray[s]["npidLocal"];
+						snapshotScroll = snapshotArray[s]["scrollPos"];
+					}
+				}
+				document.body.setAttribute('data-offline-mode', offlineState);
+				loadLocale();// document hold release #4: load the stored language code locale
+				idbGetAll('catalog').then(function(catalogArray) {
+					if (catalogArray.length == 0) {
+						prepLaunchState();// document hold release #5: set core app variables
+						holdRelease();// document hold release #6: completed IDB initialization
+					} else {
+						for (let c=0; c<catalogArray.length; c++) {
+							catalog[catalogArray[c]["npidLocal"]] = {
+								'npname': catalogArray[c]["npname"],
+								'nphash': catalogArray[c]["nphash"],
+								'npdesc': catalogArray[c]["npdesc"],
+								'lastEdit': catalogArray[c]["lastEdit"],
+								'lastOpen': catalogArray[c]["lastOpen"],
+								'synced': catalogArray[c]["synced"]
+							}
+						}
+						let cycles = 0;
+						Object.keys(catalog).forEach(function(key) { let value = catalog[key];
+							idbGetAll(key).then(function(notesArray) {
+								cycles++;
+								notepads[key] = {};
+								for (let n=0; n<notesArray.length; n++) {
+									notepads[key][notesArray[n]["idLocal"]] = {
+										'idRemote': notesArray[n]["idRemote"],
+										'org': notesArray[n]["org"],
+										'color': notesArray[n]["color"],
+										'isChecked': notesArray[n]["isChecked"],
+										'text': notesArray[n]["text"],
+										'lastEdit': notesArray[n]["lastEdit"],
+										'deleted': notesArray[n]["deleted"],
+										'synced': notesArray[n]["synced"]
+									}
+								}
+								if (cycles == catalogArray.length) {
+									prepLaunchState();// document hold release #5: set core app variables
+									holdRelease();// document hold release #6: completed IDB initialization
+								}
+							});
+						});
+					}
+				});
+			});
+		}
+	});
+	function idbBuild() {
+		idbVersion++;
+		let dbPromise = idb.openDB(idbDB, idbVersion, { upgrade: function(db) {
+			let snapshotOS = db.createObjectStore(os, {keyPath: 'entry'});
+			snapshotOS.createIndex('loc', 'loc', {unique: false});
+			snapshotOS.createIndex('npidLocal', 'npidLocal', {unique: true});
+			snapshotOS.createIndex('scrollPos', 'scrollPos', {unique: false});
+			snapshotOS.createIndex('offline', 'offline', {unique: false});
+			snapshotOS.createIndex('padCount', 'padCount', {unique: false});
+			snapshotOS.createIndex('noteCount', 'noteCount', {unique: false});
+			snapshotOS.createIndex('synced', 'synced', {unique: false});
+			let catalogOS = db.createObjectStore('catalog', {keyPath: 'npidLocal'});
+			catalogOS.createIndex('npname', 'npname', {unique: false});
+			catalogOS.createIndex('nphash', 'nphash', {unique: false});
+			catalogOS.createIndex('npdesc', 'npdesc', {unique: false});
+			catalogOS.createIndex('lastEdit', 'lastEdit', {unique: false});
+			catalogOS.createIndex('lastOpen', 'lastOpen', {unique: false});
+			catalogOS.createIndex('synced', 'synced', {unique: false});
+		}});
+		dbPromise.then(function(db) {
+			let tx = db.transaction(os, 'readwrite');
+			let store = tx.objectStore(os);
+			let itemConn = { entry: "conn", offline: offlineState };
+			let itemCount = { entry: "count", padCount: localPadCounter, noteCount: localNoteCounter };
+			let itemSync = { entry: "sync", synced: (globalSync) ? 1 : 0 };
+			store.put(itemConn);
+			store.put(itemCount);
+			store.put(itemSync);
+			db.close();
+			return tx.done;
+		}).then(function() {
+			console.log('First time visit. Core application object stores defined.');
+			holdRelease();// document hold release #6: completed IDB initialization
+		});
+	}
+}
+
+// get all values from the specified object store; returns Promise
+function idbGetAll(os) {
+	if (!idbSupport) return;
+	let dbPromise = idb.openDB(idbDB);
+	return dbPromise.then(function(db) {
+		let tx = db.transaction(os, 'readonly');
+		let store = tx.objectStore(os);
+		let val = store.getAll();
+		db.close();
+		return val;
+	});
+}
+
+// update the IndexedDB snapshot object store
+function idbSnapshotUpdate(whichEntry) {
+	if (!idbSupport) return;
+	const os = 'snapshot';
+	let item, verbiage;
+	switch (whichEntry) {
+		case "pos":   item = { entry: "pos",   loc: appLoc, npidLocal: notepadIdLocal, scrollPos: window.scrollY }; verbiage = "position";      break;
+		case "count": item = { entry: "count", padCount: localPadCounter, noteCount: localNoteCounter };            verbiage = "counters";      break;
+		case "conn":  item = { entry: "conn",  offline: offlineState };                                             verbiage = "offline state"; break;
+		case "sync":  item = { entry: "sync",  synced: (globalSync) ? 1 : 0 };                                      verbiage = "data sync";     break;
+		default: return;
+	}
+	let dbPromise = idb.openDB(idbDB);
+	return dbPromise.then(function(db) {
+		let tx = db.transaction(os, 'readwrite');
+		let store = tx.objectStore(os);
+		store.put(item);
+		db.close();
+		return tx.done;
+	}).then(function() {
+		console.log(`Snapshot ${verbiage} updated:`, item);
+		return item;
+	});
+}
+
+// commit the current notepad hash, name, description, last edit timestamp, and sync status to the IndexedDB catalog object store
+function idbCatalogUpdate() {
+	if (!idbSupport) return;
+	let os = 'catalog';
+	let item = {
+		npidLocal: notepadIdLocal,
+		npname: catalog[notepadIdLocal]["npname"],
+		nphash: catalog[notepadIdLocal]["nphash"],
+		npdesc: catalog[notepadIdLocal]["npdesc"],
+		lastEdit: catalog[notepadIdLocal]["lastEdit"],
+		lastOpen: catalog[notepadIdLocal]["lastOpen"],
+		synced: catalog[notepadIdLocal]["synced"]
+	};
+	let dbPromise = idb.openDB(idbDB);
+	return dbPromise.then(function(db) {
+		let tx = db.transaction(os, 'readwrite');
+		let store = tx.objectStore(os);
+		store.put(item);
+		db.close();
+		return tx.done;
+	}).then(function() {
+		console.log('Notepad details updated to catalog object store:', item);
+		return item;
+	});
+}
+
+// update one or all notes in the current IndexedDB notepad object store
+function idbNoteUpdate(whichTar) {
+	if (!idbSupport) return;
+	let os = notepadIdLocal;
+	let thisTarget, items, item;
+	if (whichTar == "all") {
+		items = [];
+		for (let n in notepads[os]) {
+			thisTarget = { "idLocal": Number(n) };
+			items.push(Object.assign({}, thisTarget, notepads[os][n]));
+		}
+	} else {
+		thisTarget = { "idLocal": whichTar };
+		item = Object.assign({}, thisTarget, notepads[os][whichTar]);
+	}
+	let dbPromise = idb.openDB(idbDB);
+	return dbPromise.then(function(db) {
+		let tx = db.transaction(os, 'readwrite');
+		let store = tx.objectStore(os);
+		if (whichTar == "all") {
+			items.forEach(function(item) { store.put(item); });
+		} else {
+			store.put(item);
+		}
+		db.close();
+		return tx.done;
+	}).then(function() {
+		if (whichTar == "all") {
+			console.log(`All notes in object store "${os}" updated:`, items);
+			return items;
+		} else {
+			console.log(`Note ${whichTar} in object store "${os}" updated:`, item);
+			return item;
+		}
+	});
+}
+
+// delete one or all notes in the current IndexedDB notepad object store
+function idbNoteDelete(whichTar) {
+	if (!idbSupport) return;
+	let os = notepadIdLocal;
+	let dbPromise = idb.openDB(idbDB);
+	return dbPromise.then(function(db) {
+		let tx = db.transaction(os, 'readwrite');
+		let store = tx.objectStore(os);
+		if (whichTar == "all") {
+			store.clear();
+		} else {
+			store.delete(whichTar);
+		}
+		db.close();
+		return tx.done;
+	}).then(function() {
+		if (whichTar == "all") {
+			console.log(`All notes deleted from the "${os}" object store.`);
+		} else {
+			console.log(`Note ${whichTar} deleted from the "${os}" object store.`);
+		}
+		return true;
+	});
+}
+
+// clear notepad IndexedDB object store (if exists) and do a full refresh with a MySQL-gotten array
+function idbNotepadRefresh(dataArray) {
+	if (!idbSupport) return;
+	let os = notepadIdLocal;
+	let osCheckPromise = idb.openDB(idbDB);
+	return osCheckPromise.then(function(db) {
+		let osInDB = (db.objectStoreNames.contains(os) ? true : false);
+		db.close();
+		if (!osInDB) {
+			return idbCreateNotepadOS(os).then(function() { return arrayAddProceed(); });
+		} else {
+			console.log(`Object store "${os}" already exists. Proceeding to purge.`);
+			return clearOS().then(function() { return arrayAddProceed(); });
+		}
+	});
+	function clearOS() {
+		let dbPromise = idb.openDB(idbDB);
+		return dbPromise.then(function(db) {
+			let tx = db.transaction(os, 'readwrite');
+			let store = tx.objectStore(os);
+			store.clear();
+			db.close();
+			return tx.done;
+		}).then(function() {
+			console.log(`All items purged from the "${os}" object store.`);
+			return true;
+		});
+	}
+	function arrayAddProceed() {
+		if (typeof dataArray === 'undefined') return true;// there aren't any notes to add
+		let dbPromise = idb.openDB(idbDB);
+		return dbPromise.then(function(db) {
+			let tx = db.transaction(os, 'readwrite');
+			let store = tx.objectStore(os);
+			for (let n=0; n<dataArray.length; n++) { store.put(dataArray[n]); }
+			db.close();
+			return tx.done;
+		}).then(function() {
+			console.log(`All notes added to the "${os}" object store. Values:`, dataArray);
+			return true;
+		});
+	}
+}
+
+// create a new IndexedDB object store for the specified local notepad ID
+function idbCreateNotepadOS(osNum) {
+	idbVersion++;
+	let dbPromise = idb.openDB(idbDB, idbVersion, { upgrade: function(db) {
+		let npOS = db.createObjectStore(osNum, {keyPath: 'idLocal'});
+		npOS.createIndex('idRemote', 'idRemote', {unique: false});
+		npOS.createIndex('org', 'org', {unique: false});
+		npOS.createIndex('color', 'color', {unique: false});
+		npOS.createIndex('isChecked', 'isChecked', {unique: false});
+		npOS.createIndex('text', 'text', {unique: false});
+		npOS.createIndex('lastEdit', 'lastEdit', {unique: false});
+		npOS.createIndex('deleted', 'deleted', {unique: false});
+		npOS.createIndex('synced', 'synced', {unique: false});
+	}});
+	return dbPromise.then(function(db) {
+		db.close();
+		console.log(`Object store "${osNum}" created.`);
+		return true;
+	});
+}
+
+// after a successful sync: update catalog entries with server-assigned data and clear all note stores
+// preserves catalog (and lastOpen timestamps) while wiping stale note data
+function idbSyncWipe(postData) {
+	if (!idbSupport) return Promise.resolve();
+	// patch in-memory catalog: assign new hashes for newly synced notepads, mark all as synced
+	for (let npid in catalog) {
+		if (!catalog[npid]["nphash"] && postData[npid] && postData[npid]["nphash"]) {
+			catalog[npid]["nphash"] = postData[npid]["nphash"];
+		}
+		catalog[npid]["synced"] = 1;
+	}
+	// open IDB and in one transaction: update catalog entries, clear all note stores
+	return idb.openDB(idbDB).then(function(db) {
+		let noteStores = Array.from(db.objectStoreNames).filter(function(name) { return !isNaN(name); });
+		let tx = db.transaction(['catalog', ...noteStores], 'readwrite');
+		let catalogStore = tx.objectStore('catalog');
+		for (let npid in catalog) {
+			catalogStore.put({
+				npidLocal: Number(npid),
+				npname: catalog[npid]["npname"],
+				nphash: catalog[npid]["nphash"],
+				npdesc: catalog[npid]["npdesc"],
+				lastEdit: catalog[npid]["lastEdit"],
+				lastOpen: catalog[npid]["lastOpen"],
+				synced: catalog[npid]["synced"]
+			});
+		}
+		noteStores.forEach(function(name) { tx.objectStore(name).clear(); });
+		db.close();
+		return tx.done;
+	}).then(function() {
+		globalSync = true;
+		offlineState = 0;// ensure the app reloads in online mode after sync
+		return Promise.all([idbSnapshotUpdate("sync"), idbSnapshotUpdate("conn")]);
+	}).then(function() {
+		console.log('IDB sync wipe complete: catalog preserved, note stores cleared.');
+		return true;
+	});
+}
+
+// delete the entire IndexedDB application database
+function idbEmpty() {
+	if (!idbSupport) return;
+	let dbPromise = idb.deleteDB(idbDB);
+	return dbPromise.then(function() {
+		console.log(`Entire ${idbDB} IndexedDB database deleted.`);
+		return true;
+	});
+}
+
+//** PALETTE PICKER **//
+
+let _pp = new Map();// stores picker state keyed by element
+let _ppPopup = null;// singleton popup element, built once and reused
+let _ppActiveEl = null;// trigger element whose picker is currently open
+
+function _ppBuildPopup() {
+	let popup = document.createElement('div');
+	popup.className = 'pp-popup';
+	let grid = document.createElement('div');
+	grid.className = 'pp-grid';
+	let lbl = document.createElement('div');
+	lbl.className = 'pp-label';
+	grid.appendChild(lbl);
+	for (let i = 0; i < noteColorCount; i++) {
+		let sw = document.createElement('button');
+		sw.type = 'button';
+		sw.className = 'pp-swatch';
+		sw.style.backgroundColor = `var(--color-${i})`;
+		sw.setAttribute('data-color-id', i);
+		sw.addEventListener('click', function(e) {
+			e.stopPropagation();
+			if (_ppActiveEl) _ppSelectColor(_ppActiveEl, _pp.get(_ppActiveEl), i);
+		});
+		grid.appendChild(sw);
+	}
+	popup.appendChild(grid);
+	popup.addEventListener('click', function(e) { e.stopPropagation(); });
+	document.body.appendChild(popup);
+	_ppPopup = popup;
+}
+
+function _ppPositionPopup(el) {
+	let rect = el.getBoundingClientRect();
+	let spaceBelow = window.innerHeight - rect.bottom;
+	let popH = _ppPopup.offsetHeight || 130;
+	if (spaceBelow < popH && rect.top > popH) {
+		_ppPopup.style.top = `${rect.top + window.scrollY - popH - 4}px`;
+	} else {
+		_ppPopup.style.top = `${rect.bottom + window.scrollY + 4}px`;
+	}
+	_ppPopup.style.left = `${rect.left}px`;
+}
+
+function _ppOpen(el, state) {
+	if (state.open) { _ppClose(el, state); return; }
+	if (_ppActiveEl && _ppActiveEl !== el) { let os = _pp.get(_ppActiveEl); if (os) _ppClose(_ppActiveEl, os); }
+	let lbl = _ppPopup.querySelector('.pp-label');
+	if (state.opts.label) { lbl.textContent = state.opts.label; lbl.style.display = ''; } else { lbl.style.display = 'none'; }
+	_ppPopup.querySelectorAll('.pp-swatch').forEach(function(sw) { sw.classList.remove('active'); });
+	if (state.colorId !== null && state.colorId !== undefined) {
+		let activeSw = _ppPopup.querySelector(`.pp-swatch[data-color-id="${state.colorId}"]`);
+		if (activeSw) activeSw.classList.add('active');
+	}
+	_ppActiveEl = el;
+	_ppPopup.offsetHeight;// force reflow so CSS transitions fire
+	_ppPopup.classList.add('pp-open');
+	state.open = true;
+	_ppPositionPopup(el);
+	setTimeout(function() {
+		state.onDocClick = function() { _ppClose(el, state); };
+		document.addEventListener('click', state.onDocClick);
+	}, 0);
+}
+
+function _ppSelectColor(el, state, colorId) {
+	state.colorId = colorId;
+	_ppClose(el, state);
+	if (state.opts.change) state.opts.change.call(el, colorId);
+}
+
+function _ppClose(el, state) {
+	if (_ppPopup) _ppPopup.classList.remove('pp-open');
+	_ppActiveEl = null;
+	state.open = false;
+	if (state.onDocClick) {
+		document.removeEventListener('click', state.onDocClick);
+		state.onDocClick = null;
+	}
+}
+
+function _ppGet(el) {
+	let state = _pp.get(el);
+	return state ? state.colorId : null;
+}
+
+function _ppSet(el, colorId) {
+	let state = _pp.get(el);
+	if (!state) return;
+	state.colorId = (colorId !== null && colorId !== undefined) ? Number(colorId) : null;
+}
+
+function _ppClear(el) {
+	let state = _pp.get(el);
+	if (!state) return;
+	if (state.onDocClick) document.removeEventListener('click', state.onDocClick);
+	if (_ppActiveEl === el) { if (_ppPopup) _ppPopup.classList.remove('pp-open'); _ppActiveEl = null; }
+	_pp.delete(el);
+}
+
+function _ppClearAll() {
+	_pp.forEach(function(state) {
+		if (state.onDocClick) document.removeEventListener('click', state.onDocClick);
+	});
+	_pp.clear();
+	if (_ppPopup) _ppPopup.classList.remove('pp-open');
+	_ppActiveEl = null;
+}
+
+//** STARTUP **//
+
+// increment holdReleaseCurrent until it hits the target, then allow document ready
+function holdRelease() {
+	holdReleaseCurrent++;
+	if (holdReleaseCurrent >= holdReleaseTarget) {
+		_appReady();
+	}
+}
+
+// determine internet connection status
+apiFetch({
+	type: "GET",
+	dataType: "text",
+	timeout: timeoutInternet,
+	url: "/api/is-connected",
+	success: function() {
+		internetConn = true;// we are probably online
+	},
+	error: function(xhr, status, errorThrown) {
+		internetConn = false;// we are either offline, or have a poor connection -- the latter to be treated the same as the former
+	},
+	complete: function() {
+		holdRelease();// document hold release #1: determine whether there is a functional internet connection
+		if (!('indexedDB' in window)) {// check for IndexedDB support
+			if (internetConn) {
+				idbSupport = false;
+				document.body.setAttribute('data-idb-support', 0);
+				setOfflineState("system", 3);// without IDB support, offline mode is unavailable
+				loadLocale();// document hold release #4: load the default language code locale
+				prepLaunchState();// document hold release #5: set core app variables
+				holdRelease();// document hold release #6: no IDB to initialize, so skip it
+			} else {
+				splashHandler("doa");// without either IndexedDB or an internet connection, this app can't run
+			}
+		} else {
+			idbInit();// initialize IndexedDB
+		}
+	}
+});
+
+Promise.race([// document hold release #2: wait for Google Fonts to load, or bail after 3 seconds
+	document.fonts.ready,
+	new Promise(function(resolve) { setTimeout(resolve, 3000); })
+]).then(function() { holdRelease(); });
+
+let cssCheck = setInterval(function(){// document hold release #3: CSS is being loaded asynchronously on the index.php page; wait for the presence of one of its styles to confirm it's ready
+	if (getComputedStyle(document.querySelector(':root')).getPropertyValue('--color-0') != "") {
+		holdRelease();
+		clearInterval(cssCheck);
+	}
+}, 250);
 
 // set core application variables necessary for launch; depends upon an array of circumstances, including URL, offline state, and more
 function prepLaunchState() {
@@ -210,12 +878,11 @@ function prepLaunchState() {
 		holdRelease();
 	} else if (window.location.pathname.substring(0,4) == "/np/") {
 		// scenario #2: the URL is specifying a remote DB notepad hash
-		var notepadHash = window.location.pathname.substring(4,10);
+		let notepadHash = window.location.pathname.substring(4,10);
 		if (([0, 3].includes(offlineState)) && (internetConn)) {
-			$.ajax({
+			apiFetch({
 				type: "GET",
-				url: "/ajax/find-notepad-by-hash",
-				contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+				url: "/api/find-notepad-by-hash",
 				data: { nphash: notepadHash },
 				success: function(postData) {
 					if (postData["result"] == "success") {
@@ -234,10 +901,8 @@ function prepLaunchState() {
 							'nphash': notepadHash,
 							'npdesc': ((postData.npdesc == "") || (postData.npdesc == null) || (typeof postData.npdesc === 'undefined')) ? void 0 : postData.npdesc,
 							'lastEdit': postData.lastEdit,
-							'lastOpen': getUnixTimestamp(),
 							'synced': 1
 						}
-						idbCatalogUpdate();
 					} else {
 						// there was an error of one kind or another: flag the error and bail
 						npLaunchFail = true;
@@ -285,114 +950,6 @@ function prepLaunchState() {
 	}
 }
 
-// lockdown or allow user control
-function userControl(directive) {
-	switch (directive) {
-		case "lock":
-			$('#user-lock').addClass("display");
-			break;
-		case "open":
-			$('#user-lock').removeClass("display");
-			break;
-	}
-}
-
-// trigger on changes to network connection status
-function updateOnlineStatus(event) {
-	console.log("Network connection status change: " + event.type + ".");
-	networkConn = navigator.onLine ? true : false;
-	if (!networkConn) {// if the network connection has been lost
-		internetConn = false;
-		$('body').attr('data-internet', 0);
-		setOfflineState("system", 1);
-		if (!idbSupport) splashHandler("doa");// without either IndexedDB or a network connection, this app can't run
-	} else {// if the network connection has been re-established
-		$.ajax({
-			type: "GET",
-			dataType: "text",
-			timeout: timeoutInternet,
-			url: "/ajax/is-connected",
-			success: function() {
-				internetConn = true;
-				$('body').attr('data-internet', 1);
-				setOfflineState("system", 0);
-			},
-			error: function(xhr, status, errorThrown) {
-				internetConn = false;
-				$('body').attr('data-internet', 0);
-				setOfflineState("system", 1);
-				recheckInternet(15, 4);
-			}
-		});
-	}
-}
-window.addEventListener('online',  updateOnlineStatus);
-window.addEventListener('offline', updateOnlineStatus);
-
-// toggle offline mode state
-// 0 = offline mode off (online); 1 = offline mode on via system coercion; 2 = offline mode on by user choice; 3 = unavailable (no IDB support)
-function setOfflineState(userSystem, num, override) {
-	if (override == "override") {
-		// disregard all of the logic below and execute the request silently
-		offlineState = num;
-		$('body').attr('data-offline-mode', offlineState);
-		idbSnapshotUpdate("conn");
-		return offlineState;
-	}
-	if (offlineState == 3) return null;// this variable can never be other than "3" in the absence of IDB support; bail
-	var originalState = offlineState;
-	if (typeof num !== 'undefined') {
-		if (num == offlineState) return null;// the offline state is already the specified value; bail
-		if ((offlineState == 2) && (num == 0) && (userSystem == "system")) {
-			return null;// the user turned on offline mode and the system is trying to turn it off; don't let it
-		} else if ((offlineState == 2) && (num == 1)) {
-			return null;// the user had already turned offline mode on; don't let the system claim credit for it
-		} else {
-			offlineState = num;
-		}
-	} else {
-		switch (offlineState) {
-			case 0:
-				offlineState = (userSystem == "user") ? 2 : 1;
-				break;
-			case 1:
-				offlineState = 0;
-				break;
-			case 2:
-				if (userSystem == "user") {
-					offlineState = 0;
-				} else {
-					return null;// the user turned on offline mode and the system is trying to turn it off; don't let it
-				}
-				break;
-		}
-	}
-	// if we weren't online, but now we are -- and there's any data out of sync -- revert this change and bring up the sync modal now
-	// or, if the application is still launching, flag the sync modal to appear later, right as the splash screen is cleared
-	if ((originalState != 0) && (offlineState == 0) && (globalSync == false)) {
-		offlineState = originalState;
-		if (appLaunched == true) {
-			syncModal("dialog");
-		} else {
-			window.syncOnLaunch = true;
-		}
-	} else {
-		// otherwise, commit the change to DOM attribute and IndexedDB
-		$('body').attr('data-offline-mode', offlineState);
-		idbSnapshotUpdate("conn");
-		// convey messaging via pop ups
-		if (offlineState == 0) {
-			if (userSystem == "user") popupMsg(locale.popup.offline.disabled_user, "green");
-			if (userSystem == "system") popupMsg(locale.popup.offline.disabled_sys, "green");
-		} else if (offlineState == 1) {
-			popupMsg(locale.popup.offline.enabled_sys, "red");
-		} else if (offlineState == 2) {
-			popupMsg(locale.popup.offline.enabled_user, "red");
-		}
-	}
-	return offlineState;
-}
-
 // clear or otherwise modify the splash screen
 function splashHandler(toggle) {
 	switch (toggle) {
@@ -401,16 +958,23 @@ function splashHandler(toggle) {
 				window.syncOnLaunch = void 0;
 				syncModal("dialog");
 			}
-			$('body').removeClass("noscroll");
-			$('#splash').empty().hide();
+			document.body.classList.remove("noscroll"); {
+			const _splash = document.getElementById('splash');
+			_splash.innerHTML = '';
+			_splash.style.display = 'none';
 			appLaunched = true;
 			break;
-		case "doa":
-			$('body').addClass("noscroll");
-			$('#splash').empty().append("<button type='button' class='button transparent' onclick='window.location.reload();'><i class='error fa fa-warning'></i></button>").show();
+		} case "doa": {
+			document.body.classList.add("noscroll");
+			const _splash = document.getElementById('splash');
+			_splash.innerHTML = "<button type='button' class='button transparent' onclick='window.location.reload();'><i class='error fa fa-warning'></i></button>";
+			_splash.style.display = '';
 			break;
+		}
 	}
 }
+
+//** STATUS & INDICATORS **//
 
 // used to limit IDB function puts for quick transactions that are likely to succeed
 function npCommitHandler(toggle, sync, ts) {
@@ -438,6 +1002,7 @@ function npCommitHandler(toggle, sync, ts) {
 		}
 	}
 }
+
 function noteCommitHandler(toggle, whichid, sync, ts, option) {
 	switch (toggle) {
 		case "offline":
@@ -469,180 +1034,114 @@ function noteCommitHandler(toggle, whichid, sync, ts, option) {
 	}
 }
 
-// update status indicator icon
+// update menu bar status indicator icon
 function statusIndicator(toggle) {
+	let _si = document.getElementById('icon-status');
+	let _sii = _si.querySelector('i');
 	switch (toggle) {
 		case "process":
 			statusQueue++;
 			statusComplete = 0;
-			$('#icon-status i').removeClass().addClass('fa fa-refresh fa-spin');
-			$('#icon-status').addClass('display');
+			_sii.className = 'fa fa-refresh fa-spin';
+			_si.classList.add('display');
 			break;
 		case "success":
 			statusComplete = 1;
-			$('#icon-status i').removeClass().addClass('fa fa-check');
+			_sii.className = 'fa fa-check';
 			hideIndicator(statusQueue);
 			break;
 		case "error":
 			statusComplete = 1;
-			$('#icon-status i').removeClass().addClass('fa fa-warning');
+			_sii.className = 'fa fa-warning';
 			hideIndicator(statusQueue);
 			break;
 		case "hide":
 			statusComplete = 1;
-			$('#icon-status i').removeClass().addClass('fa');
-			$('#icon-status').removeClass('display');
+			_sii.className = 'fa';
+			_si.classList.remove('display');
 			break;
 	}
 }
 
-// hide status indicator icon
+// hide menu bar status indicator icon
 function hideIndicator(queueNum) {
 	window.setTimeout(function() {
-		if (statusQueue == queueNum) $('#icon-status').removeClass('display');
+		if (statusQueue == queueNum) document.getElementById('icon-status').classList.remove('display');
 	}, 3000);
 }
 
-// update cloud indicator icon
-function cloudIndicator(toggle) {
-	switch (toggle) {
-		case "online":
-			$('#icon-cloud i').removeClass().addClass('fa fa-cloud-online');
-			break;
-		case "offline":
-			$('#icon-cloud i').removeClass().addClass('fa fa-cloud-offline');
-			break;
-		case "upload":
-			$('#icon-cloud i').removeClass().addClass('fa fa-cloud-upload');
-			break;
-		case "download":
-			$('#icon-cloud i').removeClass().addClass('fa fa-cloud-download');
-			break;
-		case "error":
-			$('#icon-cloud i').removeClass().addClass('fa fa-cloud-error');
-			break;
-	}
-}
-
-// slide the app header bar in or out
-function appToolbarToggle() {
-	$('#app-toolbar').toggleClass('hide');
-}
-
-// toggle the modal window on and off
-// a lot of hack-y styling to accommodate a position: fixed, 100% height, no-scroll body -- which is necessary to prevent background scrolling on iOS
-function modalToggle(op) {
-	if ((op == "on") && ($('#modal').hasClass('display'))) return;
-	switch (op) {
-		case "on":
-			modalScroll = $(window).scrollTop();
-			var offsetY = $(window).scrollTop() * (-1) + 'px';
-			$('#modal').addClass('display');
-			$(document).on("keyup", modalEsc);
-			$('body').addClass('noscroll').css('top', offsetY);
-			var footerLocationCalc = $(window).height() - $('#container').height() - $('#header').height();
-			if (footerLocationCalc <= 110) {
-				if ($('html').hasClass('ie11')) {
-					$('#footer').css('position', 'relative').css('margin-top', 0);
-				} else {
-					$('#footer').css('position', 'relative').css('margin-top', $('#footer').height()*-1);
-				}
-			}
-			break;
-		case "off":
-			$('#footer').css('position', '').css('margin-top', '');
-			$('body').removeClass('noscroll').css('top', '');
-			$('#modal').removeClass('display');
-			$('#modal-window').empty();
-			$(document).off("keyup", modalEsc);
-			$(window).scrollTop(modalScroll);
-			modalForce = false;
-			break;
-	}
-}
-
-// listen for ESC key when modal is active
-function modalEsc(e) {
-	if ((e.keyCode == 27) && ($('#modal').hasClass('display')) && (!modalForce)) {
-		modalToggle("off");
-	}
-}
-
-// produce an error message
-function errorModal(errcode, manualtext) {
-	switch (errcode) {
-		case "timeout":
-			var dialogTxt = locale.modal.error.timeout;
-			break;
-		case 403:
-			var dialogTxt = locale.modal.error.http_code_403;
-			break;
-		case 404:
-			var dialogTxt = locale.modal.error.http_code_404;
-			break;
-		case 408:
-			var dialogTxt = locale.modal.error.http_code_408;
-			break;
-		case 500:
-			var dialogTxt = locale.modal.error.http_code_500;
-			break;
-		case "manual":
-			if (typeof manualtext !== 'undefined') {
-				var dialogTxt = manualtext;
-				break;
-			}
-		default:
-			var dialogTxt = locale.modal.error.catchall;
-			break;
-	}
-	var modalContent = [
-		'<i id="modal-close" class="fa fa-times" title="'+ locale.general.close +'" onclick="modalToggle(\'off\');"></i>',
-		'<div class="row modal-window-wrapper-top">',
-		'	<p>'+ dialogTxt +'</p>',
-		'</div>',
-		'<div class="row modal-window-wrapper-bottom">',
-		'	<button type="button" class="button color green large" aria-label="'+ locale.general.continue +'" onclick="modalToggle(\'off\');">'+ locale.general.continue +'</button>',
-		'	<button type="button" class="button color cyan large" aria-label="'+ locale.general.reload +'" onclick="window.location.reload();">'+ locale.general.reload +'</button>',
-		'</div>'
-	].join("\n");
-	$('#modal-window').empty().append(modalContent);
-	modalToggle("on");
-	userControl("open");
-	statusIndicator("error");
-}
-
-// display a popup message
-function popupMsg(popupTxt, optColor) {
+// display a popup message on screen bottom
+// duration: milliseconds to display before auto-dismiss; otherwise null for sticky (dismissed by user)
+// onDismiss: optional string, the onclick function call for the dismiss button (defaults to 'popupDismiss();')
+function popupMsg(popupTxt, optColor, duration, onDismiss) {
+	if (typeof duration === 'undefined') duration = timeoutPopup;
+	let dismissFn = (typeof onDismiss !== 'undefined') ? onDismiss : 'popupDismiss();';
 	clearTimeout(window.popupTimeout);
-	$('#popup-status').removeClass("red green");
-	if (typeof optColor !== 'undefined') $('#popup-status').addClass(optColor);
-	$('#popup-msg').html(popupTxt);
-	$('#popup-status').addClass('show');
-	window.popupTimeout = setTimeout(function() {
-		$('#popup-status').removeClass('show');
-	}, 5000);
+	let _ps = document.getElementById('popup-status');
+	_ps.classList.remove('red', 'green', 'blue', 'yellow', 'sticky');
+	if (typeof optColor !== 'undefined') _ps.classList.add(optColor);
+	if (duration === null) {
+		document.getElementById('popup-msg').innerHTML = `${popupTxt}<i id="popup-dismiss" class="fa fa-times" title="${locale.general.close}" onclick="${dismissFn}"></i>`;
+		_ps.classList.add('show', 'sticky');
+	} else {
+		document.getElementById('popup-msg').innerHTML = popupTxt;
+		_ps.classList.add('show');
+		window.popupTimeout = setTimeout(function() {
+			_ps.classList.remove('show', 'sticky');
+		}, duration);
+	}
 }
+
+// dismiss a sticky popup message
+function popupDismiss() {
+	clearTimeout(window.popupTimeout);
+	document.getElementById('popup-status').classList.remove('show', 'sticky');
+}
+
+// show the PWA install prompt popup if conditions are met
+function showInstallPrompt() {
+	if (isInWebApp) return;
+	if (!deferredPrompt || localStorage.getItem("_installPromptShown")) return;
+	popupMsg(`<a href="#" onclick="installPromptAccept(); return false;">${locale.popup.install}</a>`, void 0, null, 'installPromptDismiss();');
+}
+
+// user tapped the install link: trigger the native install dialog
+function installPromptAccept() {
+	if (!deferredPrompt) return;
+	deferredPrompt.prompt();
+	deferredPrompt.userChoice.then(function() {
+		deferredPrompt = null;
+		localStorage.setItem("_installPromptShown", "1");
+		popupDismiss();
+	});
+}
+
+// user dismissed the install prompt with the X: don't show it again
+function installPromptDismiss() {
+	localStorage.setItem("_installPromptShown", "1");
+	deferredPrompt = null;
+	popupDismiss();
+}
+
+//** NAVIGATION **//
 
 // update the display URL and store location information
 function updateState(appLocation, pushAction) {
+	let pushObject, pushTitle, pushURL;
 	switch (appLocation) {
 		case "home":
-			var pushObject = { loc: 'home' };
-			var pushTitle = locale.core.app_name + " - " + locale.app.tagline;
-			var pushURL = "/";
+			pushObject = { loc: 'home' };
+			pushTitle = `${locale.core.app_name} - ${locale.app.tagline}`;
+			pushURL = "/";
 			notepadIdLocal = void 0;
 			break;
 		case "notepad":
-			var pushObject = { loc: 'notepad', npidLocal: notepadIdLocal };
-			var pushTitle = catalog[notepadIdLocal]["npname"] + " - " + locale.core.app_name;
-			if (typeof catalog[notepadIdLocal]["nphash"] !== 'undefined') {
-				var pushURL = "/np/" + catalog[notepadIdLocal]["nphash"];
-			} else {
-				var pushURL = "/local/" + notepadIdLocal;
-			}
+			pushObject = { loc: 'notepad', npidLocal: notepadIdLocal };
+			pushTitle = `${catalog[notepadIdLocal]["npname"]} - ${locale.core.app_name}`;
+			pushURL = (typeof catalog[notepadIdLocal]["nphash"] !== 'undefined') ? `/np/${catalog[notepadIdLocal]["nphash"]}` : `/local/${notepadIdLocal}`;
 			break;
 		case "edit":
-			var pushTitle = catalog[notepadIdLocal]["npname"] + " - " + locale.core.app_name;
+			pushTitle = `${catalog[notepadIdLocal]["npname"]} - ${locale.core.app_name}`;
 			break;
 		default:
 			return;
@@ -652,388 +1151,29 @@ function updateState(appLocation, pushAction) {
 	} else if (pushAction == "push") {
 		history.pushState(pushObject, pushTitle, pushURL);
 	}
-	$(document).prop('title', pushTitle);
+	document.title = pushTitle;
 	appLoc = appLocation;
 	idbSnapshotUpdate("pos");
 }
-
-//** INDEXEDDB FUNCTIONS **//
-
-// either build the core IDB object stores on first use, or retrieve the stored values, or determine IDB is unsupported
-// then call holdRelease() to proceed with releasing the hold on document ready
-function idbInit() {
-	var os = 'snapshot';
-	var dbCheckPromise = idb.open(idbDB);
-	dbCheckPromise.catch(function() {
-		// IndexedDB is supported but not accessible, probably as a result of private browsing mode.
-		// Effectively, it's unsupported. Flag it as such. Proceed with application.
-		if (!internetConn) {
-			splashHandler("doa");// without either IndexedDB or an internet connection, this app can't run
-		} else {
-			idbSupport = false;
-			$('body').attr('data-idb-support', 0);
-			setOfflineState("system", 3);// without IDB support, offline mode is unavailable
-			loadLocale();// document hold release #4: load the default language code locale
-			prepLaunchState();// document hold release #5: set core app variables
-			holdRelease();// document hold release #6: no IDB to initialize, so skip it
-		}
-	});
-	dbCheckPromise.then(function(db) {
-		idbSupport = true;
-		$('body').attr('data-idb-support', 1);
-		idbVersion = db.version;
-		db.close();
-		if (idbVersion == 1) {
-			// V1 means application is running for the first time. Proceed to the build function where we upgrade to V2 and create core object stores.
-			$('body').attr('data-offline-mode', offlineState);
-			loadLocale();// document hold release #4: load the default language code locale
-			prepLaunchState();// document hold release #5: set core app variables
-			idbBuild();
-		} else {
-			// any other version, pull stored variables
-			idbGetAll(os).then(function(snapshotArray) {
-				for (var s=0; s<snapshotArray.length; s++) {
-					if (snapshotArray[s]["entry"] == "conn") offlineState = snapshotArray[s]["offline"];
-					if (snapshotArray[s]["entry"] == "lang") langCode = snapshotArray[s]["lang"];
-					if (snapshotArray[s]["entry"] == "sync") globalSync = Boolean(snapshotArray[s]["synced"]);
-					if (snapshotArray[s]["entry"] == "mode") darkMode = Boolean(snapshotArray[s]["darkMode"]);
-					if (snapshotArray[s]["entry"] == "count") {
-						localPadCounter = snapshotArray[s]["padCount"];
-						localNoteCounter = snapshotArray[s]["noteCount"];
-					}
-					if (snapshotArray[s]["entry"] == "pos") {
-						snapshotLoc = snapshotArray[s]["loc"];
-						snapshotNotepadIdLocal = snapshotArray[s]["npidLocal"];
-						snapshotScroll = snapshotArray[s]["scrollPos"];
-					}
-				}
-				$('body').attr('data-offline-mode', offlineState);
-				loadLocale();// document hold release #4: load the stored language code locale
-				idbGetAll('catalog').then(function(catalogArray) {
-					if (catalogArray.length == 0) {
-						prepLaunchState();// document hold release #5: set core app variables
-						holdRelease();// document hold release #6: completed IDB initialization
-					} else {
-						for (var c=0; c<catalogArray.length; c++) {
-							catalog[catalogArray[c]["npidLocal"]] = {
-								'npname': catalogArray[c]["npname"],
-								'nphash': catalogArray[c]["nphash"],
-								'npdesc': catalogArray[c]["npdesc"],
-								'lastEdit': catalogArray[c]["lastEdit"],
-								'lastOpen': catalogArray[c]["lastOpen"],
-								'synced': catalogArray[c]["synced"]
-							}
-						}
-						var cycles = 0;
-						$.each(catalog, function(key, value) {
-							idbGetAll(key).then(function(notesArray) {
-								cycles++;
-								notepads[key] = {};
-								for (var n=0; n<notesArray.length; n++) {
-									notepads[key][notesArray[n]["idLocal"]] = {
-										'idRemote': notesArray[n]["idRemote"],
-										'org': notesArray[n]["org"],
-										'color': notesArray[n]["color"],
-										'isChecked': notesArray[n]["isChecked"],
-										'text': notesArray[n]["text"],
-										'lastEdit': notesArray[n]["lastEdit"],
-										'deleted': notesArray[n]["deleted"],
-										'synced': notesArray[n]["synced"]
-									}
-								}
-								if (cycles == catalogArray.length) {
-									prepLaunchState();// document hold release #5: set core app variables
-									holdRelease();// document hold release #6: completed IDB initialization
-								}
-							});
-						});
-					}
-				});
-			});
-		}
-	});
-	function idbBuild() {
-		idbVersion++;
-		var dbPromise = idb.open(idbDB, idbVersion, function(upgradeDb) {
-			var snapshotOS = upgradeDb.createObjectStore(os, {keyPath: 'entry'});
-			snapshotOS.createIndex('loc', 'loc', {unique: false});
-			snapshotOS.createIndex('npidLocal', 'npidLocal', {unique: true});
-			snapshotOS.createIndex('scrollPos', 'scrollPos', {unique: false});
-			snapshotOS.createIndex('offline', 'offline', {unique: false});
-			snapshotOS.createIndex('padCount', 'padCount', {unique: false});
-			snapshotOS.createIndex('noteCount', 'noteCount', {unique: false});
-			snapshotOS.createIndex('lang', 'lang', {unique: false});
-			snapshotOS.createIndex('synced', 'synced', {unique: false});
-			snapshotOS.createIndex('darkMode', 'darkMode', {unique: false});
-			var catalogOS = upgradeDb.createObjectStore('catalog', {keyPath: 'npidLocal'});
-			catalogOS.createIndex('npname', 'npname', {unique: false});
-			catalogOS.createIndex('nphash', 'nphash', {unique: false});
-			catalogOS.createIndex('npdesc', 'npdesc', {unique: false});
-			catalogOS.createIndex('lastEdit', 'lastEdit', {unique: false});
-			catalogOS.createIndex('lastOpen', 'lastOpen', {unique: false});
-			catalogOS.createIndex('synced', 'synced', {unique: false});
-		});
-		dbPromise.then(function(db) {
-			var tx = db.transaction(os, 'readwrite');
-			var store = tx.objectStore(os);
-			var itemConn = { entry: "conn", offline: offlineState };
-			var itemCount = { entry: "count", padCount: localPadCounter, noteCount: localNoteCounter };
-			var itemLang = { entry: "lang", lang: langCode };
-			var itemSync = { entry: "sync", synced: (globalSync) ? 1 : 0 };
-			var itemMode = { entry: "mode", darkMode: (darkMode) ? 1 : 0 };
-			store.put(itemConn);
-			store.put(itemCount);
-			store.put(itemLang);
-			store.put(itemSync);
-			store.put(itemMode);
-			db.close();
-			return tx.complete;
-		}).then(function() {
-			console.log('First time visit. Core application object stores defined.');
-			holdRelease();// document hold release #6: completed IDB initialization
-		});
-	}
-}
-
-// get all values from the specified object store; returns Promise
-function idbGetAll(os) {
-	if (!idbSupport) return;
-	var dbPromise = idb.open(idbDB);
-	return dbPromise.then(function(db) {
-		var tx = db.transaction(os, 'readonly');
-		var store = tx.objectStore(os);
-		var val = store.getAll();
-		db.close();
-		return val;
-	});
-}
-
-// update the IndexedDB snapshot object store
-function idbSnapshotUpdate(whichEntry) {
-	if (!idbSupport) return;
-	var os = 'snapshot';
-	switch (whichEntry) {
-		case "pos":
-			var item = { entry: "pos", loc: appLoc, npidLocal: notepadIdLocal, scrollPos: $(document).scrollTop() };
-			var verbiage = "position";
-			break;
-		case "count":
-			var item = { entry: "count", padCount: localPadCounter, noteCount: localNoteCounter };
-			var verbiage = "counters";
-			break;
-		case "conn":
-			var item = { entry: "conn", offline: offlineState };
-			var verbiage = "offline state";
-			break;
-		case "sync":
-			var item = { entry: "sync", synced: (globalSync) ? 1 : 0 };
-			var verbiage = "data sync";
-			break;
-		case "mode":
-			var item = { entry: "mode", darkMode: (darkMode) ? 1 : 0 };
-			var verbiage = "dark mode";
-			break;
-		default:
-			return;
-			break;
-	}
-	var dbPromise = idb.open(idbDB);
-	return dbPromise.then(function(db) {
-		var tx = db.transaction(os, 'readwrite');
-		var store = tx.objectStore(os);
-		store.put(item);
-		db.close();
-		return tx.complete;
-	}).then(function() {
-		console.log('Snapshot '+ verbiage +' updated:', item);
-		return item;
-	});
-}
-
-// commit the current notepad hash, name, description, last edit timestamp, and sync status to the IndexedDB catalog object store
-function idbCatalogUpdate() {
-	if (!idbSupport) return;
-	var os = 'catalog';
-	var item = {
-		npidLocal: notepadIdLocal,
-		npname: catalog[notepadIdLocal]["npname"],
-		nphash: catalog[notepadIdLocal]["nphash"],
-		npdesc: catalog[notepadIdLocal]["npdesc"],
-		lastEdit: catalog[notepadIdLocal]["lastEdit"],
-		lastOpen: catalog[notepadIdLocal]["lastOpen"],
-		synced: catalog[notepadIdLocal]["synced"]
-	};
-	var dbPromise = idb.open(idbDB);
-	return dbPromise.then(function(db) {
-		var tx = db.transaction(os, 'readwrite');
-		var store = tx.objectStore(os);
-		store.put(item);
-		db.close();
-		return tx.complete;
-	}).then(function() {
-		console.log('Notepad details updated to catalog object store:', item);
-		return item;
-	});
-}
-
-// update one or all notes in the current IndexedDB notepad object store
-function idbNoteUpdate(whichTar) {
-	if (!idbSupport) return;
-	var os = notepadIdLocal;
-	if (whichTar == "all") {
-		var thisTarget;
-		var items = [];
-		for (let n in notepads[os]) {
-			thisTarget = { "idLocal": Number(n) };
-			items.push($.extend({}, thisTarget, notepads[os][n]));
-		}
-	} else {
-		var thisTarget = { "idLocal": whichTar };
-		var item = $.extend({}, thisTarget, notepads[os][whichTar]);
-	}
-	var dbPromise = idb.open(idbDB);
-	return dbPromise.then(function(db) {
-		var tx = db.transaction(os, 'readwrite');
-		var store = tx.objectStore(os);
-		if (whichTar == "all") {
-			items.forEach(function(item) { store.put(item); });
-		} else {
-			store.put(item);
-		}
-		db.close();
-		return tx.complete;
-	}).then(function() {
-		if (whichTar == "all") {
-			console.log('All notes in object store "'+ os +'" updated:', items);
-			return items;
-		} else {
-			console.log('Note '+ whichTar +' in object store "'+ os +'" updated:', item);
-			return item;
-		}
-	});
-}
-
-// delete one or all notes in the current IndexedDB notepad object store
-function idbNoteDelete(whichTar) {
-	if (!idbSupport) return;
-	var os = notepadIdLocal;
-	var dbPromise = idb.open(idbDB);
-	return dbPromise.then(function(db) {
-		var tx = db.transaction(os, 'readwrite');
-		var store = tx.objectStore(os);
-		if (whichTar == "all") {
-			store.clear();
-		} else {
-			store.delete(whichTar);
-		}
-		db.close();
-		return tx.complete;
-	}).then(function() {
-		if (whichTar == "all") {
-			console.log('All notes deleted from the "'+ os +'" object store.');
-		} else {
-			console.log('Note '+ whichTar +' deleted from the "'+ os +'" object store.');
-		}
-		return true;
-	});
-}
-
-// clear notepad IndexedDB object store (if exists) and do a full refresh with a MySQL-gotten array
-function idbNotepadRefresh(dataArray) {
-	if (!idbSupport) return;
-	var os = notepadIdLocal;
-	var osCheckPromise = idb.open(idbDB);
-	return osCheckPromise.then(function(db) {
-		var osInDB = (db.objectStoreNames.contains(os) ? true : false);
-		db.close();
-		if (!osInDB) {
-			return idbCreateNotepadOS(os).then(function() { return arrayAddProceed(); });
-		} else {
-			console.log('Object store "'+ os +'" already exists. Proceeding to purge.');
-			return clearOS().then(function() { return arrayAddProceed(); });
-		}
-	});
-	function clearOS() {
-		var dbPromise = idb.open(idbDB);
-		return dbPromise.then(function(db) {
-			var tx = db.transaction(os, 'readwrite');
-			var store = tx.objectStore(os);
-			store.clear();
-			db.close();
-			return tx.complete;
-		}).then(function() {
-			console.log('All items purged from the "'+ os +'" object store.');
-			return true;
-		});
-	}
-	function arrayAddProceed() {
-		if (typeof dataArray === 'undefined') return true;// there aren't any notes to add
-		var dbPromise = idb.open(idbDB);
-		return dbPromise.then(function(db) {
-			var tx = db.transaction(os, 'readwrite');
-			var store = tx.objectStore(os);
-			for (var n=0; n<dataArray.length; n++) { store.put(dataArray[n]); }
-			db.close();
-			return tx.complete;
-		}).then(function() {
-			console.log('All notes added to the "'+ os +'" object store. Values:', dataArray);
-			return true;
-		});
-	}
-}
-
-// create a new IndexedDB object store for the specified local notepad ID
-function idbCreateNotepadOS(osNum) {
-	idbVersion++;
-	var dbPromise = idb.open(idbDB, idbVersion, function(upgradeDb) {
-		var npOS = upgradeDb.createObjectStore(osNum, {keyPath: 'idLocal'});
-		npOS.createIndex('idRemote', 'idRemote', {unique: false});
-		npOS.createIndex('org', 'org', {unique: false});
-		npOS.createIndex('color', 'color', {unique: false});
-		npOS.createIndex('isChecked', 'isChecked', {unique: false});
-		npOS.createIndex('text', 'text', {unique: false});
-		npOS.createIndex('lastEdit', 'lastEdit', {unique: false});
-		npOS.createIndex('deleted', 'deleted', {unique: false});
-		npOS.createIndex('synced', 'synced', {unique: false});
-	});
-	return dbPromise.then(function(db) {
-		db.close();
-		console.log('Object store "'+ osNum +'" created.');
-		return true;
-	});
-}
-
-// delete the entire IndexedDB application database
-function idbEmpty() {
-	if (!idbSupport) return;
-	var dbPromise = idb.delete(idbDB);
-	return dbPromise.then(function() {
-		console.log('Entire '+ idbDB +' IndexedDB database deleted.');
-		return true;
-	});
-}
-
-
-//** ACTION FUNCTIONS **//
 
 // present the homepage
 function buildHome(dir) {
 	switch (dir) {
 		case "start":
 			statusIndicator("success");
-			$('#home').addClass('active-loc');
+			document.getElementById('home').classList.add('active-loc');
 			updateState("home", "replace");
-			$('#notepad-input').focus();
+			document.getElementById('notepad-input').focus();
 			splashHandler("clear");
 			break;
 		case "jump":
-			$('.color-selector').spectrum("destroy");// destroy all color picker instances
-			$('.active-loc').empty().removeAttr('style').removeClass('active-loc');
-			$('#notepad').empty().removeAttr('style');// just in case the jump was from the edit dialog
-			$('html, body').animate({ scrollTop: 0 }, 0);
-			$('#home').addClass('active-loc').removeAttr('style');
-			$('#notepad-input').val('').focus();
-			$('#find-notepad-button').addClass('disabled');
+			_ppClearAll();// close and clear all palette picker state
+			document.querySelectorAll('.active-loc').forEach(function(el) { el.innerHTML = ''; el.removeAttribute('style'); el.classList.remove('active-loc'); });
+			let _np2 = document.getElementById('notepad'); _np2.innerHTML = ''; _np2.removeAttribute('style');// just in case the jump was from the edit dialog
+			window.scrollTo(0, 0);
+			let _home = document.getElementById('home'); _home.classList.add('active-loc'); _home.removeAttribute('style');
+			let _ni = document.getElementById('notepad-input'); _ni.value = ''; _ni.focus();
+			document.getElementById('find-notepad-button').classList.add('disabled');
 			stickyButtonsToggle("hide");
 			updateState("home", "jump");
 			break;
@@ -1044,23 +1184,30 @@ function buildHome(dir) {
 			} else {
 				stickyButtonsToggle("hide");
 			}
-			$('#notepad').css({ opacity: 1, x: 0 }).transition({ opacity: 0, x: '50%' }, speed, function() {
-				updateState("home", "push");
-				$('.color-selector').spectrum("destroy");// destroy all color picker instances
-				$('#notepad').empty().removeAttr('style').removeClass('active-loc');
-				$('#home').css({ opacity: 0, x: '-50%' }).addClass('active-loc');
-				$('html, body').animate({ scrollTop: 0 }, 0);
-				$('#notepad-input').val('');
-				$('#find-notepad-button').addClass('disabled');
-				$('#home').transition({
-					opacity: 1,
-					x: 0,
-					duration: speed,
-					complete: function() {
-						$('#home').removeAttr('style');
-						$('#notepad-input').focus();
-					}
-				});
+			anime.animate('#notepad', {
+				opacity: [1, 0],
+				translateX: ['0%', '50%'],
+				duration: speed,
+				ease: 'inOutQuad',
+				onComplete: function() {
+					updateState("home", "push");
+					_ppClearAll();// close and clear all palette picker state
+					let _np = document.getElementById('notepad'); _np.innerHTML = ''; _np.removeAttribute('style'); _np.classList.remove('active-loc');
+					document.getElementById('home').classList.add('active-loc');
+					window.scrollTo(0, 0);
+					document.getElementById('notepad-input').value = '';
+					document.getElementById('find-notepad-button').classList.add('disabled');
+					anime.animate('#home', {
+						opacity: [0, 1],
+						translateX: ['-50%', '0%'],
+						duration: speed,
+						ease: 'inOutQuad',
+						onComplete: function() {
+							document.getElementById('home').removeAttribute('style');
+							document.getElementById('notepad-input').focus();
+						}
+					});
+				}
 			});
 			break;
 	}
@@ -1073,19 +1220,17 @@ function findNotepadByName(pad) {
 		return;
 	}
 	if ([0, 3].includes(offlineState)) {// if online, MySQL query
-		$.ajax({
+		apiFetch({
 			type: "POST",
-			url: "/ajax/find-notepad-by-name",
+			url: "/api/find-notepad-by-name",
 			data: JSON.stringify({
 				npname: pad
 			}),
 			beforeSend: function() {
 				userControl("lock");
 				statusIndicator("process");
-				cloudIndicator("upload");
 			},
 			success: function(postData) {
-				cloudIndicator("online");
 				if (postData["result"] == "is-empty") {
 					errorModal();
 				} else {
@@ -1136,271 +1281,326 @@ function findNotepadByName(pad) {
 	}
 }
 
+// find the notepad db entry based on the hash; used when opening a notepad from the localStorage-restored recent notepads list
+function findNotepadByHash(hash) {
+	for (let k in catalog) {
+		if (catalog[k]["nphash"] === hash) {
+			notepadIdLocal = Number(k);
+			buildNotepad("forward");
+			return;
+		}
+	}
+	apiFetch({
+		type: "GET",
+		url: "/api/find-notepad-by-hash",
+		data: { nphash: hash },
+		beforeSend: function() {
+			userControl("lock");
+			statusIndicator("process");
+		},
+		success: function(postData) {
+			if (postData["result"] == "success") {
+				localPadCounter++;
+				notepadIdLocal = localPadCounter;
+				idbSnapshotUpdate("count");
+				catalog[notepadIdLocal] = {
+					'npname': postData.npname,
+					'nphash': hash,
+					'npdesc': ((postData.npdesc == "") || (postData.npdesc == null) || (typeof postData.npdesc === 'undefined')) ? void 0 : postData.npdesc,
+					'lastEdit': postData.lastEdit,
+					'lastOpen': getUnixTimestamp(),
+					'synced': 1
+				};
+				idbCatalogUpdate();
+				buildNotepad("forward");
+			}
+		}
+	});
+}
+
 // build or re-build the recently opened notepads list
 // home page, web app mode only, max 10
 function buildRecentNotepads() {
 	if (!isInWebApp) return;
+	let _rnw = document.getElementById('recent-notepads-wrapper');
 	if (Object.keys(catalog).length == 0) {
-		$('#recent-notepads-wrapper').hide();
+		_rnw.style.display = 'none';
 		return;
 	} else {
-		$('#recent-notepads-wrapper').show();
+		_rnw.style.display = '';
 	}
-	$('#recent-notepads').empty();
-	var catalogOrdered = [];
-	$.each(catalog, function(key, value) {
-		catalogOrdered[key] = {
-			"npidLocal": key,
-			"npname": value["npname"],
-			"lastOpen": value["lastOpen"]
-		}
+	let _rn = document.getElementById('recent-notepads');
+	_rn.innerHTML = '';
+	let catalogOrdered = [];
+	Object.keys(catalog).forEach(function(key) {
+		let value = catalog[key];
+		catalogOrdered[key] = { "npidLocal": key, "npname": value["npname"], "lastOpen": value["lastOpen"] };
 	});
 	catalogOrdered.sort(function(a, b){return b.lastOpen - a.lastOpen}).slice(0, 10).forEach(function(c) {
-		$('#recent-notepads').append(
-			'<button type="button" class="button large full-width white" onclick="notepadIdLocal='+c.npidLocal+';catalog['+c.npidLocal+'][\'lastOpen\']=getUnixTimestamp();idbCatalogUpdate();buildNotepad(\'forward\');">'+ c.npname +'</button>'
+		_rn.insertAdjacentHTML('beforeend',
+			`<button type="button" class="button large full-width white" onclick="notepadIdLocal=${c.npidLocal};buildNotepad('forward');">${c.npname}</button>`
 		);
 	});
-	$('#recent-notepads-button').removeClass('active');
-	$('#recent-notepads').css('max-height', '0px');
+	document.getElementById('recent-notepads-button').classList.remove('active');
+	_rn.style.maxHeight = '0px';
 }
 
+//** NOTEPAD **//
+
 // open the specified notepad
-function buildNotepad(arg, scrPos, elem) {
-	if (arg == "backward") {
-		$('#edit').css({ opacity: 1, x: 0 }).transition({ opacity: 0, x: '50%' }, speed, function() {
-			$('#edit-color-selector').spectrum("destroy");
-			$('#edit').empty().removeAttr('style').removeClass('active-loc');
-			$('#notepad').css({ opacity: 0, x: '-50%' }).addClass('active-loc');
+function returnToNotepad(scrPos, elem) {
+	anime.animate('#edit', {
+		opacity: [1, 0],
+		translateX: ['0%', '50%'],
+		duration: speed,
+		ease: 'inOutQuad',
+		onComplete: function() {
+			_ppClear(document.getElementById('edit-color-selector'));
+			let _edit = document.getElementById('edit'); _edit.innerHTML = ''; _edit.removeAttribute('style'); _edit.classList.remove('active-loc');
+			document.getElementById('notepad').classList.add('active-loc');
 			if (typeof scrPos === 'undefined') {
-				$('html, body').animate({ scrollTop: 0 }, 0);
+				window.scrollTo(0, 0);
 			} else {
-				$(window).scrollTop(scrPos);
+				window.scrollTo(0, scrPos);
 			}
 			stickyButtonsToggle("show");
 			updateState("notepad", "jump");
-			$('#notepad').transition({
-				opacity: 1,
-				x: 0,
+			anime.animate('#notepad', {
+				opacity: [0, 1],
+				translateX: ['-50%', '0%'],
 				duration: speed,
-				complete: function() {
-					$('#notepad').removeAttr('style');// fixes sortable bug
-					// If a DOM element has been added or changed in the edit dialog, Linkify it now.
-					// This is frankly baffling. It won't Linkify while hidden back on the edit dialog. Fine. It won't even consistently Linkify (I'm looking at you, iOS) while perfectly visible, albeit off screen. Okay...
-					// So now I have to wait for the animation to finish, and then suffer the visual hiccup of the Linkification that I'd rather happen off screen?
-					// When I Linkify the whole notepad on the notepad build, IT'S INVISIBLE. AND IT WORKS. So WTF is going on here?
+				ease: 'inOutQuad',
+				onComplete: function() {
+					document.getElementById('notepad').removeAttribute('style');// anime.js leaves inline transform/opacity on the element after animation; remove so SortableJS reads clean geometry
+					// Linkify must run after the animation completes. During initial notepad build, Linkify runs before any layout is painted so visibility is irrelevant.
+					// When returning from edit, the notepad is already in the rendered layout and iOS withholds geometry for off-screen transformed elements, making Linkify unreliable mid-animation.
 					if (typeof elem !== 'undefined') linkifyInit(elem);
 				}
 			});
-		});
-	} else {
-		var lockStatus = false;
-		var hasNotes = false;
-		var allNotes = "";
-		if ([0, 3].includes(offlineState) && (typeof catalog[notepadIdLocal]["nphash"] !== 'undefined')) {// if online and notepad hash is defined, MySQL query
-			$.ajax({
-				type: "GET",
-				url: "/ajax/build-notepad",
-				contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-				data: {
-					nphash: catalog[notepadIdLocal]["nphash"]
-				},
-				beforeSend: function() {
-					userControl("lock");
-					statusIndicator("process");
-					cloudIndicator("download");
-				},
-				success: function(postData) {
-					cloudIndicator("online");
-					if (postData["result"] == "hashfail") {
-						errorModal("manual", locale.modal.error.critical);
-						return;
-					}
-					delete notepads[notepadIdLocal];
-					notepads[notepadIdLocal] = {};
-					var npdescCheck = ((postData["npdesc"] == "") || (postData["npdesc"] == null) || (typeof postData["npdesc"] === 'undefined')) ? void 0 : postData["npdesc"];
-					if ((catalog[notepadIdLocal]["npname"] != postData["npname"]) || (catalog[notepadIdLocal]["npdesc"] != npdescCheck)) {
-						catalog[notepadIdLocal]["npname"] = postData["npname"];
-						catalog[notepadIdLocal]["npdesc"] = npdescCheck;
-						catalog[notepadIdLocal]["lastEdit"] = postData["lastEdit"];
-						idbCatalogUpdate();
-					}
-					if (postData["lockstatus"] == true) lockStatus = true;
-					if (postData["size"] != 0) {// if there are any notes, parse through them
-						hasNotes = true;
-						var thisNote, thisTarget;
-						var idbArray = [];
-						for (var i=0; i<postData["size"]; i++) {
-							localNoteCounter++;
-							thisTarget = { "idLocal": localNoteCounter };
-							notepads[notepadIdLocal][localNoteCounter] = { "idRemote": Number(postData[i]["id"]), "org": Number(postData[i]["org"]), "color": Number(postData[i]["color"]), "isChecked": Number(postData[i]["isChecked"]), "text": postData[i]["text"], "lastEdit": Number(postData[i]["lastEdit"]), "deleted": 0, "synced": 1 };
-							idbArray[i] = $.extend({}, thisTarget, notepads[notepadIdLocal][localNoteCounter]);
-							thisNote = rowBuilder(localNoteCounter, postData[i]["id"], postData[i]["color"], postData[i]["isChecked"], postData[i]["text"]);
-							allNotes += thisNote;
-						}
-						idbSnapshotUpdate("count");// update the counter
-						idbNotepadRefresh(idbArray);// refresh (or create) an object store with this notepad's notes
-					} else {
-						idbNotepadRefresh();// give it no parameter so that it will simply create an empty OS or clear an existing one
-					}
-					buildNotepadProceed();
+		}
+	});
+}
+
+function buildNotepad(arg, scrPos, elem) {
+	let lockStatus = false, hasNotes = false, allNotes = "";
+	if ([0, 3].includes(offlineState) && (typeof catalog[notepadIdLocal]["nphash"] !== 'undefined')) {// if online and notepad hash is defined, MySQL query
+		apiFetch({
+			type: "GET",
+			url: "/api/build-notepad",
+			data: {
+				nphash: catalog[notepadIdLocal]["nphash"]
+			},
+			beforeSend: function() {
+				userControl("lock");
+				statusIndicator("process");
+			},
+			success: function(postData) {
+				if (postData["result"] == "hashfail") {
+					errorModal("manual", locale.modal.error.critical);
+					return;
 				}
-			});
-		} else {// if offline, pull from IDB catalog
-			if (Object.keys(notepads[notepadIdLocal]).length > 0) {// if there are any notes, parse through them
-				var orderedNotesObj = {};
-				for (let n in notepads[notepadIdLocal]) {
-					if (notepads[notepadIdLocal][n]["deleted"] == 0) {// discard deleted notes; use org as key to put them in order
-						orderedNotesObj[notepads[notepadIdLocal][n]["org"]] = { "idLocal" : Number(n), "idRemote" : notepads[notepadIdLocal][n]["idRemote"], "color" : notepads[notepadIdLocal][n]["color"], "isChecked" : notepads[notepadIdLocal][n]["isChecked"], "text" : notepads[notepadIdLocal][n]["text"] };
-					}
+				delete notepads[notepadIdLocal];
+				notepads[notepadIdLocal] = {};
+				let npdescCheck = ((postData["npdesc"] == "") || (postData["npdesc"] == null) || (typeof postData["npdesc"] === 'undefined')) ? void 0 : postData["npdesc"];
+				if ((catalog[notepadIdLocal]["npname"] != postData["npname"]) || (catalog[notepadIdLocal]["npdesc"] != npdescCheck)) {
+					catalog[notepadIdLocal]["npname"] = postData["npname"];
+					catalog[notepadIdLocal]["npdesc"] = npdescCheck;
+					catalog[notepadIdLocal]["lastEdit"] = postData["lastEdit"];
+					idbCatalogUpdate();
 				}
-				if (Object.keys(orderedNotesObj).length > 0) {// proceed if there are any non-deleted notes
-					var orderedNotes = Object.entries(orderedNotesObj);// convert to array
-					orderedNotes.reverse();// reverse the array, since we display descending order
+				if (postData["lockstatus"] == true) lockStatus = true;
+				if (postData["size"] != 0) {// if there are any notes, parse through them
 					hasNotes = true;
-					for (var o=0; o<orderedNotes.length; o++) {
-						thisNote = rowBuilder(orderedNotes[o][1]["idLocal"], orderedNotes[o][1]["idRemote"], orderedNotes[o][1]["color"], orderedNotes[o][1]["isChecked"], orderedNotes[o][1]["text"]);
-						allNotes += thisNote;
+					let thisTarget;
+					let idbArray = [];
+					for (let i=0; i<postData["size"]; i++) {
+						localNoteCounter++;
+						thisTarget = { "idLocal": localNoteCounter };
+						notepads[notepadIdLocal][localNoteCounter] = { "idRemote": Number(postData[i]["id"]), "org": Number(postData[i]["org"]), "color": Number(postData[i]["color"]), "isChecked": Number(postData[i]["isChecked"]), "text": postData[i]["text"], "lastEdit": Number(postData[i]["lastEdit"]), "deleted": 0, "synced": 1 };
+						idbArray[i] = Object.assign({}, thisTarget, notepads[notepadIdLocal][localNoteCounter]);
+						allNotes += rowBuilder(localNoteCounter, postData[i]["id"], postData[i]["color"], postData[i]["isChecked"], postData[i]["text"]);
 					}
-				}
-			}
-			buildNotepadProceed();
-		}
-	}
-	function buildNotepadProceed() {
-		statusIndicator("success");
-		if (arg == "refresh") var previousScroll = $(window).scrollTop();
-		if (!$('#notepad').is(':empty')) {
-			$('.color-selector').spectrum("destroy");// remove any of the previous Spectrum color picker elements
-			$('#notepad').empty();
-		}
-		var notepadTop = [
-			'<div id="notepad-top">',
-			'	<div id="np-top-row">',
-			'		<div id="lock-button-wrapper"><button id="lock-button" type="button" class="button circle" aria-label="'+ locale.notepad.lock +'" title="'+ locale.notepad.lock +'"><i class="fa fa-unlock"></i></button></div>',
-			'		<div id="np-rename" class="h1"></div>',
-			'	</div>',
-			'	<div id="np-desc"></div>',
-			'	<div id="notepad-btns">',
-			'		<button id="home-button" type="button" class="button responsive" aria-label="'+ locale.notepad.home +'" onclick="buildHome(\'backward\');">',
-			'			<i class="fa fa-home"></i><span> '+ locale.notepad.home +'</span>',
-			'		</button>',
-			'		<button id="delete-all-modal-button" type="button" class="button color red responsive" aria-label="'+ locale.notepad.delete_all +'" onclick="deleteAllModal();">',
-			'			<i class="fa fa-trash"></i><span> '+ locale.notepad.delete_all +'</span>',
-			'		</button>',
-			'		<button id="sort-modal-button" type="button" class="button color orange responsive" aria-label="'+ locale.notepad.sort +'" onclick="sortModal();">',
-			'			<i class="fa fa-sort"></i><span> '+ locale.notepad.sort +'</span>',
-			'		</button>',
-			'		<button id="json-modal-button" type="button" class="button color blue responsive" aria-label="'+ locale.notepad.json +'" onclick="jsonModal();">',
-			'			<i class="fa fa-code"></i><span> '+ locale.notepad.json +'</span>',
-			'		</button>',
-			'		<button id="refresh-button" type="button" class="button color green responsive" aria-label="'+ locale.notepad.refresh +'" onclick="buildNotepad(\'refresh\');">',
-			'			<i class="fa fa-repeat"></i><span> '+ locale.notepad.refresh +'</span>',
-			'		</button>',
-			'	</div>',
-			'	<div id="quick-add"><form>',
-			'		<input id="quick-add-input" type="text" aria-label="'+ locale.notepad.quick_add_placeholder +'" placeholder="'+ locale.notepad.quick_add_placeholder +'" onkeypress="return event.keyCode!=13;"/>',
-			'		<button id="quick-add-button" type="submit" class="button color cyan square disabled" aria-label="'+ locale.notepad.quick_add_label +'" onclick="quickAdd();"><i class="fa fa-enter"></i></button>',
-			'	</form></div>',
-			'</div>'
-		].join("\n");
-		$('#notepad').append(notepadTop);
-		if (typeof catalog[notepadIdLocal]["nphash"] === 'undefined') $('#json-modal-button').addClass('disabled');
-		// fill in top with additional elements
-		fillNotepadName();
-		fillNotepadDesc();
-		// add listeners to quick add input
-		$('#quick-add-input').on({
-			'input': function() {
-				if ($(this).val() == "") {
-					if (!$('#quick-add-button').hasClass('disabled')) $('#quick-add-button').addClass('disabled');
+					idbSnapshotUpdate("count");// update the counter
+					idbNotepadRefresh(idbArray);// refresh (or create) an object store with this notepad's notes
 				} else {
-					if ($('#quick-add-button').hasClass('disabled')) $('#quick-add-button').removeClass('disabled');
+					idbNotepadRefresh();// give it no parameter so that it will simply create an empty OS or clear an existing one
 				}
-			},
-			'keyup': function(e) {
-				if ((e.keyCode == 13) && (!$('#quick-add-button').hasClass('disabled'))) {
-					$('#quick-add-button').click();
-				}
-			},
-			'focusin': function() {
-				if (typeof quickAddFocusOut !== 'undefined') {
-					clearTimeout(quickAddFocusOut);
-					quickAddFocusOut = void 0;
-				} else {
-					stickyButtonsToggle("hide");
-				}
-			},
-			'focusout': function() {
-				quickAddFocusOut = setTimeout(function() { stickyButtonsToggle("show"); quickAddFocusOut = void 0; }, 100);
+				buildNotepadRender(arg, scrPos, elem, lockStatus, hasNotes, allNotes);
 			}
 		});
-		// lock the notepad if specified in database
-		if (lockStatus) {
-			lockToggle("lock");
-		} else {
-			$('#lock-button').off('click').click(function() {
-				lockModal();
-			});
-		}
-		// check for presence of notes and build accordingly
-		if (!hasNotes) {
-			// no notes = no notepad
-			notepadRoot("destroy");
-		} else {
-			// create the notepad root
-			notepadRoot("create");
-			// populate notes
-			$('#notepad-body').append(allNotes);
-			// toggle the state of the Check All button
-			setCheckAllState();
-			// Linkify these notes and Spectrum-ize the color selectors
-			linkifyInit("all");
-			spectrumInit("all");
-		}
-		// open user control
-		userControl("open");
-		// animate it in
-		switch (arg) {
-			case "start":
-				stickyButtonsToggle("show");
-				$('#notepad').addClass('active-loc');
-				splashHandler("clear");
-				if (typeof scrPos !== 'undefined') $(window).scrollTop(scrPos);
-				updateState("notepad", "replace");
-				break;
-			case "refresh":
-				$(window).scrollTop(previousScroll);
-				break;
-			case "jump":
-				if ($('.active-loc').attr('id') == "home") {
-					$('#home').removeClass('active-loc').removeAttr('style');
-				} else {
-					$('.active-loc').empty().removeClass('active-loc').removeAttr('style');
+	} else {// if offline, pull from IDB catalog
+		if (Object.keys(notepads[notepadIdLocal]).length > 0) {// if there are any notes, parse through them
+			let orderedNotesObj = {};
+			for (let n in notepads[notepadIdLocal]) {
+				if (notepads[notepadIdLocal][n]["deleted"] == 0) {// discard deleted notes; use org as key to put them in order
+					orderedNotesObj[notepads[notepadIdLocal][n]["org"]] = { "idLocal" : Number(n), "idRemote" : notepads[notepadIdLocal][n]["idRemote"], "color" : notepads[notepadIdLocal][n]["color"], "isChecked" : notepads[notepadIdLocal][n]["isChecked"], "text" : notepads[notepadIdLocal][n]["text"] };
 				}
-				$('#notepad').addClass('active-loc');
-				stickyButtonsToggle("show");
-				updateState("notepad", "jump");
-				buildRecentNotepads();
-				break;
-			case "forward":
-				$('#home').css({ opacity: 1, x: 0 }).transition({ opacity: 0, x: '-50%' }, speed, function() {
-					$('#home').removeClass('active-loc').removeAttr('style');
-					$('#notepad').css({ opacity: 0, x: '50%' }).addClass('active-loc');
-					$('html, body').animate({ scrollTop: 0 }, 0);
+			}
+			if (Object.keys(orderedNotesObj).length > 0) {// proceed if there are any non-deleted notes
+				let orderedNotes = Object.entries(orderedNotesObj);// convert to array
+				orderedNotes.reverse();// reverse the array, since we display descending order
+				hasNotes = true;
+				for (let o=0; o<orderedNotes.length; o++) {
+					allNotes += rowBuilder(orderedNotes[o][1]["idLocal"], orderedNotes[o][1]["idRemote"], orderedNotes[o][1]["color"], orderedNotes[o][1]["isChecked"], orderedNotes[o][1]["text"]);
+				}
+			}
+		}
+		buildNotepadRender(arg, scrPos, elem, lockStatus, hasNotes, allNotes);
+	}
+}
+
+function buildNotepadRender(arg, scrPos, elem, lockStatus, hasNotes, allNotes) {
+	statusIndicator("success");
+	let previousScroll;
+	if (arg == "refresh") previousScroll = window.scrollY;
+	let _npEl = document.getElementById('notepad');
+	if (_npEl.innerHTML.trim() !== '') {
+		_ppClearAll();// close and clear all palette picker state
+		_npEl.innerHTML = '';
+	}
+	let notepadTop = [
+		'<div id="notepad-top">',
+		'	<div id="np-top-row">',
+		`		<div id="lock-button-wrapper"><button id="lock-button" type="button" class="button circle" aria-label="${locale.notepad.lock}" title="${locale.notepad.lock}"><i class="fa fa-unlock"></i></button></div>`,
+		'		<div id="np-rename" class="h1"></div>',
+		'	</div>',
+		'	<div id="np-desc"></div>',
+		'	<div id="notepad-btns">',
+		`		<button id="home-button" type="button" class="button responsive" aria-label="${locale.notepad.home}" onclick="buildHome('backward');">`,
+		`			<i class="fa fa-home"></i><span> ${locale.notepad.home}</span>`,
+		'		</button>',
+		`		<button id="delete-all-modal-button" type="button" class="button color red responsive" aria-label="${locale.notepad.delete_all}" onclick="deleteAllModal();">`,
+		`			<i class="fa fa-trash"></i><span> ${locale.notepad.delete_all}</span>`,
+		'		</button>',
+		`		<button id="sort-modal-button" type="button" class="button color orange responsive" aria-label="${locale.notepad.sort}" onclick="sortModal();">`,
+		`			<i class="fa fa-sort"></i><span> ${locale.notepad.sort}</span>`,
+		'		</button>',
+		`		<button id="json-modal-button" type="button" class="button color blue responsive" aria-label="${locale.notepad.api}" onclick="apiModal();">`,
+		`			<i class="fa fa-code"></i><span> ${locale.notepad.api}</span>`,
+		'		</button>',
+		`		<button id="refresh-button" type="button" class="button color green responsive" aria-label="${locale.notepad.refresh}" onclick="buildNotepad('refresh');">`,
+		`			<i class="fa fa-repeat"></i><span> ${locale.notepad.refresh}</span>`,
+		'		</button>',
+		'	</div>',
+		'	<div id="quick-add"><form>',
+		`		<input id="quick-add-input" type="text" aria-label="${locale.notepad.quick_add_placeholder}" placeholder="${locale.notepad.quick_add_placeholder}" onkeydown="return event.key!=='Enter';"/>`,
+		`		<button id="quick-add-button" type="submit" class="button color cyan square disabled" aria-label="${locale.notepad.quick_add_label}" onclick="quickAdd();"><i class="fa fa-enter"></i></button>`,
+		'	</form></div>',
+		'</div>'
+	].join("\n");
+	document.getElementById('notepad').insertAdjacentHTML('beforeend', notepadTop);
+	if (typeof catalog[notepadIdLocal]["nphash"] === 'undefined') document.getElementById('json-modal-button').classList.add('disabled');
+	// fill in top with additional elements
+	fillNotepadName();
+	fillNotepadDesc();
+	// add listeners to quick add input
+	let _qai = document.getElementById('quick-add-input');
+	let _qab = document.getElementById('quick-add-button');
+	_qai.addEventListener('input', function() {
+		if (this.value == "") {
+			_qab.classList.add('disabled');
+		} else {
+			_qab.classList.remove('disabled');
+		}
+	});
+	_qai.addEventListener('keyup', function(e) {
+		if ((e.key === "Enter") && (!_qab.classList.contains('disabled'))) {
+			_qab.click();
+		}
+	});
+	_qai.addEventListener('focusin', function() {
+		if (typeof quickAddFocusOut !== 'undefined') {
+			clearTimeout(quickAddFocusOut);
+			quickAddFocusOut = void 0;
+		} else {
+			stickyButtonsToggle("hide");
+		}
+	});
+	_qai.addEventListener('focusout', function() {
+		quickAddFocusOut = setTimeout(function() { stickyButtonsToggle("show"); quickAddFocusOut = void 0; }, 100);
+	});
+	// lock the notepad if specified in database
+	if (lockStatus) {
+		lockToggle("lock");
+	} else {
+		document.getElementById('notepad').removeAttribute('data-lock-status');// clear any stale lock state left by a previously visited locked notepad
+		document.getElementById('sticky-add').style.display = '';// same -- sticky-add lives outside #notepad so isn't cleared by innerHTML reset
+		document.getElementById('lock-button').onclick = function() { lockModal(); };
+	}
+	// check for presence of notes and build accordingly
+	if (!hasNotes) {
+		// no notes = no notepad
+		notepadRoot("destroy");
+	} else {
+		// create the notepad root
+		notepadRoot("create");
+		// populate notes
+		document.getElementById('notepad-body').insertAdjacentHTML('beforeend', allNotes);
+		// toggle the state of the Check All button
+		setCheckAllState();
+		// Linkify these notes
+		linkifyInit("all");
+	}
+	// open user control
+	userControl("open");
+	// animate it in
+	switch (arg) {
+		case "start":
+			document.getElementById('notepad').classList.add('active-loc');
+			stickyButtonsToggle("show");
+			splashHandler("clear");
+			if (typeof scrPos !== 'undefined') window.scrollTo(0, scrPos);
+			updateState("notepad", "replace");
+			catalog[notepadIdLocal]["lastOpen"] = getUnixTimestamp();
+			idbCatalogUpdate();
+			showInstallPrompt();
+			break;
+		case "refresh":
+			window.scrollTo(0, previousScroll);
+			break;
+		case "jump":
+			let _activeLoc = document.querySelector('.active-loc');
+			if (_activeLoc && _activeLoc.id == "home") {
+				_activeLoc.classList.remove('active-loc'); _activeLoc.removeAttribute('style');
+			} else if (_activeLoc) {
+				_activeLoc.innerHTML = ''; _activeLoc.classList.remove('active-loc'); _activeLoc.removeAttribute('style');
+			}
+			document.getElementById('notepad').classList.add('active-loc');
+			stickyButtonsToggle("show");
+			updateState("notepad", "jump");
+			catalog[notepadIdLocal]["lastOpen"] = getUnixTimestamp();
+			idbCatalogUpdate();
+			buildRecentNotepads();
+			showInstallPrompt();
+			break;
+		case "forward":
+			catalog[notepadIdLocal]["lastOpen"] = getUnixTimestamp();
+			idbCatalogUpdate();
+			anime.animate('#home', {
+				opacity: [1, 0],
+				translateX: ['0%', '-50%'],
+				duration: speed,
+				ease: 'inOutQuad',
+				onComplete: function() {
+					document.getElementById('home').classList.remove('active-loc'); document.getElementById('home').removeAttribute('style');
+					document.getElementById('notepad').classList.add('active-loc');
+					window.scrollTo(0, 0);
 					stickyButtonsToggle("show");
 					updateState("notepad", "push");
-					$('#notepad').transition({
-						opacity: 1,
-						x: 0,
+					anime.animate('#notepad', {
+						opacity: [0, 1],
+						translateX: ['50%', '0%'],
 						duration: speed,
-						complete: function() {
-							$('#notepad').removeAttr('style');//fixes sortable bug
+						ease: 'inOutQuad',
+						onComplete: function() {
+							document.getElementById('notepad').removeAttribute('style');// anime.js leaves inline transform/opacity on the element after animation; remove so SortableJS reads clean geometry
 							buildRecentNotepads();
+							showInstallPrompt();
 						}
 					});
-				});
-				break;
-		}
+				}
+			});
+			break;
 	}
 }
 
@@ -1408,32 +1608,31 @@ function buildNotepad(arg, scrPos, elem) {
 function renameNotepad(action) {
 	switch (action) {
 		case "edit":
-			var renameHtml = '<input id="np-rename-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>';
-			$('#np-rename').empty().append(renameHtml);
-			$('#np-rename-input').val(catalog[notepadIdLocal]["npname"]);
-			$('#np-rename-input').on({
-				'input': function() {
-					if ($(this).val() == "") {
-						if (!$(this).hasClass('warning')) $(this).addClass('warning');
-					} else {
-						if ($(this).hasClass('warning')) $(this).removeClass('warning');
-						if (charSplitter.countGraphemes($(this).val()) >= npnameMaxChar) { $(this).val(charSplitter.splitGraphemes($(this).val()).slice(0, npnameMaxChar).join('')); }
-					}
-				},
-				'keyup': function(e) {
-					if (e.keyCode == 13) {
-						if (($(this).val() != "") && (!$(this).hasClass('warning'))) {
-							renameNotepad("save");
-						}
-					} else if (e.keyCode == 27) {
-						renameNotepad("cancel");
-					}
-				},
-				'focusout': function() {
-					renameNotepad("save");
+			let renameHtml = '<input id="np-rename-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>';
+			document.getElementById('np-rename').innerHTML = renameHtml;
+			let _nri = document.getElementById('np-rename-input');
+			_nri.value = catalog[notepadIdLocal]["npname"];
+			_nri.addEventListener('input', function() {
+				if (this.value == "") {
+					if (!this.classList.contains('warning')) this.classList.add('warning');
+				} else {
+					if (this.classList.contains('warning')) this.classList.remove('warning');
+					if ([...charSplitter.segment(this.value)].length >= npnameMaxChar) { this.value = [...charSplitter.segment(this.value)].slice(0, npnameMaxChar).map(function(s){return s.segment;}).join(''); }
 				}
 			});
-			$('#np-rename-input').focus();
+			_nri.addEventListener('keyup', function(e) {
+				if (e.key === "Enter") {
+					if ((this.value != "") && (!this.classList.contains('warning'))) {
+						renameNotepad("save");
+					}
+				} else if (e.key === "Escape") {
+					renameNotepad("cancel");
+				}
+			});
+			_nri.addEventListener('focusout', function() {
+				renameNotepad("save");
+			});
+			_nri.focus();
 			if (typeof quickAddFocusOut !== 'undefined') {
 				clearTimeout(quickAddFocusOut);
 				quickAddFocusOut = void 0;
@@ -1442,19 +1641,21 @@ function renameNotepad(action) {
 			}
 			break;
 		case "save":
+			if (_renameSaving) return;
 			// variables, objects, arrays; conditions for early bailing
-			var proposedName = $('#np-rename-input').val();
-			var formerName = catalog[notepadIdLocal]["npname"];
+			let proposedName = document.getElementById('np-rename-input').value;
+			let formerName = catalog[notepadIdLocal]["npname"];
 			if (proposedName == "") return;
 			if (proposedName == formerName) {
 				renameNotepad("cancel");
 				return;
 			}
+			_renameSaving = true;
 			// IDB and MySQL updates
 			if ([0, 3].includes(offlineState)) {// if online
-				$.ajax({
+				apiFetch({
 					type: "POST",
-					url: "/ajax/rename-notepad",
+					url: "/api/rename-notepad",
 					data: JSON.stringify({
 						npname: proposedName,
 						nphash: catalog[notepadIdLocal]["nphash"]
@@ -1462,30 +1663,28 @@ function renameNotepad(action) {
 					beforeSend: function() {
 						userControl("lock");
 						statusIndicator("process");
-						cloudIndicator("upload");
 					},
 					success: function(postData) {
-						cloudIndicator("online");
 						switch (postData["result"]) {
 							case "is-empty":
-								$('#np-rename-input').val(formerName);
+								document.getElementById('np-rename-input').value = formerName;
 								fillNotepadName();
 								errorModal();
 								break;
 							case "hashfail":
-								$('#np-rename-input').val(formerName);
+								document.getElementById('np-rename-input').value = formerName;
 								fillNotepadName();
 								errorModal("manual", locale.modal.error.critical);
 								break;
 							case "lockfail":
-								$('#np-rename-input').val(formerName);
+								document.getElementById('np-rename-input').value = formerName;
 								fillNotepadName();
 								errorModal("manual", locale.modal.error.locked);
 								break;
 							case "actionfail":
 								userControl("open");
 								statusIndicator("error");
-								$('#np-rename-input').addClass('warning');
+								document.getElementById('np-rename-input').classList.add('warning');
 								popupMsg(locale.popup.rename, "red");
 								break;
 							default:
@@ -1494,36 +1693,41 @@ function renameNotepad(action) {
 								catalog[notepadIdLocal]["npname"] = postData.npname;
 								catalog[notepadIdLocal]["lastEdit"] = postData.lastEdit;
 								idbCatalogUpdate();
-								$('#np-rename-input').val(postData.npname);
+								document.getElementById('np-rename-input').value = postData.npname;
 								fillNotepadName();
 								updateState("notepad", "replace");
 								break;
 						}
 					},
 					complete: function() {
+						_renameSaving = false;
 						stickyButtonsToggle("show");
 					}
 				});
 			} else {// if offline
-				var proceed = true;
+				let proceed = true;
 				for (let k in catalog) { if (catalog[k]["npname"] == proposedName) proceed = false; }
 				if (proceed) {
 					catalog[notepadIdLocal]["npname"] = proposedName;
 					catalog[notepadIdLocal]["lastEdit"] = getUnixTimestamp();
 					catalog[notepadIdLocal]["synced"] = 0;
 					npCommitHandler("offline", globalSync, undefined);
+					_renameSaving = false;
 					fillNotepadName();
 					stickyButtonsToggle("show");
 					updateState("notepad", "replace");
 				} else {// error
-					$('#np-rename-input').addClass('warning');
+					_renameSaving = false;
+					document.getElementById('np-rename-input').classList.add('warning');
 					popupMsg(locale.popup.rename, "red");
 				}
 			}
 			break;
 		case "cancel":
+			_renameSaving = true;
 			stickyButtonsToggle("show");
 			fillNotepadName();
+			_renameSaving = false;
 			break;
 			
 	}
@@ -1532,30 +1736,28 @@ function renameNotepad(action) {
 // change the notepad description
 function changeNotepadDesc() {
 	// conditions for early bailing
-	if (catalog[notepadIdLocal]["npdesc"] == $('#np-desc-textarea').text()) return;
-	if ((typeof catalog[notepadIdLocal]["npdesc"] === 'undefined') && ($('#np-desc-textarea').text() == "")) return;
+	if (catalog[notepadIdLocal]["npdesc"] == document.getElementById('np-desc-textarea').value) return;
+	if ((typeof catalog[notepadIdLocal]["npdesc"] === 'undefined') && (document.getElementById('np-desc-textarea').value == "")) return;
 	// variables, objects, arrays
-	var wasSynced = globalSync;
-	var tsAction = getUnixTimestampMS();
-	catalog[notepadIdLocal]["npdesc"] = ($('#np-desc-textarea').text() == "") ? void 0 : $('#np-desc-textarea').text();
+	let wasSynced = globalSync;
+	let tsAction = getUnixTimestampMS();
+	catalog[notepadIdLocal]["npdesc"] = (document.getElementById('np-desc-textarea').value == "") ? void 0 : document.getElementById('np-desc-textarea').value;
 	catalog[notepadIdLocal]["lastEdit"] = Math.floor(tsAction/1000);
 	catalog[notepadIdLocal]["synced"] = 0;
 	// IDB and MySQL updates
 	if ([0, 3].includes(offlineState)) {// if online
-		$.ajax({
+		apiFetch({
 			type: "POST",
-			url: "/ajax/change-notepad-desc",
+			url: "/api/change-notepad-desc",
 			data: JSON.stringify({
 				nphash: catalog[notepadIdLocal]["nphash"],
-				npdesc: $('#np-desc-textarea').text()
+				npdesc: document.getElementById('np-desc-textarea').value
 			}),
 			beforeSend: function() {
 				statusIndicator("process");
-				cloudIndicator("upload");
 				npCommitHandler("delay", wasSynced, tsAction);
 			},
 			success: function(postData) {
-				cloudIndicator("online");
 				switch (postData["result"]) {
 					case "hashfail":
 						errorModal("manual", locale.modal.error.critical);
@@ -1566,7 +1768,7 @@ function changeNotepadDesc() {
 					default:
 						statusIndicator("success");
 						if (postData.ssv == true) {
-							$('#np-desc-textarea').text(postData.npdesc);
+							document.getElementById('np-desc-textarea').value = postData.npdesc;
 							catalog[notepadIdLocal]["npdesc"] = postData.npdesc;
 						}
 						catalog[notepadIdLocal]["lastEdit"] = postData.lastEdit;
@@ -1584,9 +1786,9 @@ function changeNotepadDesc() {
 // lock the notepad
 function lockNotepad(whatpass) {
 	if (typeof whatpass === 'undefined') return;
-	$.ajax({
+	apiFetch({
 		type: "POST",
-		url: "/ajax/lock-notepad",
+		url: "/api/lock-notepad",
 		data: JSON.stringify({
 			nphash: catalog[notepadIdLocal]["nphash"],
 			lockpass: whatpass
@@ -1594,10 +1796,8 @@ function lockNotepad(whatpass) {
 		beforeSend: function() {
 			userControl("lock");
 			statusIndicator("process");
-			cloudIndicator("upload");
 		},
 		success: function(postData) {
-			cloudIndicator("online");
 			switch (postData["result"]) {
 				case "is-empty":
 					errorModal();
@@ -1624,9 +1824,9 @@ function lockNotepad(whatpass) {
 // unlock the notepad
 function unlockNotepad(whichpass) {
 	if (typeof whichpass === 'undefined') return;
-	$.ajax({
+	apiFetch({
 		type: "POST",
-		url: "/ajax/unlock-notepad",
+		url: "/api/unlock-notepad",
 		data: JSON.stringify({
 			nphash: catalog[notepadIdLocal]["nphash"],
 			lockpass: whichpass
@@ -1634,10 +1834,8 @@ function unlockNotepad(whichpass) {
 		beforeSend: function() {
 			userControl("lock");
 			statusIndicator("process");
-			cloudIndicator("upload");
 		},
 		success: function(postData) {
-			cloudIndicator("online");
 			switch (postData["result"]) {
 				case "is-empty":
 					errorModal();
@@ -1664,18 +1862,19 @@ function unlockNotepad(whichpass) {
 }
 
 // display lock modal
-var password1, password2;
+let password1, password2;
 function lockModal(lockstep) {
+	let modalContent;
 	switch (lockstep) {
 		case "validate1":
-			if ($('#lock-password-input-1').val() != "") {
-				password1 = $('#lock-password-input-1').val();
+			if (document.getElementById('lock-password-input-1').value != "") {
+				password1 = document.getElementById('lock-password-input-1').value;
 				lockModal("prompt2");
 			}
 			break;
 		case "validate2":
-			if ($('#lock-password-input-2').val() != "") {
-				password2 = $('#lock-password-input-2').val();
+			if (document.getElementById('lock-password-input-2').value != "") {
+				password2 = document.getElementById('lock-password-input-2').value;
 				if (password1 == password2) {
 					lockNotepad(password2);
 				} else {
@@ -1685,187 +1884,176 @@ function lockModal(lockstep) {
 			break;
 		case "success":
 			lockToggle("lock");
-			var modalContent = [
-				'<i id="modal-close" class="fa fa-times" title="'+ locale.general.close +'" onclick="modalToggle(\'off\');"></i>',
+			modalContent = [
+				`<i id="modal-close" class="fa fa-times" title="${locale.general.close}" onclick="modalToggle('off');"></i>`,
 				'<div class="row modal-window-wrapper-top">',
-				'	<p>'+ locale.modal.lock.success +'</p>',
-				'	<p class="smaller ital">'+ locale.modal.lock.success_detail +'</p>',
+				`	<p>${locale.modal.lock.success}</p>`,
+				`	<p class="smaller ital">${locale.modal.lock.success_detail}</p>`,
 				'</div>',
 				'<div class="row modal-window-wrapper-bottom">',
-				'	<button type="button" class="button large" aria-label="'+ locale.general.close +'" onclick="modalToggle(\'off\');">'+ locale.general.close +'</button>',
+				`	<button type="button" class="button large" aria-label="${locale.general.close}" onclick="modalToggle('off');">${locale.general.close}</button>`,
 				'</div>'
 			].join("\n");
-			$('#modal-window').empty().append(modalContent);
+			document.getElementById('modal-window').innerHTML = modalContent;
 			break;
 		case "mismatch":
-			var modalContent = [
-				'<i id="modal-close" class="fa fa-times" title="'+ locale.general.close +'" onclick="modalToggle(\'off\');"></i>',
+			modalContent = [
+				`<i id="modal-close" class="fa fa-times" title="${locale.general.close}" onclick="modalToggle('off');"></i>`,
 				'<div class="row modal-window-wrapper-top">',
-				'	<p>'+ locale.modal.lock.mismatch +'</p>',
+				`	<p>${locale.modal.lock.mismatch}</p>`,
 				'</div>',
 				'<div class="row modal-window-wrapper-bottom">',
-				'	<button type="button" class="button color cyan large" aria-label="'+ locale.general.retry +'" onclick="lockModal(\'prompt1\');">'+ locale.general.retry +'</button>',
-				'	<button type="button" class="button large" aria-label="'+ locale.general.close +'" onclick="modalToggle(\'off\');">'+ locale.general.close +'</button>',
+				`	<button type="button" class="button color cyan large" aria-label="${locale.general.retry}" onclick="lockModal('prompt1');">${locale.general.retry}</button>`,
+				`	<button type="button" class="button large" aria-label="${locale.general.close}" onclick="modalToggle('off');">${locale.general.close}</button>`,
 				'</div>'
 			].join("\n");
-			$('#modal-window').empty().append(modalContent);
+			document.getElementById('modal-window').innerHTML = modalContent;
 			break;
 		case "prompt2":
-			var modalContent = [
-				'<i id="modal-close" class="fa fa-times" title="'+ locale.general.close +'" onclick="modalToggle(\'off\');"></i>',
+			modalContent = [
+				`<i id="modal-close" class="fa fa-times" title="${locale.general.close}" onclick="modalToggle('off');"></i>`,
 				'<div class="row modal-window-wrapper-top"><form>',
-				'	<input id="lock-password-input-2" type="password" aria-label="'+ locale.modal.lock.reenter_placeholder +'" placeholder="'+ locale.modal.lock.reenter_placeholder +'" onkeypress="return event.keyCode!=13;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>',
+				`	<input id="lock-password-input-2" type="password" aria-label="${locale.modal.lock.reenter_placeholder}" placeholder="${locale.modal.lock.reenter_placeholder}" onkeydown="return event.key!=='Enter';" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>`,
 				'	<div class="spacer20"></div>',
 				'	<div class="modal-window-wrapper-bottom">',
-				'		<button type="button" class="button color red large" aria-label="'+ locale.general.back +'" onclick="lockModal(\'prompt1\');">'+ locale.general.back +'</button>',
-				'		<button type="submit" class="button color green large next" aria-label="'+ locale.general.next +'" onclick="lockModal(\'validate2\');">'+ locale.general.next +'</button>',
-				'		<button type="button" class="button large" aria-label="'+ locale.general.cancel +'" onclick="modalToggle(\'off\');">'+ locale.general.cancel +'</button>',
+				`		<button type="button" class="button color red large" aria-label="${locale.general.back}" onclick="lockModal('prompt1');">${locale.general.back}</button>`,
+				`		<button type="submit" class="button color green large next" aria-label="${locale.general.next}" onclick="lockModal('validate2');">${locale.general.next}</button>`,
+				`		<button type="button" class="button large" aria-label="${locale.general.cancel}" onclick="modalToggle('off');">${locale.general.cancel}</button>`,
 				'	</div>',
 				'</form></div>'
 			].join("\n");
-			$('#modal-window').empty().append(modalContent);
-			$('#modal-window .next').addClass('disabled');
-			$('#lock-password-input-2').addClass('invalid').on({
-				'input': function() {
-					if ($(this).val() == "") {
-						if (!$(this).hasClass('invalid')) {
-							$(this).addClass('invalid');
-							$('#modal-window .next').addClass('disabled');
-						}
-					} else {
-						if (charSplitter.countGraphemes($(this).val()) >= npnameMaxChar) { $(this).val(charSplitter.splitGraphemes($(this).val()).slice(0, npnameMaxChar).join('')); }
-						if ($(this).hasClass('invalid')) {
-							$(this).removeClass('invalid');
-							$('#modal-window .next').removeClass('disabled');
-						}
-					}
-				},
-				'keyup': function(e) {
-					if ((e.keyCode == 13) && (!$(this).hasClass('invalid'))) {
-						$(':focus').blur();
-						$('#modal-window .next').click();
-					}
+			document.getElementById('modal-window').innerHTML = modalContent;
+			let _mwNext2 = document.querySelector('#modal-window .next');
+			_mwNext2.classList.add('disabled');
+			let _lpi2 = document.getElementById('lock-password-input-2');
+			_lpi2.classList.add('invalid');
+			_lpi2.addEventListener('input', function() {
+				if (this.value == "") {
+					if (!this.classList.contains('invalid')) { this.classList.add('invalid'); _mwNext2.classList.add('disabled'); }
+				} else {
+					if ([...charSplitter.segment(this.value)].length >= npnameMaxChar) { this.value = [...charSplitter.segment(this.value)].slice(0, npnameMaxChar).map(function(s){return s.segment;}).join(''); }
+					if (this.classList.contains('invalid')) { this.classList.remove('invalid'); _mwNext2.classList.remove('disabled'); }
 				}
 			});
-			$('#lock-password-input-2').val('').focus();
+			_lpi2.addEventListener('keyup', function(e) {
+				if ((e.key === "Enter") && (!this.classList.contains('invalid'))) {
+					if (document.activeElement) document.activeElement.blur();
+					_mwNext2.click();
+				}
+			});
+			_lpi2.value = ''; _lpi2.focus();
 			break;
 		case "prompt1":
 		default:
-			var modalContent = [
-				'<i id="modal-close" class="fa fa-times" title="'+ locale.general.close +'" onclick="modalToggle(\'off\');"></i>',
+			modalContent = [
+				`<i id="modal-close" class="fa fa-times" title="${locale.general.close}" onclick="modalToggle('off');"></i>`,
 				'<div class="row modal-window-wrapper-top"><form>',
-				'	<p class="bold">'+ locale.modal.lock.prompt +'</p>',
-				'	<p>'+ locale.modal.lock.prompt_detail +'</p>',
-				'	<input id="lock-password-input-1" type="password" aria-label="'+ locale.modal.lock.password_placeholder +'" placeholder="'+ locale.modal.lock.password_placeholder +'" onkeypress="return event.keyCode!=13;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>',
-				'	<p class="smaller ital">'+ locale.modal.lock.password_detail +'</p>',
+				`	<p class="bold">${locale.modal.lock.prompt}</p>`,
+				`	<p>${locale.modal.lock.prompt_detail}</p>`,
+				`	<input id="lock-password-input-1" type="password" aria-label="${locale.modal.lock.password_placeholder}" placeholder="${locale.modal.lock.password_placeholder}" onkeydown="return event.key!=='Enter';" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>`,
+				`	<p class="smaller ital">${locale.modal.lock.password_detail}</p>`,
 				'	<div class="modal-window-wrapper-bottom">',
-				'		<button type="submit" class="button color green large next" aria-label="'+ locale.general.next +'" onclick="lockModal(\'validate1\');">'+ locale.general.next +'</button>',
-				'		<button type="button" class="button large" aria-label="'+ locale.general.cancel +'" onclick="modalToggle(\'off\');">'+ locale.general.cancel +'</button>',
+				`		<button type="submit" class="button color green large next" aria-label="${locale.general.next}" onclick="lockModal('validate1');">${locale.general.next}</button>`,
+				`		<button type="button" class="button large" aria-label="${locale.general.cancel}" onclick="modalToggle('off');">${locale.general.cancel}</button>`,
 				'	</div>',
 				'</form></div>'
 			].join("\n");
-			$('#modal-window').empty().append(modalContent);
-			$('#modal-window .next').addClass('disabled');
-			$('#lock-password-input-1').addClass('invalid').on({
-				'input': function() {
-					if ($(this).val() == "") {
-						if (!$(this).hasClass('invalid')) {
-							$(this).addClass('invalid');
-							$('#modal-window .next').addClass('disabled');
-						}
-					} else {
-						if (charSplitter.countGraphemes($(this).val()) >= npnameMaxChar) { $(this).val(charSplitter.splitGraphemes($(this).val()).slice(0, npnameMaxChar).join('')); }
-						if ($(this).hasClass('invalid')) {
-							$(this).removeClass('invalid');
-							$('#modal-window .next').removeClass('disabled');
-						}
-					}
-				},
-				'keyup': function(e) {
-					if ((e.keyCode == 13) && (!$(this).hasClass('invalid'))) {
-						$(':focus').blur();
-						$('#modal-window .next').click();
-					}
+			document.getElementById('modal-window').innerHTML = modalContent;
+			let _mwNext1 = document.querySelector('#modal-window .next');
+			_mwNext1.classList.add('disabled');
+			let _lpi1 = document.getElementById('lock-password-input-1');
+			_lpi1.classList.add('invalid');
+			_lpi1.addEventListener('input', function() {
+				if (this.value == "") {
+					if (!this.classList.contains('invalid')) { this.classList.add('invalid'); _mwNext1.classList.add('disabled'); }
+				} else {
+					if ([...charSplitter.segment(this.value)].length >= npnameMaxChar) { this.value = [...charSplitter.segment(this.value)].slice(0, npnameMaxChar).map(function(s){return s.segment;}).join(''); }
+					if (this.classList.contains('invalid')) { this.classList.remove('invalid'); _mwNext1.classList.remove('disabled'); }
+				}
+			});
+			_lpi1.addEventListener('keyup', function(e) {
+				if ((e.key === "Enter") && (!this.classList.contains('invalid'))) {
+					if (document.activeElement) document.activeElement.blur();
+					_mwNext1.click();
 				}
 			});
 			if (typeof lockstep === 'undefined') modalToggle("on");
+			_lpi1.value = ''; _lpi1.focus();
 			break;
 	}
 }
 
 // display unlock modal
 function unlockModal(unlockstep) {
+	let modalContent;
 	switch (unlockstep) {
 		case "validate":
-			if ($('#unlock-password-input').val() != "") {
-				unlockNotepad($('#unlock-password-input').val());
+			let _upiVal = document.getElementById('unlock-password-input');
+			if (_upiVal && _upiVal.value != "") {
+				unlockNotepad(_upiVal.value);
 			}
 			break;
 		case "success":
 			lockToggle("unlock");
-			var modalContent = [
-				'<i id="modal-close" class="fa fa-times" title="'+ locale.general.close +'" onclick="modalToggle(\'off\');"></i>',
+			modalContent = [
+				`<i id="modal-close" class="fa fa-times" title="${locale.general.close}" onclick="modalToggle('off');"></i>`,
 				'<div class="row modal-window-wrapper-top">',
-				'	<p>'+ locale.modal.unlock.success +'</p>',
+				`	<p>${locale.modal.unlock.success}</p>`,
 				'</div>',
 				'<div class="row modal-window-wrapper-bottom">',
-				'	<button type="button" class="button large" aria-label="'+ locale.general.close +'" onclick="modalToggle(\'off\');">'+ locale.general.close +'</button>',
+				`	<button type="button" class="button large" aria-label="${locale.general.close}" onclick="modalToggle('off');">${locale.general.close}</button>`,
 				'</div>'
 			].join("\n");
-			$('#modal-window').empty().append(modalContent);
+			document.getElementById('modal-window').innerHTML = modalContent;
 			break;
 		case "incorrect":
-			var modalContent = [
-				'<i id="modal-close" class="fa fa-times" title="'+ locale.general.close +'" onclick="modalToggle(\'off\');"></i>',
+			modalContent = [
+				`<i id="modal-close" class="fa fa-times" title="${locale.general.close}" onclick="modalToggle('off');"></i>`,
 				'<div class="row modal-window-wrapper-top">',
-				'	<p>'+ locale.modal.unlock.incorrect +'</p>',
+				`	<p>${locale.modal.unlock.incorrect}</p>`,
 				'</div>',
 				'<div class="row modal-window-wrapper-bottom">',
-				'	<button type="button" class="button color cyan large" aria-label="'+ locale.general.retry +'" onclick="unlockModal(\'prompt\');">'+ locale.general.retry +'</button>',
-				'	<button type="button" class="button large" aria-label="'+ locale.general.close +'" onclick="modalToggle(\'off\');">'+ locale.general.close +'</button>',
+				`	<button type="button" class="button color cyan large" aria-label="${locale.general.retry}" onclick="unlockModal('prompt');">${locale.general.retry}</button>`,
+				`	<button type="button" class="button large" aria-label="${locale.general.close}" onclick="modalToggle('off');">${locale.general.close}</button>`,
 				'</div>'
 			].join("\n");
-			$('#modal-window').empty().append(modalContent);
+			document.getElementById('modal-window').innerHTML = modalContent;
 			break;
 		case "prompt":
 		default:
-			var modalContent = [
-				'<i id="modal-close" class="fa fa-times" title="'+ locale.general.close +'" onclick="modalToggle(\'off\');"></i>',
+			modalContent = [
+				`<i id="modal-close" class="fa fa-times" title="${locale.general.close}" onclick="modalToggle('off');"></i>`,
 				'<div class="row modal-window-wrapper-top"><form>',
-				'	<p>'+ locale.modal.unlock.prompt +'</p>',
-				'	<input id="unlock-password-input" type="password" aria-label="'+ locale.modal.lock.password_placeholder +'" placeholder="'+ locale.modal.lock.password_placeholder +'" onkeypress="return event.keyCode!=13;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>',
-				'	<p class="smaller ital">'+ locale.modal.unlock.prompt_detail +'</p>',
+				`	<p>${locale.modal.unlock.prompt}</p>`,
+				`	<input id="unlock-password-input" type="password" aria-label="${locale.modal.lock.password_placeholder}" placeholder="${locale.modal.lock.password_placeholder}" onkeydown="return event.key!=='Enter';" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>`,
+				`	<p class="smaller ital">${locale.modal.unlock.prompt_detail}</p>`,
 				'	<div class="modal-window-wrapper-bottom">',
-				'		<button type="submit" class="button color green large next" aria-label="'+ locale.general.next +'" onclick="unlockModal(\'validate\');">'+ locale.general.next +'</button>',
-				'		<button type="button" class="button large" aria-label="'+ locale.general.cancel +'" onclick="modalToggle(\'off\');">'+ locale.general.cancel +'</button>',
+				`		<button type="submit" class="button color green large next" aria-label="${locale.general.next}" onclick="unlockModal('validate');">${locale.general.next}</button>`,
+				`		<button type="button" class="button large" aria-label="${locale.general.cancel}" onclick="modalToggle('off');">${locale.general.cancel}</button>`,
 				'	</div>',
 				'</form></div>'
 			].join("\n");
-			$('#modal-window').empty().append(modalContent);
-			$('#modal-window .next').addClass('disabled');
-			$('#unlock-password-input').addClass('invalid').on({
-				'input': function() {
-					if ($(this).val() == "") {
-						if (!$(this).hasClass('invalid')) {
-							$(this).addClass('invalid');
-							$('#modal-window .next').addClass('disabled');
-						}
-					} else {
-						if (charSplitter.countGraphemes($(this).val()) >= npnameMaxChar) { $(this).val(charSplitter.splitGraphemes($(this).val()).slice(0, npnameMaxChar).join('')); }
-						if ($(this).hasClass('invalid')) {
-							$(this).removeClass('invalid');
-							$('#modal-window .next').removeClass('disabled');
-						}
-					}
-				},
-				'keyup': function(e) {
-					if ((e.keyCode == 13) && (!$(this).hasClass('invalid'))) {
-						$(':focus').blur();
-						$('#modal-window .next').click();
-					}
+			document.getElementById('modal-window').innerHTML = modalContent;
+			let _mwNextU = document.querySelector('#modal-window .next');
+			_mwNextU.classList.add('disabled');
+			let _upi = document.getElementById('unlock-password-input');
+			_upi.classList.add('invalid');
+			_upi.addEventListener('input', function() {
+				if (this.value == "") {
+					if (!this.classList.contains('invalid')) { this.classList.add('invalid'); _mwNextU.classList.add('disabled'); }
+				} else {
+					if ([...charSplitter.segment(this.value)].length >= npnameMaxChar) { this.value = [...charSplitter.segment(this.value)].slice(0, npnameMaxChar).map(function(s){return s.segment;}).join(''); }
+					if (this.classList.contains('invalid')) { this.classList.remove('invalid'); _mwNextU.classList.remove('disabled'); }
+				}
+			});
+			_upi.addEventListener('keyup', function(e) {
+				if ((e.key === "Enter") && (!this.classList.contains('invalid'))) {
+					if (document.activeElement) document.activeElement.blur();
+					_mwNextU.click();
 				}
 			});
 			if (typeof unlockstep === 'undefined') modalToggle("on");
+			_upi.value = ''; _upi.focus();
 			break;
 	}
 }
@@ -1874,165 +2062,311 @@ function unlockModal(unlockstep) {
 function lockToggle(lockstate) {
 	switch (lockstate) {
 		case "lock":
-			$('#notepad').attr('data-lock-status', 'locked');
-			$('#np-name').prop('onclick', null).off('click');
-			$('#np-desc-textarea').attr('contenteditable', 'false');
-			if ($('#np-desc-textarea').text() == "") $('#np-desc').addClass('hidden');
-			$('#home-button').addClass('large').removeClass('responsive');
-			$('#sticky-add').css('display', 'none');
-			$('#lock-button .fa').removeClass('fa-unlock').addClass('fa-lock');
-			$('#lock-button').off('click').click(function() {
-				unlockModal();
-			});
+			document.getElementById('notepad').setAttribute('data-lock-status', 'locked');
+			let _npName = document.getElementById('np-name');
+			if (_npName) _npName.onclick = null;
+			document.getElementById('np-desc-textarea').readOnly = true;
+			if (document.getElementById('np-desc-textarea').value == "") document.getElementById('np-desc').classList.add('hidden');
+			document.getElementById('sticky-add').style.display = 'none';
+			let _lbFa = document.querySelector('#lock-button .fa');
+			_lbFa.classList.remove('fa-unlock'); _lbFa.classList.add('fa-lock');
+			document.getElementById('lock-button').onclick = function() { unlockModal(); };
 			break;
 		case "unlock":
-			$('#notepad').removeAttr('data-lock-status');
+			document.getElementById('notepad').removeAttribute('data-lock-status');
 			fillNotepadName();
-			$('#np-desc-textarea').attr('contenteditable', 'true');
-			if ($('#np-desc').hasClass('hidden')) $('#np-desc').removeClass('hidden');
-			$('#home-button').addClass('responsive').removeClass('large');
-			$('#sticky-add').css('display', '');
-			$('#lock-button .fa').removeClass('fa-lock').addClass('fa-unlock');
-			$('#lock-button').off('click').click(function() {
-				lockModal();
-			});
+			document.getElementById('np-desc-textarea').readOnly = false;
+			if (document.getElementById('np-desc').classList.contains('hidden')) document.getElementById('np-desc').classList.remove('hidden');
+			document.getElementById('sticky-add').style.display = '';
+			let _lbFa2 = document.querySelector('#lock-button .fa');
+			_lbFa2.classList.remove('fa-lock'); _lbFa2.classList.add('fa-unlock');
+			document.getElementById('lock-button').onclick = function() { lockModal(); };
 			break;
 	}
 }
 
-// create the edit note dialog
-function buildEdit(domID) {
-	// variables, objects, arrays
-	npScroll = $(window).scrollTop();// remember notepad scroll position, for when we return to it
-	var ntId, ntColor, ntText;
-	if (typeof domID === 'undefined') {// are we pulling up an existing note or a blank new note?
-		ntId = ntText = "";
-		ntColor = colors[0]["hex"];
-		buildEditProceed();
-	} else {
-		var thisLocalId = Number($(domID).attr('data-local-id'));
-		ntId = "'#" + notePrefix + thisLocalId + "'";
-		ntColor = colors[notepads[notepadIdLocal][thisLocalId]["color"]]["hex"];
-		ntText = notepads[notepadIdLocal][thisLocalId]["text"];
-		buildEditProceed();
+// create or destroy the notepad root as a result of it becoming empty or getting its first note
+// also handle the display of buttons in response
+function notepadRoot(ntpdstate) {
+	switch (ntpdstate) {
+		case "create":
+			let _ne = document.getElementById('notepad-empty'); if (_ne) _ne.remove();
+			let notepadContent = [
+				'<div id="notepad-table">',
+				'	<div id="notepad-header">',
+				'		<div class="col-1"></div>',
+				'		<div class="col-2">',
+				`			<button id="color-change-all-button" type="button" class="button empty palette color-selector" aria-label="${locale.notepad.change_colors}" title="${locale.notepad.change_colors}">`,
+				'				<i class="fa fa-palette"></i>',
+				'			</button>',
+				'		</div>',
+				'		<div class="col-3">',
+				`			<button id="check-all-button" type="button" class="button empty checkbox" aria-label="${locale.notepad.check_all}" title="${locale.notepad.check_all}" data-check-state="0" onclick="checkAllBox();">`,
+				'					<i class="fa fa-checkbox"></i>',
+				'			</button>',
+				'		</div>',
+				'		<div class="col-4">',
+				'			<i id="logo-nphead"><svg  version="1.1" xmlns="http://www.w3.org/2000/svg" class="logo-nphead-svg" viewBox="0 0 122 32"><path class="logo-nphead-path" d="M117.41,11.35c.1.2.1.2,0,.7-.2,1.69-2.3,2.89-3.7,3.59a4.64,4.64,0,0,0-2.3,1.2,1.57,1.57,0,0,0,.2,2.19c1.1,1,4,.7,5.29.3,1-.3,1.9-.8,2.9-1s2.8,0,2,1.39c-.6,1.1-2.4,1.69-3.4,2.09a13.62,13.62,0,0,1-5.29.7,6.71,6.71,0,0,1-3.1-.7A3.39,3.39,0,0,1,108,19a19.15,19.15,0,0,1-.1-2.39,1,1,0,0,0-.1-.3c-.6-.2-.7-.8-.8-1.3a1.8,1.8,0,0,1,1.3-2.29.44.44,0,0,0,.3-.4c.1-.2.1-.5.2-.7s0-.4-.3-.4c-1.1.1-2.1.2-3.2.4a15,15,0,0,1-2,.2c-.4,0-.5.2-.6.5-.2,1.39-.4,3-.7,4.28-.4,1.79-.4,3.59-.9,5.28a1.39,1.39,0,0,1-1.2.7c-.7-.1-1.4-.2-1.7-1a.6.6,0,0,1-.1-.4,7.22,7.22,0,0,1,.4-2.49c.4-1.69.5-3.49.9-5.18.1-.4.1-1.1.2-1.39s0-.4-.3-.4l-3.8.3a1.63,1.63,0,0,1-1.7-1.3,2.24,2.24,0,0,1,.1-1.39c.2-.5.6-.6,1.1-.6s1.1.1,1.7.1c1,0,2.1-.1,3.1-.2a.45.45,0,0,0,.3-.3c.2-1.1.3-2,.4-3.09l.2-1.39c.1-.5,0-.9.1-1.39a9.31,9.31,0,0,1,.4-1.59,1.27,1.27,0,0,1,1.6-.8,5.36,5.36,0,0,1,1.1.5.81.81,0,0,1,.4.8c-.4,2.19-.4,1.39-.8,3.59-.2,1.2-.1,2.19-.3,3.39-.1.4,0,.4.4.4,1.9-.1,3.7-.2,5.59-.2.3,0,.6.1.8.1a4.87,4.87,0,0,0,1.2-.1,4.75,4.75,0,0,1,3.7.2,4.69,4.69,0,0,1,2.5,2.29v.3m-4.3-.3c-.2,0-.4.1-.6.1a2,2,0,0,0-1.2,1c-.1.5.5.6.9.6a2.23,2.23,0,0,0,1.3-.6c.3-.2.8-.6.6-1A1.1,1.1,0,0,0,113.12,11Z"/><path class="logo-nphead-path" d="M88.55,8.16a5.42,5.42,0,0,1,1.9.3,4.48,4.48,0,0,1,2,1.2,6,6,0,0,1,.7,1,1.92,1.92,0,0,1,.3,1,21.53,21.53,0,0,1,.1,3.59,9.85,9.85,0,0,1-1.4,4.38A5.63,5.63,0,0,1,89.94,22a3.6,3.6,0,0,1-4.4-.4,7.51,7.51,0,0,1-2.3-3.79,7.1,7.1,0,0,1-.1-4.09,16.51,16.51,0,0,1,.6-1.59c.2-.3,0-.4-.3-.5s-.4-.2-.5-.5c-.2-.8.2-1.2,1.1-1.49a8,8,0,0,0,1.6-.8,5.09,5.09,0,0,1,1.7-.7Zm-2.6,7a6.92,6.92,0,0,0,.5,2.49c.2.6.8,2.09,1.8,1.79.8-.2,1.4-1.39,1.7-2a7.8,7.8,0,0,0,1.3-5.08,2.35,2.35,0,0,0-.9-1.59,3.72,3.72,0,0,0-2.1-.2,2.25,2.25,0,0,0-1.8,1.69,15.44,15.44,0,0,0-.4,2.09C86,14.64,85.95,15,85.95,15.14Z"/><path class="logo-nphead-path" d="M74.36,9.56c0,.3-.1.5-.1.8,0,.1,0,.1.1.2s.1-.1.2-.1a4.33,4.33,0,0,1,2.6-2,3.44,3.44,0,0,1,2.6.5c1.3.7,1.5,2,1.7,3.19a21.5,21.5,0,0,1,.2,4.38c-.1,1.79-.3,3.69-.5,5.48,0,.4-.2.6-.7.5-.3-.1-.6.2-.9.2a1.8,1.8,0,0,1-.9-.4,1.2,1.2,0,0,1-.5-.5c-.5-.8.1-1.49.2-2.19.1-1.39.3-2.89.5-4.28a7.75,7.75,0,0,0-.3-3.69.37.37,0,0,0-.1-.3s-.3-.5-1-.1A10.33,10.33,0,0,0,75,14.34a30.21,30.21,0,0,0-2.3,6.58,1.69,1.69,0,0,0-.1.7c0,.7-.5,1.1-1.3,1h-.5a1.82,1.82,0,0,1-1.3-.8c-.4-.7-.1-1.3,0-2,.2-1.3.5-2.59.7-3.89.2-1.1.3-2.09.5-3.19l.6-3.89a1.6,1.6,0,0,1,2.2-1C73.86,8.36,74.46,8.76,74.36,9.56Z"/><path class="logo-nphead-path" d="M68.37,12.44c-.3,2.79-.4,4.78-.8,7.17-.2,1.2-.5,2.39-.7,3.79a15.13,15.13,0,0,1-2.8,5.68A6,6,0,0,1,60,32a4.1,4.1,0,0,1-4.1-2.19c-.7-1.39-1.5-3.79.3-4.38,2.6-.5,1,2.29,2.5,3.39s3.9-1.59,4.69-3.39a26.07,26.07,0,0,0,1.7-7.07c0-.1-.1-.2-.1-.3l-.2.2A18.06,18.06,0,0,1,63,20.32c-1,.9-1.8,1.89-3.4,2a2.1,2.1,0,0,1-1.8-1,6.81,6.81,0,0,1-.9-4.18c.2-1.69.6-3.49.9-5.18a11.16,11.16,0,0,1,.8-2.59c.3-.7.9-.9,1.8-.8a1.48,1.48,0,0,1,1.3,1.2,5.25,5.25,0,0,1-.4,2.49c-.3,1.3-.8,2.49-1.1,3.79-.1.4-.8,2.79.3,2.49.6-.2,1.1-1,1.5-1.39a15.53,15.53,0,0,0,1.6-2A11.19,11.19,0,0,0,65,11.55l.3-1.79a1.27,1.27,0,0,1,1-1.1A2.17,2.17,0,0,1,68,9c.7.5.7,1.1.6,1.89A3.88,3.88,0,0,0,68.37,12.44Z"/><path class="logo-nphead-path" d="M47.19,10.15c0,.5.1.9.1,1.3,0,.1.1.3.1.4l.3-.3c.7-.9,1.4-1.39,2.1-2.29a2.73,2.73,0,0,1,1.2-.9c1.5-.7,2.2-.4,3.2.8a6.15,6.15,0,0,1,1.1,3.69,20.36,20.36,0,0,1,.1,3.49c-.1,1.59-.4,3.69-.6,5.28a1,1,0,0,1-.7.8,3.93,3.93,0,0,1-1.4.3,1.11,1.11,0,0,1-.7-1.59,12.08,12.08,0,0,0,.7-5V12.25c0-.5.2-1.89-.7-1.79-.5,0-.8.5-1,.8a40.29,40.29,0,0,0-3,7.47c-.3,1.1-.5,1.59-.8,2.79a1.42,1.42,0,0,1-.8.9c-1,.6-2.3.2-2.4-.8a4,4,0,0,1,.3-1.49,13,13,0,0,0,.5-5.88c-.2-1.49-.4-3-.5-4.48a1,1,0,0,1,.6-.9,1.51,1.51,0,0,1,2,.3A3.79,3.79,0,0,1,47.19,10.15Z"/><path class="logo-nphead-path" d="M32,17.73a6.51,6.51,0,0,1,.4-3.39,1.38,1.38,0,0,1,.3-.4,1,1,0,0,0,0-1.3c-.2-.3,0-.5.1-.9a5.55,5.55,0,0,1,3.7-3.29,4.36,4.36,0,0,1,3.7.2,2.78,2.78,0,0,1,1.8,2,15.79,15.79,0,0,1,.7,2,11.17,11.17,0,0,1-.3,3.19,17.94,17.94,0,0,1-1.6,3.79,6.1,6.1,0,0,1-3.4,3.09,2.88,2.88,0,0,1-2.7-.1,6.4,6.4,0,0,1-2.8-4.48C32.11,17.93,32,17.83,32,17.73Zm3.1.2c.1.4.3,1,.5,1.59,0,.1.1.2.2.3A.71.71,0,0,0,37,20a4.73,4.73,0,0,0,1-1,11.06,11.06,0,0,0,2.3-5.88A3.05,3.05,0,0,0,40.1,11a1.37,1.37,0,0,0-.5-.8,2.28,2.28,0,0,0-2.8.4c-.5.7-1.4,1.1-1.1,2.09a.75.75,0,0,1-.2.4c0,.1-.1.2-.1.3a2.75,2.75,0,0,0-.1.9A7.09,7.09,0,0,0,35.11,17.93Z"/><path class="logo-nphead-path" d="M30.61,14a24.75,24.75,0,0,1-.8,6.08,20.26,20.26,0,0,1-.9,2.19,1.56,1.56,0,0,1-1.4.6,1.59,1.59,0,0,1-1.2-.4c-.3-.3-.7-1-.5-1.39,1.3-1.89,1.5-4.38,1.7-6.58a18.18,18.18,0,0,0-.2-3.29.75.75,0,0,0-.2-.4c-.1.1-.3.1-.4.2a11.06,11.06,0,0,0-3.6,4.48c-.8,1.69-1.5,3.49-2.3,5.28-.1.4-.2.7-.3,1.1a.81.81,0,0,1-.9.7c-.4,0-.7.2-1.1,0a2.76,2.76,0,0,1-1.3-1.1c-.3-.6,0-1,.2-1.39A12.49,12.49,0,0,0,19,14.84c.1-1.39.2-2.79.4-4.09v-1c-.1-.7,0-.8.8-1.1a1.69,1.69,0,0,1,1.7.2c.6.3.6.9.7,1.49v.3c.1-.1.2-.1.3-.2a9.78,9.78,0,0,1,3.3-2.29,3.21,3.21,0,0,1,1.4-.1,2.75,2.75,0,0,1,2.2,1.49c.2.8.4,1.49.6,2.29A17.85,17.85,0,0,0,30.61,14Z"/><path class="logo-nphead-path" d="M15,8.66v1.1c0,.5,0,.7.6.6a5,5,0,0,1,1.2-.2c.2,0,.7-.2.8,0s-.7.5-.9.5c.4,0,1.7-.5,2,0s-1,.8-1.3.9c.1,0,.2-.1.3-.1-.8.3-1.6.6-2.5.9-.2.1-.3.2-.3.4-.2,1.49-.3,2.89-.6,4.38a25.77,25.77,0,0,0-.4,4.78,1,1,0,0,1-1.5,1A2.55,2.55,0,0,1,11,20c.4-2.19.7-4.48,1.1-6.68.1-.4-.1-.4-.4-.4-.9.2-.6.3-1.4.6-1.8.6-3.6,1.39-5.39,2.09a.82.82,0,0,0-.4.6c-.4,1.69-.8,3.49-1.2,5.18-.3.1-.3.3-.3.6a1.11,1.11,0,0,1-1.4.9c-.9,0-1.2-.7-1.6-1.3-.1-.1,0-.3,0-.4.3-1.1.7-2.29,1-3.39l.6-2.39a4,4,0,0,0,0-1.1,1.34,1.34,0,0,1,.2-.9c.4-.4.4-.9.6-1.39.4-1.59.8-1.89,1.3-3.49.5-1.2.7-1.49,1.2-2.59l1.6-3c1.3-1.89,1.2-1.89,2-2.49a1.85,1.85,0,0,1,1.3-.4c1.8.3,2.8,2.19,3.7,3.59.4.9,0,0,.8,2.09A17.27,17.27,0,0,1,15,8.66Zm-2.8.3c-.1-.6-.1-.8-.2-1.2-.4-1.39-2-5.38-3.3-3s-.5,1-.9,1.59a13.16,13.16,0,0,0-.9,1.69,28.23,28.23,0,0,0-1.7,4.09v.3h.3c1.2-.4,2.3-.7,3.5-1.1a19.64,19.64,0,0,1,3-.8.21.21,0,0,0,.2-.2Z"/></svg></i>',
+				'		</div>',
+				'	</div>',
+				'	<div id="notepad-body"></div>',
+				'</div>'
+			].join("\n");
+			document.getElementById('notepad').insertAdjacentHTML('beforeend', notepadContent);
+			// make the notes sortable and movable
+			notepadSortable = new Sortable(document.getElementById('notepad-body'), {
+				animation: 150,
+				handle: '.sort-button',
+				delay: 150,
+				delayOnTouchOnly: true,
+				ghostClass: 'sortable-placeholder',
+				onEnd: function() {
+					reorderEntry();
+				}
+			});
+			document.getElementById('delete-all-modal-button').classList.remove('disabled');
+			document.getElementById('sort-modal-button').classList.remove('disabled');
+			break;
+		case "destroy":
+			_ppClearAll();// close and clear all palette picker state
+			if (notepadSortable) { notepadSortable.destroy(); notepadSortable = null; }
+			let _nt = document.getElementById('notepad-table'); if (_nt) _nt.remove();
+			let npEmptyContent = [
+				'<div id="notepad-empty">',
+				'	<i id="empty-folder">',
+				'		<svg id="empty-folder-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle class="folder-bkg" cx="50" cy="50" r="49"/><path class="folder-otl" d="M47.7,71.36s-8.79,0-9.6,0c-3.18,0-6.21,0-9.63,0a20,20,0,0,1-3.19-.2,2.22,2.22,0,0,1-2.12-2.48c0-1.7,0-3.39,0-5.09q.06-13.87.11-27.75a6.63,6.63,0,0,1,.06-1,2.78,2.78,0,0,1,2.87-2.5c1.16,0,2.34,0,3.51,0,.85,0,1.6,0,2-.9.17-.46.45-.89.66-1.34a2,2,0,0,1,2-1.19h9.55c1.68,0,3.36,0,5,0a1.59,1.59,0,0,1,1.6,1c.25.52.53,1,.74,1.58a1.26,1.26,0,0,0,1.37.89c3.88,0,7.76-.07,11.64-.09,2,0,4,0,5.94,0a2.88,2.88,0,0,1,3,2.91c0,.83,0,1.67,0,2.5s.15.89.87.89h6.24c.24,0,.47,0,.7,0A1.79,1.79,0,0,1,82.7,41c-.23.85-.53,1.68-.83,2.51-1,2.76-2,5.51-3,8.27Q76.18,59.36,73.48,67c-.21.58-.41,1.16-.61,1.74a3.49,3.49,0,0,1-3.55,2.61c-3.46,0-3.46,0-10.39.06-3.74,0-3.74,0-11.23,0Z"/><path class="folder-bkg" d="M81.12,40.38c0,.2,0,.07-.06.29s-1,2.85-1.52,4.26-1.14,3-1.7,4.52c-.71,1.89-1.41,3.77-2.1,5.66-1.55,4.23-3,8.49-4.54,12.74-.38,1.07-1,1.33-2.06,1.33-12.76,0-25.46,0-38.22,0h-5c-.27,0-.33-.12-.28-.4a3.06,3.06,0,0,1,.13-.43c.83-2.32,1.69-4.63,2.51-6.95s1.56-4.56,2.36-6.84c.93-2.66,1.89-5.33,2.84-8q.89-2.43,1.79-4.87a7.41,7.41,0,0,1,.4-.86,1.14,1.14,0,0,1,1.13-.55H76.29c1.58,0,1.24,0,4,0h.58C81,40.29,81.14,40.27,81.12,40.38Z"/></svg>',
+				'	</i>',
+				`	<p class="larger">${locale.notepad.empty_msg}</p>`,
+				`	<p class="ital">${locale.notepad.empty_tip}</p>`,
+				'</div>'
+			].join("\n");
+			document.getElementById('notepad').insertAdjacentHTML('beforeend', npEmptyContent);
+			document.getElementById('delete-all-modal-button').classList.add('disabled');
+			document.getElementById('sort-modal-button').classList.add('disabled');
+			break;
 	}
-	// visual updates
-	function buildEditProceed() {
-		var editContent = [
-			'<div id="color-selector-wrapper">',
-			'	<div class="h3">'+ locale.edit.pick +'</div>',
-			'	<input type="text" id="edit-color-selector"/>',
-			'</div>',
-			'<form>',
-			'	<textarea id="note-text" placeholder="'+ locale.edit.placeholder +'" style="background-color: '+ ntColor +'"></textarea>',
-			'	<div id="note-edit-btns">',
-			'		<div>',
-			'			<button type="submit" class="button color green responsive" aria-label="'+ locale.general.save +'" onclick="saveNote('+ ntId +');">',
-			'				<i class="fa fa-check"></i><span> '+ locale.general.save + '</span>',
-			'			</button>',
-			'			<button type="button" class="button responsive" aria-label="'+ locale.general.cancel +'" onclick="buildNotepad(\'backward\', npScroll);">',
-			'				<i class="fa fa-arrow-down fa-rotate-90"></i><span> '+ locale.general.cancel + '</span>',
-			'			</button>',
-			'		</div>',
-			'		<div>',
-			'			<button type="button" class="button color red responsive" aria-label="'+ locale.general.delete +'" onclick="deleteNoteOnEdit('+ ntId +');">',
-			'				<i class="fa fa-trash"></i><span> '+ locale.general.delete + '</span>',
-			'			</button>',
-			'		</div>',
-			'	</div>',
-			'</form>'
-		].join("\n");
-		$('#edit').append(editContent);
-		$('#note-text').val(ntText);// set note text
-		$('#edit-color-selector').spectrum({
-			showPaletteOnly: true,
-			showSelectionPalette: false,
-			hideAfterPaletteSelect: true,
-			preferredFormat: 'hex',
-			change: function(color) {
-				$('#note-text').css('background-color', color.toHexString());
-			},
-			color: ntColor,
-			palette: [
-				[colors[0]['hex'], colors[1]['hex'], colors[2]['hex']],
-				[colors[3]['hex'], colors[4]['hex'], colors[5]['hex']],
-				[colors[6]['hex'], colors[7]['hex'], colors[8]['hex']]
-			]
+}
+
+// fill in notepad name element
+function fillNotepadName() {
+	let npnameContent = [
+		'<div id="np-name-wrapper">',
+		`	<div id="np-name" onclick="renameNotepad('edit');">${catalog[notepadIdLocal]["npname"]}</div>`,
+		'</div>'
+	].join("\n");
+	document.getElementById('np-rename').innerHTML = npnameContent;
+}
+
+// fill in notepad description element
+function fillNotepadDesc() {
+	let npdescContent = [
+		`<textarea id="np-desc-textarea" class="break-word" spellcheck="false" placeholder="${locale.notepad.desc_placeholder}" rows="1"></textarea>`,
+		`<span id="np-desc-label"><span id="np-desc-char">0</span>/${npdescMaxChar} ${locale.notepad.desc_char}</span>`
+	].join("\n");
+	document.getElementById('np-desc').innerHTML = npdescContent;
+	let _ndta = document.getElementById('np-desc-textarea');
+	let _ndChar = document.getElementById('np-desc-char');
+	let _ndLabel = document.getElementById('np-desc-label');
+	function resizeDesc() {
+		_ndta.style.height = 'auto';
+		_ndta.style.height = _ndta.scrollHeight + 'px';
+	}
+	if (typeof catalog[notepadIdLocal]["npdesc"] !== 'undefined') {
+		_ndta.value = catalog[notepadIdLocal]["npdesc"];
+		let _ro = new ResizeObserver(function() {
+			if (_ndta.offsetHeight > 0) {
+				resizeDesc();
+				_ro.disconnect();
+			}
 		});
+		_ro.observe(_ndta);
+	}
+	_ndta.addEventListener('input', resizeDesc);
+	_ndta.addEventListener('keydown', function(e) {
+		if (e.key === "Enter") {
+			e.preventDefault();
+			_ndta.blur();
+		} else if (
+			e.key !== "Backspace" && e.key !== "Delete" &&
+			e.key !== "PageUp" && e.key !== "PageDown" &&
+			e.key !== "End" && e.key !== "Home" &&
+			e.key !== "ArrowLeft" && e.key !== "ArrowUp" &&
+			e.key !== "ArrowRight" && e.key !== "ArrowDown" &&
+			!e.ctrlKey && !e.metaKey &&
+			[...charSplitter.segment(_ndta.value)].length >= npdescMaxChar
+		) {
+			e.preventDefault();// block all other keys if at the character limit
+		}
+	});
+	_ndta.addEventListener('keyup', function(e) {
+		_ndChar.textContent = [...charSplitter.segment(_ndta.value)].length;
+		if (e.key === "Escape") {// escape
+			e.preventDefault();
+			_ndta.value = (typeof catalog[notepadIdLocal]["npdesc"] !== 'undefined') ? catalog[notepadIdLocal]["npdesc"] : "";
+			resizeDesc();
+			_ndta.blur();
+		}
+	});
+	_ndta.addEventListener('focusin', function() {
+		_ndChar.textContent = [...charSplitter.segment(_ndta.value)].length;
+		_ndLabel.classList.add("show");
 		if (typeof quickAddFocusOut !== 'undefined') {
 			clearTimeout(quickAddFocusOut);
 			quickAddFocusOut = void 0;
 		} else {
 			stickyButtonsToggle("hide");
 		}
-		$('#notepad').css({ opacity: 1, x: 0 }).transition({ opacity: 0, x: '-50%' }, speed, function() {
+	});
+	_ndta.addEventListener('focusout', function() {
+		_ndLabel.classList.remove("show");
+		stickyButtonsToggle("show");
+		changeNotepadDesc();
+	});
+	_ndta.addEventListener("paste", function(e) {
+		if (clipboardAccess) {
+			e.preventDefault();
+			navigator.clipboard.readText().then(function(clipText) {
+				let clipboard = clipText;
+				let originalCount = [...charSplitter.segment(_ndta.value)].length;
+				let pasteCount = [...charSplitter.segment(clipText)].length;
+				if ((originalCount + pasteCount) > npdescMaxChar) {
+					let clipboardMax = npdescMaxChar - originalCount;
+					clipboard = [...charSplitter.segment(clipText)].slice(0, clipboardMax).map(function(s){return s.segment;}).join('');
+				}
+				_ndta.setRangeText(clipboard, _ndta.selectionStart, _ndta.selectionEnd, 'end');
+				resizeDesc();
+			});
+		}
+	});
+}
+
+//** NOTES **//
+
+// create the edit note dialog
+function buildEdit(domID) {
+	// variables, objects, arrays
+	npScroll = window.scrollY;// remember notepad scroll position, for when we return to it
+	let ntColor, ntText;
+	editDomId = domID;// store for saveNote() and deleteNoteOnEdit()
+	if (typeof domID === 'undefined') {// are we pulling up an existing note or a blank new note?
+		ntText = "";
+		ntColor = 0;
+	} else {
+		let thisLocalId = Number(document.querySelector(domID).getAttribute('data-local-id'));
+		ntColor = notepads[notepadIdLocal][thisLocalId]["color"];
+		ntText = notepads[notepadIdLocal][thisLocalId]["text"];
+	}
+	let editContent = [
+		'<div id="color-selector-wrapper">',
+		`	<div class="h3">${locale.edit.pick}</div>`,
+		`	<button type="button" class="button circle color-selector" id="edit-color-selector" aria-label="${locale.notepad.change_color}" title="${locale.notepad.change_color}"><i class="fa fa-palette"></i></button>`,
+		'</div>',
+		'<form>',
+		`	<textarea id="note-text" placeholder="${locale.edit.placeholder}" style="background-color: var(--color-${ntColor})"></textarea>`,
+		'	<div id="note-edit-btns">',
+		'		<div>',
+		`			<button type="submit" class="button color green responsive" aria-label="${locale.general.save}" onclick="saveNote();">`,
+		`				<i class="fa fa-check"></i><span> ${locale.general.save}</span>`,
+		'			</button>',
+		`			<button type="button" class="button responsive" aria-label="${locale.general.cancel}" onclick="returnToNotepad(npScroll);">`,
+		`				<i class="fa fa-arrow-down fa-rotate-90"></i><span> ${locale.general.cancel}</span>`,
+		'			</button>',
+		'		</div>',
+		'		<div>',
+		`			<button type="button" class="button color red responsive" aria-label="${locale.general.delete}" onclick="deleteNoteOnEdit();">`,
+		`				<i class="fa fa-trash"></i><span> ${locale.general.delete}</span>`,
+		'			</button>',
+		'		</div>',
+		'	</div>',
+		'</form>'
+	].join("\n");
+	document.getElementById('edit').insertAdjacentHTML('beforeend', editContent);
+	let _editEl = document.getElementById('edit-color-selector');
+	_pp.set(_editEl, { colorId: ntColor, opts: { change: function(colorId) { document.getElementById('note-text').style.backgroundColor = `var(--color-${colorId})`; } }, open: false, onDocClick: null });
+	document.getElementById('note-text').value = ntText;// set note text
+	if (typeof quickAddFocusOut !== 'undefined') {
+		clearTimeout(quickAddFocusOut);
+		quickAddFocusOut = void 0;
+	} else {
+		stickyButtonsToggle("hide");
+	}
+	anime.animate('#notepad', {
+		opacity: [1, 0],
+		translateX: ['0%', '-50%'],
+		duration: speed,
+		ease: 'inOutQuad',
+		onComplete: function() {
 			removeAllToolOverlays();// if any options overlays were visible back in the notepad we've now left, turn them off now
-			$('#notepad').removeClass('active-loc').removeAttr('style');
-			$('#edit').css({ opacity: 0, x: '50%' }).addClass('active-loc');
-			$('html, body').animate({ scrollTop: 0 }, 0);
+			document.getElementById('notepad').classList.remove('active-loc'); document.getElementById('notepad').removeAttribute('style');
+			document.getElementById('edit').classList.add('active-loc');
+			window.scrollTo(0, 0);
 			updateState("edit", "jump");
-			$('#note-text').scrollTop($('#note-text').prop('scrollHeight') - $('#note-text').height());// scroll note bottom
-			$('#edit').transition({
-				opacity: 1,
-				x: 0,
+			let noteText = document.getElementById('note-text');
+			noteText.scrollTop = noteText.scrollHeight - noteText.clientHeight;// scroll note bottom
+			anime.animate('#edit', {
+				opacity: [0, 1],
+				translateX: ['50%', '0%'],
 				duration: speed,
-				complete: function() {
-					$('#edit').removeAttr('style');
-					$('#note-text').focus();// focus note
-					var inputLength = document.getElementById('note-text').value.length;
-					document.getElementById('note-text').setSelectionRange(inputLength, inputLength);// set caret to note end
-					$('#note-text').scrollTop($('#note-text').prop('scrollHeight') - $('#note-text').height());// scroll note bottom again, because, Safari
+				ease: 'inOutQuad',
+				onComplete: function() {
+					document.getElementById('edit').removeAttribute('style');
+					noteText.focus();// focus note
+					let inputLength = noteText.value.length;
+					noteText.setSelectionRange(inputLength, inputLength);// set caret to note end
+					noteText.scrollTop = noteText.scrollHeight - noteText.clientHeight;// scroll note bottom again, because, Safari
 				}
 			});
-		});
-	}
+		}
+	});
 }
 
 // save a note
-function saveNote(domID) {
+function saveNote() {
+	let domID = editDomId;
 	// conditions for early bailing
-	if ($('#note-text').val() == "") {
+	let _noteText = document.getElementById('note-text');
+	if (_noteText.value == "") {
 		popupMsg(locale.popup.empty, "red");
 		return;
 	}
 	// variables, objects, arrays; visual updates
-	var wasSynced = globalSync;
-	var tsAction = getUnixTimestampMS();
-	var thisColorHex = $('#edit-color-selector').spectrum("get");
-	var thisColorId = Number(colorHexToId[thisColorHex]);
-	var thisText = $('#note-text').val();
+	let wasSynced = globalSync;
+	let tsAction = getUnixTimestampMS();
+	let thisColorId = _ppGet(document.getElementById('edit-color-selector'));
+	let thisText = _noteText.value;
+	let thisLocalId, thisRemoteId;
 	if (typeof domID === 'undefined') {// create new note
 		localNoteCounter++;
-		var thisLocalId = localNoteCounter;
-		var thisRemoteId = 0;
-		domID = '#' + notePrefix + thisLocalId;
+		thisLocalId = localNoteCounter;
+		thisRemoteId = 0;
+		domID = `#${notePrefix}${thisLocalId}`;
+		editDomId = domID;// update so async callback can reference the new row
 		idbSnapshotUpdate("count");
-		var newNote = rowBuilder(thisLocalId, 0, thisColorId, 0, thisText);
-		var maxOrg = 0;
+		let newNote = rowBuilder(thisLocalId, 0, thisColorId, 0, thisText);
+		let maxOrg = 0;
 		for (let n in notepads[notepadIdLocal]) { if (notepads[notepadIdLocal][n]["org"] > maxOrg) maxOrg = notepads[notepadIdLocal][n]["org"]; }
 		notepads[notepadIdLocal][thisLocalId] = { "idRemote": 0, "org": maxOrg+1, "color": thisColorId, "isChecked": 0, "text": thisText, "lastEdit": Math.floor(tsAction/1000), "deleted": 0, "synced": 0 };
-		if (!$('#notepad-table').length) notepadRoot("create");
-		$('#notepad-body').prepend(newNote);
+		if (!document.getElementById('notepad-table')) notepadRoot("create");
+		document.getElementById('notepad-body').insertAdjacentHTML('afterbegin', newNote);
 		setCheckAllState();
-		spectrumInit(domID);
-		buildNotepad("backward", undefined, domID);//it's a new note: don't specify previous scroll position (scroll to top)
+		returnToNotepad(undefined, domID);//it's a new note: don't specify previous scroll position (scroll to top)
 	} else {// edit existing note
-		var thisLocalId = Number($(domID).attr('data-local-id'));
-		var thisRemoteId = Number($(domID).attr('data-remote-id'));
+		thisLocalId = Number(document.querySelector(domID).getAttribute('data-local-id'));
+		thisRemoteId = Number(document.querySelector(domID).getAttribute('data-remote-id'));
 		notepads[notepadIdLocal][thisLocalId]["color"] = thisColorId;
 		notepads[notepadIdLocal][thisLocalId]["text"] = thisText;
 		notepads[notepadIdLocal][thisLocalId]["lastEdit"] = Math.floor(tsAction/1000);
 		notepads[notepadIdLocal][thisLocalId]["synced"] = 0;
-		$(domID).attr('data-color', thisColorId);
-		$(domID).find('.color-selector').spectrum("set", thisColorHex);
+		document.querySelector(domID).setAttribute('data-color', thisColorId);
+		_ppSet(document.querySelector(`${domID} .color-selector`), thisColorId);
 		fillNoteText("append", domID, thisText);
-		buildNotepad("backward", npScroll, domID);
+		returnToNotepad(npScroll, domID);
 	}
 	// IDB and MySQL updates
 	if ([0, 3].includes(offlineState)) {// if online
-		$.ajax({
+		apiFetch({
 			type: "POST",
-			url: "/ajax/save-note",
+			url: "/api/save-note",
 			data: JSON.stringify({
 				nphash: catalog[notepadIdLocal]["nphash"],
 				ntid: thisRemoteId,
@@ -2041,11 +2375,9 @@ function saveNote(domID) {
 			}),
 			beforeSend: function() {
 				statusIndicator("process");
-				cloudIndicator("upload");
 				noteCommitHandler("delay", thisLocalId, wasSynced, tsAction, undefined);
 			},
 			success: function(postData) {
-				cloudIndicator("online");
 				switch (postData["result"]) {
 					case "hashfail":
 					case "matchfail":
@@ -2057,14 +2389,14 @@ function saveNote(domID) {
 					default:
 						statusIndicator("success");
 						if (postData.ssv == true) {
-							$(domID).attr('data-color', postData.color);
-							$(domID).find('.color-selector').spectrum("set", colors[postData.color]["hex"]);
+							document.querySelector(domID).setAttribute('data-color', postData.color);
+							_ppSet(document.querySelector(`${domID} .color-selector`), postData.color);
 							fillNoteText("append", domID, postData.text);
 							notepads[notepadIdLocal][thisLocalId]["color"] = postData.color;
 							notepads[notepadIdLocal][thisLocalId]["text"] = postData.text;
 						}
 						if (postData["result"] == "success-new") {
-							$(domID).attr('data-remote-id', postData.idRemote);
+							document.querySelector(domID).setAttribute('data-remote-id', postData.idRemote);
 							notepads[notepadIdLocal][thisLocalId]["idRemote"] = postData.idRemote;
 							notepads[notepadIdLocal][thisLocalId]["org"] = postData.org;
 						}
@@ -2083,30 +2415,30 @@ function saveNote(domID) {
 // quick add a note from the notepad page
 function quickAdd() {
 	// conditions for early bailing
-	if ($('#quick-add-input').val() == "") {
+	let _qai = document.getElementById('quick-add-input');
+	if (_qai.value == "") {
 		popupMsg(locale.popup.empty, "red");
 		return;
 	}
 	// variables, objects, arrays
 	localNoteCounter++;
-	var thisLocalId = localNoteCounter;
+	let thisLocalId = localNoteCounter;
 	idbSnapshotUpdate("count");
-	var wasSynced = globalSync;
-	var tsAction = getUnixTimestampMS();
-	var domID = '#' + notePrefix + thisLocalId;
-	var quickAddText = $('#quick-add-input').val();
-	var newNote = rowBuilder(thisLocalId, 0, 0, 0, quickAddText);
-	var maxOrg = 0;
+	let wasSynced = globalSync;
+	let tsAction = getUnixTimestampMS();
+	let domID = `#${notePrefix}${thisLocalId}`;
+	let quickAddText = _qai.value;
+	let newNote = rowBuilder(thisLocalId, 0, 0, 0, quickAddText);
+	let maxOrg = 0;
 	for (let n in notepads[notepadIdLocal]) { if (notepads[notepadIdLocal][n]["org"] > maxOrg) maxOrg = notepads[notepadIdLocal][n]["org"]; }
 	notepads[notepadIdLocal][thisLocalId] = { "idRemote": 0, "org": maxOrg+1, "color": 0, "isChecked": 0, "text": quickAddText, "lastEdit": Math.floor(tsAction/1000), "deleted": 0, "synced": 0 };
 	// visual updates
-	if (!$('#notepad-table').length) notepadRoot("create");
-	$('#notepad-body').prepend(newNote);
+	if (!document.getElementById('notepad-table')) notepadRoot("create");
+	document.getElementById('notepad-body').insertAdjacentHTML('afterbegin', newNote);
 	setCheckAllState();
 	linkifyInit(domID);
-	spectrumInit(domID);
-	$('#quick-add-input').one("blur", function() {// a long, crazy method of focusing out and in again, so as to reset any mobile keyboard autocompletes
-		const quickAddInput = document.querySelector('#quick-add-input');
+	_qai.addEventListener('blur', function() {// a long, crazy method of focusing out and in again, so as to reset any mobile keyboard autocompletes
+		const quickAddInput = _qai;
 		const quickAddLoc = document.querySelector('#quick-add > form');
 		const fakeInput = document.createElement('input');// create invisible dummy input to receive the focus
 		fakeInput.setAttribute('type', 'text');
@@ -2120,25 +2452,23 @@ function quickAdd() {
 			quickAddInput.focus();// now we can focus back on this input
 			fakeInput.remove();// and cleanup
 		}, 100);
-	});
-	$('#quick-add-input').val("").blur();
-	$('#quick-add-button').addClass('disabled');
+	}, { once: true });
+	_qai.value = ""; _qai.blur();
+	document.getElementById('quick-add-button').classList.add('disabled');
 	// IDB and MySQL updates
 	if ([0, 3].includes(offlineState)) {// if online
-		$.ajax({
+		apiFetch({
 			type: "POST",
-			url: "/ajax/quick-add",
+			url: "/api/quick-add",
 			data: JSON.stringify({
 				nphash: catalog[notepadIdLocal]["nphash"],
 				notetext: quickAddText
 			}),
 			beforeSend: function() {
 				statusIndicator("process");
-				cloudIndicator("upload");
 				noteCommitHandler("delay", thisLocalId, wasSynced, tsAction, undefined);
 			},
 			success: function(postData) {
-				cloudIndicator("online");
 				switch (postData["result"]) {
 					case "hashfail":
 						errorModal("manual", locale.modal.error.critical);
@@ -2156,7 +2486,7 @@ function quickAdd() {
 						notepads[notepadIdLocal][thisLocalId]["org"] = postData.org;
 						notepads[notepadIdLocal][thisLocalId]["lastEdit"] = postData.lastEdit;
 						notepads[notepadIdLocal][thisLocalId]["synced"] = 1;
-						$(domID).attr('data-remote-id', postData.idRemote);
+						document.querySelector(domID).setAttribute('data-remote-id', postData.idRemote);
 						noteCommitHandler("resolve", thisLocalId, wasSynced, tsAction, undefined);
 						break;
 				}
@@ -2170,39 +2500,36 @@ function quickAdd() {
 // delete a note
 function deleteNote(domID) {
 	// variables, objects, arrays
-	var thisLocalId = Number($(domID).attr('data-local-id'));
-	var wasSynced = globalSync;
-	var tsAction = getUnixTimestampMS();
+	let thisLocalId = Number(document.querySelector(domID).getAttribute('data-local-id'));
+	let wasSynced = globalSync;
+	let tsAction = getUnixTimestampMS();
 	notepads[notepadIdLocal][thisLocalId]["deleted"] = 1;
 	notepads[notepadIdLocal][thisLocalId]["lastEdit"] = Math.floor(tsAction/1000);
 	notepads[notepadIdLocal][thisLocalId]["synced"] = 0;
 	// visual updates
-	anime({
-		targets: domID,
-		scale: { value: 0, duration: speed, easing: 'easeOutSine' },
-		complete: function(anim) {
-			$(domID + ' .color-selector').spectrum("destroy");
-			$(domID).remove();
-			if ($('#notepad-body > div').length == 0) notepadRoot("destroy");
+	anime.animate(domID, {
+		scale: { to: 0, duration: speed, ease: 'outSine' },
+		onComplete: function(anim) {
+			_ppClear(document.querySelector(`${domID} .color-selector`));
+			document.querySelector(domID).remove();
+			if (document.querySelectorAll('#notepad-body > div').length == 0) notepadRoot("destroy");
 			setCheckAllState();
 		}
 	});
 	// IDB and MySQL updates
 	if ([0, 3].includes(offlineState)) {// if online
-		$.ajax({
+		apiFetch({
 			type: "POST",
-			url: "/ajax/delete-note",
+			url: "/api/delete-note",
 			data: JSON.stringify({
 				nphash: catalog[notepadIdLocal]["nphash"],
-				ntid: Number($(domID).attr('data-remote-id'))
+				ntid: Number(document.querySelector(domID).getAttribute('data-remote-id'))
 			}),
 			beforeSend: function() {
 				statusIndicator("process");
-				cloudIndicator("upload");
 				noteCommitHandler("delay", thisLocalId, wasSynced, tsAction, undefined);
 			},
 			success: function(postData) {
-				cloudIndicator("online");
 				switch (postData["result"]) {
 					case "hashfail":
 					case "matchfail":
@@ -2225,42 +2552,41 @@ function deleteNote(domID) {
 }
 
 // delete option on the edit page
-function deleteNoteOnEdit(domID) {
+function deleteNoteOnEdit() {
+	let domID = editDomId;
 	// conditions for early bailing
 	if (typeof domID === 'undefined') {
-		buildNotepad("backward", npScroll);
+		returnToNotepad(npScroll);
 		return;
 	}
 	// variables, objects, arrays
-	var thisLocalId = Number($(domID).attr('data-local-id'));
-	var thisRemoteId = Number($(domID).attr('data-remote-id'));
-	var wasSynced = globalSync;
-	var tsAction = getUnixTimestampMS();
+	let thisLocalId = Number(document.querySelector(domID).getAttribute('data-local-id'));
+	let thisRemoteId = Number(document.querySelector(domID).getAttribute('data-remote-id'));
+	let wasSynced = globalSync;
+	let tsAction = getUnixTimestampMS();
 	notepads[notepadIdLocal][thisLocalId]["deleted"] = 1;
 	notepads[notepadIdLocal][thisLocalId]["lastEdit"] = Math.floor(tsAction/1000);
 	notepads[notepadIdLocal][thisLocalId]["synced"] = 0;
 	// visual updates
-	$(domID + ' .color-selector').spectrum("destroy");
-	$(domID).remove();
-	if ($('#notepad-body > div').length == 0) notepadRoot("destroy");
+	_ppClear(document.querySelector(`${domID} .color-selector`));
+	document.querySelector(domID).remove();
+	if (document.querySelectorAll('#notepad-body > div').length == 0) notepadRoot("destroy");
 	setCheckAllState();
-	buildNotepad("backward", npScroll);
+	returnToNotepad(npScroll);
 	// IDB and MySQL updates
 	if ([0, 3].includes(offlineState)) {// if online
-		$.ajax({
+		apiFetch({
 			type: "POST",
-			url: "/ajax/delete-note",
+			url: "/api/delete-note",
 			data: JSON.stringify({
 				nphash: catalog[notepadIdLocal]["nphash"],
 				ntid: thisRemoteId
 			}),
 			beforeSend: function() {
 				statusIndicator("process");
-				cloudIndicator("upload");
 				noteCommitHandler("delay", thisLocalId, wasSynced, tsAction, undefined);
 			},
 			success: function(postData) {
-				cloudIndicator("online");
 				switch (postData["result"]) {
 					case "hashfail":
 					case "matchfail":
@@ -2286,38 +2612,35 @@ function deleteNoteOnEdit(domID) {
 function deleteAllNotes() {
 	modalToggle("off");
 	// conditions for early bailing
-	if (!$('#notepad-table').length) return;
+	if (!document.getElementById('notepad-table')) return;
 	// variables, objects, arrays
-	var wasSynced = globalSync;
-	var tsAction = getUnixTimestampMS();
+	let wasSynced = globalSync;
+	let tsAction = getUnixTimestampMS();
 	for (let n in notepads[notepadIdLocal]) {
 		notepads[notepadIdLocal][n]["deleted"] = 1;
 		notepads[notepadIdLocal][n]["lastEdit"] = Math.floor(tsAction/1000);
 		notepads[notepadIdLocal][n]["synced"] = 0;
 	}
 	// visual updates
-	anime({
-		targets: '#notepad-body > div',
-		scale: { value: 0, duration: speed, easing: 'easeOutSine' },
-		complete: function(anim) {
+	anime.animate('#notepad-body > div', {
+		scale: { to: 0, duration: speed, ease: 'outSine' },
+		onComplete: function(anim) {
 			notepadRoot("destroy");
 		}
 	});
 	// IDB and MySQL updates
 	if ([0, 3].includes(offlineState)) {// if online
-		$.ajax({
+		apiFetch({
 			type: "POST",
-			url: "/ajax/delete-all-notes",
+			url: "/api/delete-all-notes",
 			data: JSON.stringify({
 				nphash: catalog[notepadIdLocal]["nphash"]
 			}),
 			beforeSend: function() {
 				statusIndicator("process");
-				cloudIndicator("upload");
 				noteCommitHandler("delay", "all", wasSynced, tsAction, undefined);
 			},
 			success: function(postData) {
-				cloudIndicator("online");
 				switch (postData["result"]) {
 					case "hashfail":
 						errorModal("manual", locale.modal.error.critical);
@@ -2341,46 +2664,48 @@ function deleteAllNotes() {
 
 // display delete all modal
 function deleteAllModal() {
-	var modalContent = [
-		'<i id="modal-close" class="fa fa-times" title="'+ locale.general.close +'" onclick="modalToggle(\'off\');"></i>',
+	let modalContent = [
+		`<i id="modal-close" class="fa fa-times" title="${locale.general.close}" onclick="modalToggle('off');"></i>`,
 		'<div class="row modal-window-wrapper-top">',
-		'	<p>'+ locale.modal.delete_all +'</p>',
+		`	<p>${locale.modal.delete_all}</p>`,
 		'</div>',
 		'<div class="row modal-window-wrapper-bottom">',
-		'	<button type="button" class="color red button large" aria-label="'+ locale.general.yes +'" onclick="deleteAllNotes();">'+ locale.general.yes +'</button>',
-		'	<button type="button" class="color green button large" aria-label="'+ locale.general.no +'" onclick="modalToggle(\'off\');">'+ locale.general.no +'</button>',
+		`	<button type="button" class="color red button large" aria-label="${locale.general.yes}" onclick="deleteAllNotes();">${locale.general.yes}</button>`,
+		`	<button type="button" class="color green button large" aria-label="${locale.general.no}" onclick="modalToggle('off');">${locale.general.no}</button>`,
 		'</div>'
 	].join("\n");
-	$('#modal-window').empty().append(modalContent);
+	document.getElementById('modal-window').innerHTML = modalContent;
 	modalToggle("on");
 }
 
-// display the JSON modal
-function jsonModal() {
-	var jsonURL = window.location.protocol+'//'+window.location.hostname+'/json/'+catalog[notepadIdLocal]["nphash"];
-	var modalContent = [
-		'<i id="modal-close" class="fa fa-times" title="'+ locale.general.close +'" onclick="modalToggle(\'off\');"></i>',
+// display the API modal
+function apiModal() {
+	let apiURL = `/json/${catalog[notepadIdLocal]["nphash"]}`;
+	let apiURLFull = `${window.location.origin}/json/${catalog[notepadIdLocal]["nphash"]}`;
+	let modalContent = [
+		`<i id="modal-close" class="fa fa-times" title="${locale.general.close}" onclick="modalToggle('off');"></i>`,
 		'<div class="row modal-window-wrapper-top">',
-		'	<p class="bold">'+ locale.modal.json.prompt +'</p>',
-		'	<p>'+ locale.modal.json.prompt_detail +'</p>',
-		'	<div id="json-wrapper"><a href="'+ jsonURL +'" target="_blank" aria-label="'+ locale.modal.json.url +'">'+ jsonURL +'</a></div>',
+		`	<p class="bold">${locale.modal.api.prompt}</p>`,
+		`	<p>${locale.modal.api.prompt_detail}</p>`,
+		`	<p><i class="fa fa-link"></i> <a id="api-modal-link" href="${apiURL}" target="_blank">${apiURLFull}</a></p>`,
 		'</div>',
 		'<div class="row modal-window-wrapper-bottom">',
-		'	<button type="button" class="button large" aria-label="'+ locale.general.close +'" onclick="modalToggle(\'off\');">'+ locale.general.close +'</button>',
+		`	<button type="button" class="button large" aria-label="${locale.general.close}" onclick="modalToggle('off');">${locale.general.close}</button>`,
 		'</div>'
 	].join("\n");
-	$('#modal-window').empty().append(modalContent);
+	document.getElementById('modal-window').innerHTML = modalContent;
 	modalToggle("on");
 }
 
 // shuffle the note order around
 function reorderEntry() {
 	// variables, objects, arrays
-	var wasSynced = globalSync;
-	var tsAction = getUnixTimestampMS();
-	var orderArrayLocalId = $('#notepad-body').sortable("toArray", { attribute: "data-local-id" });
-	var orderArrayRemoteId = $('#notepad-body').sortable("toArray", { attribute: "data-remote-id" });
-	var c = 0;
+	let wasSynced = globalSync;
+	let tsAction = getUnixTimestampMS();
+	let _sortedRows = Array.from(document.querySelectorAll('#notepad-body .note-row'));
+	let orderArrayLocalId = _sortedRows.map(function(el) { return el.getAttribute('data-local-id'); });
+	let orderArrayRemoteId = _sortedRows.map(function(el) { return el.getAttribute('data-remote-id'); });
+	let c = 0;
 	orderArrayLocalId.forEach(function(n) {
 		notepads[notepadIdLocal][n]["org"] = orderArrayLocalId.length - c;
 		notepads[notepadIdLocal][n]["lastEdit"] = Math.floor(tsAction/1000);
@@ -2389,20 +2714,18 @@ function reorderEntry() {
 	});
 	// IDB and MySQL updates
 	if ([0, 3].includes(offlineState)) {// if online
-		$.ajax({
+		apiFetch({
 			type: "POST",
-			url: "/ajax/reorder-entry",
+			url: "/api/reorder-entry",
 			data: JSON.stringify({
 				nphash: catalog[notepadIdLocal]["nphash"],
 				noteorder: orderArrayRemoteId
 			}),
 			beforeSend: function() {
 				statusIndicator("process");
-				cloudIndicator("upload");
 				noteCommitHandler("delay", "all", wasSynced, tsAction, undefined);
 			},
 			success: function(postData) {
-				cloudIndicator("online");
 				switch (postData["result"]) {
 					case "hashfail":
 					case "matchfail":
@@ -2429,143 +2752,160 @@ function reorderEntry() {
 
 // re-sort the present notepad's notes by a variety of methods
 function noteSort(sortorder) {
+	let _nb = document.getElementById('notepad-body');
+	let _rows = Array.from(document.querySelectorAll('.note-row'));
 	switch (sortorder) {
 		case "az":
-			$('.note-row').sort(function(a, b) {
-				if ($(a).find(".note-full").text().toLowerCase() < $(b).find(".note-full").text().toLowerCase()) { return -1; } else { return 1; }
-			}).appendTo('#notepad-body');
+			_rows.sort(function(a, b) {
+				return a.querySelector(".note-full").textContent.toLowerCase() < b.querySelector(".note-full").textContent.toLowerCase() ? -1 : 1;
+			});
 			break;
 		case "za":
-			$('.note-row').sort(function(a, b) {
-				if ($(a).find(".note-full").text().toLowerCase() < $(b).find(".note-full").text().toLowerCase()) { return 1; } else { return -1; }
-			}).appendTo('#notepad-body');
+			_rows.sort(function(a, b) {
+				return a.querySelector(".note-full").textContent.toLowerCase() < b.querySelector(".note-full").textContent.toLowerCase() ? 1 : -1;
+			});
 			break;
 		case "color":
-			$('.note-row').sort(function(a, b) {
-				if ($(a).attr("data-color") > $(b).attr("data-color")) { return 1; } else { return -1; }
-			}).appendTo('#notepad-body');
+			_rows.sort(function(a, b) {
+				return a.getAttribute("data-color") > b.getAttribute("data-color") ? 1 : -1;
+			});
 			break;
 		case "checked":
-			$('.note-row').sort(function(a, b) {
-				if ($(a).attr("data-is-checked") < $(b).attr("data-is-checked")) { return 1; } else { return -1; }
-			}).appendTo('#notepad-body');
+			_rows.sort(function(a, b) {
+				return a.getAttribute("data-is-checked") < b.getAttribute("data-is-checked") ? 1 : -1;
+			});
 			break;
 		case "unchecked":
-			$('.note-row').sort(function(a, b) {
-				if ($(a).attr("data-is-checked") > $(b).attr("data-is-checked")) { return 1; } else { return -1; }
-			}).appendTo('#notepad-body');
+			_rows.sort(function(a, b) {
+				return a.getAttribute("data-is-checked") > b.getAttribute("data-is-checked") ? 1 : -1;
+			});
 			break;
 	}
+	_rows.forEach(function(row) { _nb.appendChild(row); });
 	modalToggle("off");
 	reorderEntry();
 }
 
 // display sort modal
 function sortModal() {
-	var modalContent = [
-		'<i id="modal-close" class="fa fa-times" title="'+ locale.general.close +'" onclick="modalToggle(\'off\');"></i>',
+	let modalContent = [
+		`<i id="modal-close" class="fa fa-times" title="${locale.general.close}" onclick="modalToggle('off');"></i>`,
 		'<div class="row modal-window-wrapper-top">',
-		'	<p>'+ locale.modal.sort +'</p>',
-		'	<button type="button" class="color red button large" aria-label="'+ locale.notepad.sort_az +'" onclick="noteSort(\'az\');"><i class="fa fa-sort-az"></i> '+ locale.notepad.sort_az +'</button>',
-		'	<button type="button" class="color orange button large" aria-label="'+ locale.notepad.sort_za +'" onclick="noteSort(\'za\');"><i class="fa fa-sort-za"></i> '+ locale.notepad.sort_za +'</button>',
-		'	<button type="button" class="color yellow button large" aria-label="'+ locale.notepad.sort_color +'" onclick="noteSort(\'color\');"><i class="fa fa-palette"></i> '+ locale.notepad.sort_color +'</button>',
+		`	<p>${locale.modal.sort}</p>`,
+		`	<button type="button" class="color red button large" aria-label="${locale.notepad.sort_az}" onclick="noteSort('az');"><i class="fa fa-sort-az"></i> ${locale.notepad.sort_az}</button>`,
+		`	<button type="button" class="color orange button large" aria-label="${locale.notepad.sort_za}" onclick="noteSort('za');"><i class="fa fa-sort-za"></i> ${locale.notepad.sort_za}</button>`,
+		`	<button type="button" class="color yellow button large" aria-label="${locale.notepad.sort_color}" onclick="noteSort('color');"><i class="fa fa-palette"></i> ${locale.notepad.sort_color}</button>`,
 		'	<div class="spacer0"></div>',
-		'	<button type="button" class="color cyan button large" aria-label="'+ locale.notepad.sort_checked +'" onclick="noteSort(\'checked\');"><i class="fa fa-checkbox-checked"></i> '+ locale.notepad.sort_checked +'</button>',
-		'	<button type="button" class="color blue button large" aria-label="'+ locale.notepad.sort_unchecked +'" onclick="noteSort(\'unchecked\');"><i class="fa fa-checkbox-unchecked"></i> '+ locale.notepad.sort_unchecked +'</button>',
+		`	<button type="button" class="color cyan button large" aria-label="${locale.notepad.sort_checked}" onclick="noteSort('checked');"><i class="fa fa-checkbox-checked"></i> ${locale.notepad.sort_checked}</button>`,
+		`	<button type="button" class="color blue button large" aria-label="${locale.notepad.sort_unchecked}" onclick="noteSort('unchecked');"><i class="fa fa-checkbox-unchecked"></i> ${locale.notepad.sort_unchecked}</button>`,
 		'</div>',
 		'<div class="row modal-window-wrapper-bottom">',
-		'	<button type="button" class="button large" aria-label="'+ locale.general.cancel +'" onclick="modalToggle(\'off\');">'+ locale.general.cancel +'</button>',
+		`	<button type="button" class="button large" aria-label="${locale.general.cancel}" onclick="modalToggle('off');">${locale.general.cancel}</button>`,
 		'</div>'
 	].join("\n");
-	$('#modal-window').empty().append(modalContent);
+	document.getElementById('modal-window').innerHTML = modalContent;
 	modalToggle("on");
 }
 
 // move notes up and down
 function moveUp(domID) {
-	var targetRow = $(domID);
-	var prevRow = targetRow.prev();
-	if (prevRow.length == 0) return;
+	let targetRow = document.querySelector(domID);
+	let prevRow = targetRow.previousElementSibling;
+	if (!prevRow) return;
 	removeAllToolOverlays();
-	var prevClone = prevRow.hide().clone().attr('id', 'prev-clone').insertBefore(prevRow).show().css('z-index', 999).css('position','relative');
-	var targetClone = targetRow.hide().clone().attr('id', 'target-clone').insertBefore(targetRow).show().css('z-index', 1000).css('position','relative');
-	anime({
-		targets: '#prev-clone',
-		translateY: { value: targetClone.height(), duration: speed, easing: 'easeInOutSine' }
+	let prevClone = prevRow.cloneNode(true);
+	prevClone.id = 'prev-clone';
+	prevClone.style.zIndex = 999;
+	prevClone.style.position = 'relative';
+	prevRow.parentNode.insertBefore(prevClone, prevRow);
+	prevRow.style.display = 'none';
+	let targetClone = targetRow.cloneNode(true);
+	targetClone.id = 'target-clone';
+	targetClone.style.zIndex = 1000;
+	targetClone.style.position = 'relative';
+	targetRow.parentNode.insertBefore(targetClone, targetRow);
+	targetRow.style.display = 'none';
+	anime.animate('#prev-clone', {
+		translateY: { to: targetClone.clientHeight, duration: speed, ease: 'inOutSine' }
 	});
-	anime({
-		targets: '#target-clone',
-		translateY: { value: '-' + prevClone.height(), duration: speed, easing: 'easeInOutSine' },
-		complete: function(anim) {
+	anime.animate('#target-clone', {
+		translateY: { to: `-${prevClone.clientHeight}`, duration: speed, ease: 'inOutSine' },
+		onComplete: function(anim) {
 			prevClone.remove();
 			targetClone.remove();
-			targetRow.insertBefore(prevRow);
-			prevRow.show();
-			targetRow.show();
+			prevRow.parentNode.insertBefore(targetRow, prevRow);
+			prevRow.style.display = '';
+			targetRow.style.display = '';
 			reorderEntry();
 		}
 	});
 }
+
 function moveDown(domID) {
-	var targetRow = $(domID);
-	var nextRow = targetRow.next();
-	if (nextRow.length == 0) return;
+	let targetRow = document.querySelector(domID);
+	let nextRow = targetRow.nextElementSibling;
+	if (!nextRow) return;
 	removeAllToolOverlays();
-	var nextClone = nextRow.hide().clone().attr('id', 'next-clone').insertBefore(nextRow).show().css('z-index', 999).css('position', 'relative');
-	var targetClone = targetRow.hide().clone().attr('id', 'target-clone').insertBefore(targetRow).show().css('z-index', 1000).css('position', 'relative');
-	anime({
-		targets: '#next-clone',
-		translateY: { value: '-' + targetClone.height(), duration: speed, easing: 'easeInOutSine' }
+	let nextClone = nextRow.cloneNode(true);
+	nextClone.id = 'next-clone';
+	nextClone.style.zIndex = 999;
+	nextClone.style.position = 'relative';
+	nextRow.parentNode.insertBefore(nextClone, nextRow);
+	nextRow.style.display = 'none';
+	let targetClone = targetRow.cloneNode(true);
+	targetClone.id = 'target-clone';
+	targetClone.style.zIndex = 1000;
+	targetClone.style.position = 'relative';
+	targetRow.parentNode.insertBefore(targetClone, targetRow);
+	targetRow.style.display = 'none';
+	anime.animate('#next-clone', {
+		translateY: { to: `-${targetClone.clientHeight}`, duration: speed, ease: 'inOutSine' }
 	});
-	anime({
-		targets: '#target-clone',
-		translateY: { value: nextClone.height(), duration: speed, easing: 'easeInOutSine' },
-		complete: function(anim) {
+	anime.animate('#target-clone', {
+		translateY: { to: nextClone.clientHeight, duration: speed, ease: 'inOutSine' },
+		onComplete: function(anim) {
 			nextClone.remove();
 			targetClone.remove();
-			targetRow.insertAfter(nextRow);
-			nextRow.show();
-			targetRow.show();
+			nextRow.parentNode.insertBefore(targetRow, nextRow.nextElementSibling);
+			nextRow.style.display = '';
+			targetRow.style.display = '';
 			reorderEntry();
 		}
 	});
 }
 
 // change a note color
-function changeColor(domID, whichcolor) {
+function changeColor(domID, colorId) {
 	// variables, objects, arrays
-	var wasSynced = globalSync;
-	var tsAction = getUnixTimestampMS();
-	var thisLocalId = Number($(domID).attr('data-local-id'));
-	notepads[notepadIdLocal][thisLocalId]["color"] = colorHexToId[whichcolor];
+	let wasSynced = globalSync;
+	let tsAction = getUnixTimestampMS();
+	let thisLocalId = Number(document.querySelector(domID).getAttribute('data-local-id'));
+	notepads[notepadIdLocal][thisLocalId]["color"] = colorId;
 	notepads[notepadIdLocal][thisLocalId]["lastEdit"] = Math.floor(tsAction/1000);
 	notepads[notepadIdLocal][thisLocalId]["synced"] = 0;
 	// visual updates
-	$(domID).attr('data-color', colorHexToId[whichcolor]);
-	$(domID).find('.color-selector').spectrum("set", whichcolor);
-	if ($(domID+' .col-4').hasClass('tools-disp')) {
-		$(domID).find('.tools-disp').removeClass('tools-disp');
-		$(domID).find('.expand-button i').toggleClass('fa-ellipsis-h');
-		$(domID).find('.expand-button i').toggleClass('fa-ellipsis-v');
-		$(domID + ' .col-4 .color-selector').spectrum("destroy");
+	document.querySelector(domID).setAttribute('data-color', colorId);
+	_ppSet(document.querySelector(`${domID} .color-selector`), colorId);
+	if (document.querySelector(`${domID} .col-4`).classList.contains('tools-disp')) {
+		document.querySelectorAll(`${domID} .tools-disp`).forEach(function(el) { el.classList.remove('tools-disp'); });
+		document.querySelectorAll(`${domID} .expand-button i`).forEach(function(el) { el.classList.toggle('fa-ellipsis-h'); el.classList.toggle('fa-ellipsis-v'); });
+		_ppClear(document.querySelector(`${domID} .col-4 .color-selector`));
 	}
 	// IDB and MySQL updates
 	if ([0, 3].includes(offlineState)) {// if online
-		$.ajax({
+		apiFetch({
 			type: "POST",
-			url: "/ajax/change-color",
+			url: "/api/change-color",
 			data: JSON.stringify({
 				nphash: catalog[notepadIdLocal]["nphash"],
-				ntid: Number($(domID).attr('data-remote-id')),
-				notecolor: colorHexToId[whichcolor]
+				ntid: Number(document.querySelector(domID).getAttribute('data-remote-id')),
+				notecolor: colorId
 			}),
 			beforeSend: function() {
 				statusIndicator("process");
-				cloudIndicator("upload");
 				noteCommitHandler("delay", thisLocalId, wasSynced, tsAction, undefined);
 			},
 			success: function(postData) {
-				cloudIndicator("online");
 				switch (postData["result"]) {
 					case "hashfail":
 					case "matchfail":
@@ -2577,8 +2917,8 @@ function changeColor(domID, whichcolor) {
 					default:
 						statusIndicator("success");
 						if (postData.ssv == true) {
-							$(domID).attr('data-color', postData.color);
-							$(domID).find('.color-selector').spectrum("set", colors[postData.color]["hex"]);
+							document.querySelector(domID).setAttribute('data-color', postData.color);
+							_ppSet(document.querySelector(`${domID} .color-selector`), postData.color);
 							notepads[notepadIdLocal][thisLocalId]["color"] = postData.color;
 						}
 						notepads[notepadIdLocal][thisLocalId]["lastEdit"] = postData.lastEdit;
@@ -2594,36 +2934,32 @@ function changeColor(domID, whichcolor) {
 }
 
 // change all note colors for the current notepad
-function changeAllColors() {
+function changeAllColors(colorId) {
 	// variables, objects, arrays
-	var wasSynced = globalSync;
-	var tsAction = getUnixTimestampMS();
-	var currentColorHex = $('#spectrum-change-all .color-selector').spectrum("get");
-	var currentColorId = colorHexToId[currentColorHex];
+	let wasSynced = globalSync;
+	let tsAction = getUnixTimestampMS();
 	for (let n in notepads[notepadIdLocal]) {
-		notepads[notepadIdLocal][n]["color"] = currentColorId;
+		notepads[notepadIdLocal][n]["color"] = colorId;
 		notepads[notepadIdLocal][n]["lastEdit"] = Math.floor(tsAction/1000);
 		notepads[notepadIdLocal][n]["synced"] = 0;
 	}
 	// visual updates
-	$('#notepad-body > div').attr('data-color', currentColorId);
-	$('#notepad-body').find('.color-selector').spectrum("set", currentColorHex);
+	document.querySelectorAll('#notepad-body > div').forEach(function(el) { el.setAttribute('data-color', colorId); });
+	document.querySelectorAll('#notepad-body .color-selector').forEach(function(el) { _ppSet(el, colorId); });
 	// IDB and MySQL updates
 	if ([0, 3].includes(offlineState)) {// if online
-		$.ajax({
+		apiFetch({
 			type: "POST",
-			url: "/ajax/change-color-all",
+			url: "/api/change-color-all",
 			data: JSON.stringify({
 				nphash: catalog[notepadIdLocal]["nphash"],
-				notecolor: currentColorId
+				notecolor: colorId
 			}),
 			beforeSend: function() {
 				statusIndicator("process");
-				cloudIndicator("upload");
 				noteCommitHandler("delay", "all", wasSynced, tsAction, undefined);
 			},
 			success: function(postData) {
-				cloudIndicator("online");
 				switch (postData["result"]) {
 					case "hashfail":
 						errorModal("manual", locale.modal.error.critical);
@@ -2634,8 +2970,8 @@ function changeAllColors() {
 					default:
 						statusIndicator("success");
 						if (postData.ssv == true) {
-							$('#notepad-body > div').attr('data-color', postData.color);
-							$('#notepad-body').find('.color-selector').spectrum("set", colors[postData.color]["hex"]);
+							document.querySelectorAll('#notepad-body > div').forEach(function(el) { el.setAttribute('data-color', postData.color); });
+							document.querySelectorAll('#notepad-body .color-selector').forEach(function(el) { _ppSet(el, postData.color); });
 							for (let n in notepads[notepadIdLocal]) notepads[notepadIdLocal][n]["color"] = postData.color;
 						}
 						for (let n in notepads[notepadIdLocal]) {
@@ -2655,33 +2991,31 @@ function changeAllColors() {
 // check or uncheck the checkbox
 function checkBox(domID) {
 	// variables, objects, arrays; visual updates
-	var toCheck = false;
-	if ($(domID).attr('data-is-checked') == 0) toCheck = true;
-	$(domID).attr('data-is-checked', toCheck ? 1 : 0);
+	let toCheck = false;
+	if (document.querySelector(domID).getAttribute('data-is-checked') == 0) toCheck = true;
+	document.querySelector(domID).setAttribute('data-is-checked', toCheck ? 1 : 0);
 	setCheckAllState();
-	var wasSynced = globalSync;
-	var tsAction = getUnixTimestampMS();
-	var thisLocalId = Number($(domID).attr('data-local-id'));
+	let wasSynced = globalSync;
+	let tsAction = getUnixTimestampMS();
+	let thisLocalId = Number(document.querySelector(domID).getAttribute('data-local-id'));
 	notepads[notepadIdLocal][thisLocalId]["isChecked"] = toCheck ? 1 : 0;
 	notepads[notepadIdLocal][thisLocalId]["lastEdit"] = Math.floor(tsAction/1000);
 	notepads[notepadIdLocal][thisLocalId]["synced"] = 0;
 	// IDB and MySQL updates
 	if ([0, 3].includes(offlineState)) {// if online
-		$.ajax({
+		apiFetch({
 			type: "POST",
-			url: "/ajax/check-box",
+			url: "/api/check-box",
 			data: JSON.stringify({
 				nphash: catalog[notepadIdLocal]["nphash"],
-				ntid: Number($(domID).attr('data-remote-id')),
+				ntid: Number(document.querySelector(domID).getAttribute('data-remote-id')),
 				checkaction: toCheck
 			}),
 			beforeSend: function() {
 				statusIndicator("process");
-				cloudIndicator("upload");
 				noteCommitHandler("delay", thisLocalId, wasSynced, tsAction, undefined);
 			},
 			success: function(postData) {
-				cloudIndicator("online");
 				switch (postData["result"]) {
 					case "hashfail":
 					case "matchfail":
@@ -2693,7 +3027,7 @@ function checkBox(domID) {
 					default:
 						statusIndicator("success");
 						if (postData.ssv == true) {
-							$(domID).attr('data-is-checked', postData.isChecked ? 1 : 0);
+							document.querySelector(domID).setAttribute('data-is-checked', postData.isChecked ? 1 : 0);
 							notepads[notepadIdLocal][thisLocalId]["isChecked"] = postData.isChecked ? 1 : 0;
 						}
 						notepads[notepadIdLocal][thisLocalId]["lastEdit"] = postData.lastEdit;
@@ -2711,20 +3045,21 @@ function checkBox(domID) {
 // check or uncheck all the checkboxes
 function checkAllBox() {
 	// visual updates
-	if ($('#notepad-header .checkbox').attr('data-check-state') == 1) {
+	let checkState;
+	if (document.querySelector('#notepad-header .checkbox').getAttribute('data-check-state') == 1) {
 		// uncheck all
-		$('#notepad-body > div').attr('data-is-checked', 0);
-		$('#notepad-header .checkbox').attr('data-check-state', 0);
-		var checkState = false;
+		document.querySelectorAll('#notepad-body > div').forEach(function(el) { el.setAttribute('data-is-checked', 0); });
+		document.querySelector('#notepad-header .checkbox').setAttribute('data-check-state', 0);
+		checkState = false;
 	} else {
 		// check all
-		$('#notepad-body > div').attr('data-is-checked', 1);
-		$('#notepad-header .checkbox').attr('data-check-state', 1);
-		var checkState = true;
+		document.querySelectorAll('#notepad-body > div').forEach(function(el) { el.setAttribute('data-is-checked', 1); });
+		document.querySelector('#notepad-header .checkbox').setAttribute('data-check-state', 1);
+		checkState = true;
 	}
 	// variables, objects, arrays
-	var wasSynced = globalSync;
-	var tsAction = getUnixTimestampMS();
+	let wasSynced = globalSync;
+	let tsAction = getUnixTimestampMS();
 	for (let n in notepads[notepadIdLocal]) {
 		notepads[notepadIdLocal][n]["isChecked"] = checkState ? 1 : 0;
 		notepads[notepadIdLocal][n]["lastEdit"] = Math.floor(tsAction/1000);
@@ -2732,20 +3067,18 @@ function checkAllBox() {
 	}
 	// IDB and MySQL updates
 	if ([0, 3].includes(offlineState)) {// if online
-		$.ajax({
+		apiFetch({
 			type: "POST",
-			url: "/ajax/check-all-box",
+			url: "/api/check-all-box",
 			data: JSON.stringify({
 				nphash: catalog[notepadIdLocal]["nphash"],
 				checkaction: checkState
 			}),
 			beforeSend: function() {
 				statusIndicator("process");
-				cloudIndicator("upload");
 				noteCommitHandler("delay", "all", wasSynced, tsAction, undefined);
 			},
 			success: function(postData) {
-				cloudIndicator("online");
 				switch (postData["result"]) {
 					case "hashfail":
 						errorModal("manual", locale.modal.error.critical);
@@ -2756,8 +3089,8 @@ function checkAllBox() {
 					default:
 						statusIndicator("success");
 						if (postData.ssv == true) {
-							$('#notepad-body > div').attr('data-is-checked', postData.isChecked ? 1 : 0);
-							$('#notepad-header .checkbox').attr('data-check-state', postData.isChecked ? 1 : 0);
+							document.querySelectorAll('#notepad-body > div').forEach(function(el) { el.setAttribute('data-is-checked', postData.isChecked ? 1 : 0); });
+							document.querySelector('#notepad-header .checkbox').setAttribute('data-check-state', postData.isChecked ? 1 : 0);
 							for (let n in notepads[notepadIdLocal]) notepads[notepadIdLocal][n]["isChecked"] = postData.isChecked ? 1 : 0;
 						}
 						for (let n in notepads[notepadIdLocal]) {
@@ -2774,87 +3107,382 @@ function checkAllBox() {
 	}
 }
 
-// display the light / dark mode modal window
-function lightDarkModal() {
-	if (idbSupport) {
-		var thisMode = (darkMode) ? locale.modal.light_dark.dark_mode : locale.modal.light_dark.light_mode;
-		var otherMode = (darkMode) ? locale.modal.light_dark.light_mode : locale.modal.light_dark.dark_mode;
-		var otherBool = (darkMode) ? false : true;
-		var bulb = (darkMode) ? "outline" : "fill";
-		var extraStyle = (darkMode) ? "" : " color: #bdc435;";
-		var buttonColor = (darkMode) ? "yellow" : "black";
-		var modalContent = [
-			'<i id="modal-close" class="fa fa-times" title="'+ locale.general.close +'" onclick="modalToggle(\'off\');"></i>',
-			'<div class="row modal-window-wrapper-top">',
-			'	<span class="center"><i class="fa fa-bulb-'+ bulb +'" style="font-size: 5em;'+ extraStyle +'"></i></span>',
-			'	<div class="spacer10"></div>',
-			'	<p class="bold">'+ locale.modal.light_dark.prompt +' '+ thisMode +'</p>',
-			'	<p>'+ locale.modal.light_dark.prompt_detail +'</p>',
-			'	<p class="smaller ital">'+ locale.modal.light_dark.additional_notice +'</p>',
-			'</div>',
-			'<div class="row modal-window-wrapper-bottom">',
-			'	<button type="button" class="button color '+ buttonColor +' large" aria-label="'+ locale.modal.light_dark.change_mode +' '+ otherMode +'" onclick="darkMode='+ otherBool +';idbSnapshotUpdate(\'mode\').then(function() { window.location.replace(window.location.href+\'?override=1\'); });">'+ locale.modal.light_dark.change_mode +' '+ otherMode +'</button>',
-			'	<button type="button" class="button large" aria-label="'+ locale.general.cancel +'" onclick="modalToggle(\'off\');">'+ locale.general.cancel +'</button>',
-			'</div>'
-		].join("\n");
-	} else {
-		var modalContent = [
-			'<i id="modal-close" class="fa fa-times" title="'+ locale.general.close +'" onclick="modalToggle(\'off\');"></i>',
-			'<div class="row modal-window-wrapper-top">',
-			'	<p class="bold">'+ locale.modal.light_dark.error +'</p>',
-			'</div>',
-			'<div class="row modal-window-wrapper-bottom">',
-				'	<button type="button" class="button large" aria-label="'+ locale.general.close +'" onclick="modalToggle(\'off\');">'+ locale.general.close +'</button>',
-			'</div>'
-		].join("\n");
+// return (and optionally append) the note DOM elements on a specified note
+function fillNoteText(resultAction, thisId, thisNote) {
+	let isCut = false;
+	let cutPos = null;
+	let cutStr;
+	if (thisNote.length > truncateNote) {
+		let nextSpace = thisNote.indexOf(" ", truncateNote);
+		let nextLb = thisNote.indexOf("\n", truncateNote);
+		if (nextSpace != -1) {
+			if (nextLb != -1) {
+				cutPos = Math.min(nextSpace, nextLb);
+			} else {
+				cutPos = nextSpace;
+			}
+		} else if (nextLb != -1) {
+			cutPos = nextLb;
+		}
+		if ((cutPos != null) && ((cutPos/thisNote.length) < 0.90)) {
+			cutStr = `... <a href="#" class="nolink read-more" title="${locale.notepad.expand}">${locale.notepad.expand.toLowerCase()}</a>`;
+			isCut = true;
+		}
 	}
-	$('#modal-window').empty().append(modalContent);
-	modalToggle("on");
+	let noteFull = thisNote.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#039;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+	let noteCut;
+	if (isCut == true) {
+		noteCut = thisNote.substr(0, cutPos).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#039;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + cutStr;
+	} else {
+		noteCut = noteFull;
+	}
+	let noteContent = [
+		`<span class="note-short">${noteCut}</span>`,
+		`<span class="note-full">${noteFull}</span>`
+	].join("\n");
+	if (resultAction== "append") { let _noteEl = document.querySelector(`${thisId} .note`); if (_noteEl) { _noteEl.innerHTML = ''; _noteEl.insertAdjacentHTML('beforeend', noteContent); } }
+	return noteContent;
 }
 
-// display the advanced settings modal window
-function advancedModal() {
-	var modalContent = [
-		'<i id="modal-close" class="fa fa-times" title="'+ locale.general.close +'" onclick="modalToggle(\'off\');"></i>',
-		'<div class="row modal-window-wrapper-top">',
-		'	<span class="smaller"><span class="bold">'+ locale.modal.advanced.local_version +': </span>'+ appVer +'</span>',
-		'	<div class="spacer5"></div>',
-		'	<span class="smaller"><span class="bold">'+ locale.modal.advanced.current_version +': </span><span class="app-ver"></span><div class="loading-placeholder"><div></div><div></div><div></div><div></div></div></span>',
-		'	<div class="spacer20"></div>',
-		'	<span>'+ locale.modal.advanced.prompt_detail +'</span>',
-		'</div>',
-		'<div class="row modal-window-wrapper-bottom">',
-		'	<button type="button" class="button color red large" aria-label="'+ locale.modal.advanced.idb +'" onclick="idbEmpty().then(function() { window.location.replace(window.location.href+\'?override=1\'); });">'+ locale.modal.advanced.idb +'</button>',
-		'	<button type="button" class="button large" aria-label="'+ locale.general.cancel +'" onclick="modalToggle(\'off\');">'+ locale.general.cancel +'</button>',
+// build the notepad rows (notes)
+function rowBuilder(thisLocalId, thisRemoteId, thisColor, thisChecked, thisNote) {
+	let inputDomId = notePrefix + thisLocalId;
+	let inputRemoteId = ((thisRemoteId == 0) || (thisRemoteId == "") || (thisRemoteId == null) || (typeof thisRemoteId === 'undefined')) ? "" : thisRemoteId;
+	let noteContent = fillNoteText("return", `#${inputDomId}`, thisNote);
+	let desktopTools = (window.innerWidth < desktopWidth) ? false : true;
+	let thisRow = [
+		`<div id="${inputDomId}" class="note-row" data-local-id="${thisLocalId}" data-remote-id="${inputRemoteId}" data-color="${thisColor}" data-is-checked="${thisChecked}">`,
+		'	<div class="col-1">',
+		`		<button type="button" class="button circle move-up-button" aria-label="${locale.notepad.moveup}" title="${locale.notepad.moveup}"><i class="fa fa-arrow-up"></i></button>`,
+		`		<button type="button" class="button circle move-down-button" aria-label="${locale.notepad.movedown}" title="${locale.notepad.movedown}"><i class="fa fa-arrow-down"></i></button>`,
+		'	</div>',
+		'	<div class="col-2">',
+		`		<button type="button" class="button circle expand-button" aria-label="${locale.notepad.options}" title="${locale.notepad.options}"><i class="fa fa-ellipsis-h"></i></button>`,
+		... desktopTools ? ['		<div class="note-tool-btns">'] : [],
+		... desktopTools ? [`			<button type="button" class="button circle sort-button" aria-label="${locale.notepad.reorder}" title="${locale.notepad.reorder}"><i class="fa fa-arrows"></i></button>`] : [],
+		... desktopTools ? [`			<button type="button" class="button circle delete-button" aria-label="${locale.general.delete}" title="${locale.general.delete}"><i class="fa fa-trash"></i></button>`] : [],
+		... desktopTools ? [`			<button type="button" class="button circle edit-button" aria-label="${locale.notepad.edit}" title="${locale.notepad.edit}"><i class="fa fa-pencil"></i></button>`] : [],
+		... desktopTools ? [`			<button type="button" class="button circle color-selector" aria-label="${locale.notepad.change_color}" title="${locale.notepad.change_color}"><i class="fa fa-palette"></i></button>`] : [],
+		... desktopTools ? ['		</div>'] : [],
+		'	</div>',
+		'	<div class="col-3">',
+		`		<button type="button" class="button empty checkbox" aria-label="${locale.notepad.check}" title="${locale.notepad.check}"><i class="fa fa-checkbox"></i></button>`,
+		'	</div>',
+		'	<div class="col-4">',
+		`		<div class="note break-word">${noteContent}</div>`,
+		'	</div>',
+		... clipboardAccess ? [`	<button class="copy-button" aria-label="${locale.notepad.note_copy}" title="${locale.notepad.note_copy}"><i class="fa fa-copy"></i></button>`] : [],
 		'</div>'
 	].join("\n");
-	$('#modal-window').empty().append(modalContent);
-	modalToggle("on");
-	getAppVer(function(verNum) {
-		$('.modal-window-wrapper-top .loading-placeholder').remove();
-		$('.modal-window-wrapper-top .app-ver').text(verNum);
-	}); 
+	return thisRow;
 }
 
-// get the current version number of the application
-function getAppVer(callback) {
-	if ([0, 3].includes(offlineState)) {// if online
-		$.ajax({
-			type: "GET",
-			url: "/ajax/current-version",
-			contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-			success: function(postData) {
-				if (typeof postData.version !== 'undefined') callback(postData.version);
-			},
-			error: function() {}// override the global AJAX error with nothing; fail silently
+// fully display a truncated note
+function readMore(domID) {
+	document.querySelector(`${domID} .note-short`).classList.add('hidden');
+	document.querySelector(`${domID} .note-full`).classList.add('display');
+}
+
+// Linkify URLs in notes
+function linkifyInit(whichtarget) {
+	let target = (whichtarget == "all")
+		? document.getElementById('notepad-body')
+		: document.querySelector(`#notepad-body ${whichtarget}`);
+	linkifyElement(target, { target: '_blank' });
+	target.querySelectorAll('a').forEach(function(a) { a.setAttribute('rel', 'noopener noreferrer'); });
+}
+
+//** MODAL & UI **//
+
+// lockdown or allow user control
+function userControl(directive) {
+	switch (directive) {
+		case "lock":
+			document.getElementById('user-lock').classList.add("display");
+			break;
+		case "open":
+			document.getElementById('user-lock').classList.remove("display");
+			break;
+	}
+}
+
+// toggle the modal window on and off
+// a lot of hack-y styling to accommodate a position: fixed, 100% height, no-scroll body -- which is necessary to prevent background scrolling on iOS
+function modalToggle(op) {
+	if ((op == "on") && (document.getElementById('modal').classList.contains('display'))) return;
+	switch (op) {
+		case "on":
+			modalScroll = window.scrollY;
+			let offsetY = `${window.scrollY * (-1)}px`;
+			document.getElementById('modal').classList.add('display');
+			document.addEventListener("keyup", modalEsc);
+			document.body.classList.add('noscroll');
+			document.body.style.top = offsetY;
+			let footerLocationCalc = window.innerHeight - document.getElementById('container').clientHeight - document.getElementById('header').clientHeight;
+			if (footerLocationCalc <= 110) {
+				let _footer = document.getElementById('footer');
+				if (document.documentElement.classList.contains('ie11')) {
+					_footer.style.position = 'relative';
+					_footer.style.marginTop = '0';
+				} else {
+					_footer.style.position = 'relative';
+					_footer.style.marginTop = `${_footer.clientHeight * -1}px`;
+				}
+			}
+			break;
+		case "off":
+			let _footer = document.getElementById('footer');
+			_footer.style.position = '';
+			_footer.style.marginTop = '';
+			document.body.classList.remove('noscroll');
+			document.body.style.top = '';
+			document.getElementById('modal').classList.remove('display');
+			document.getElementById('modal-window').innerHTML = '';
+			document.removeEventListener("keyup", modalEsc);
+			window.scrollTo(0, modalScroll);
+			modalForce = false;
+			break;
+	}
+}
+
+// listen for ESC key when modal is active
+function modalEsc(e) {
+	if ((e.key === "Escape") && (document.getElementById('modal').classList.contains('display')) && (!modalForce)) {
+		modalToggle("off");
+	}
+}
+
+// produce an error message
+function errorModal(errcode, manualtext) {
+	let dialogTxt;
+	switch (errcode) {
+		case "timeout":   dialogTxt = locale.modal.error.timeout;       break;
+		case 403:         dialogTxt = locale.modal.error.http_code_403; break;
+		case 404:         dialogTxt = locale.modal.error.http_code_404; break;
+		case 408:         dialogTxt = locale.modal.error.http_code_408; break;
+		case 500:         dialogTxt = locale.modal.error.http_code_500; break;
+		case "manual":
+			if (typeof manualtext !== 'undefined') { dialogTxt = manualtext; break; }
+		default:          dialogTxt = locale.modal.error.catchall;      break;
+	}
+	let modalContent = [
+		`<i id="modal-close" class="fa fa-times" title="${locale.general.close}" onclick="modalToggle('off');"></i>`,
+		'<div class="row modal-window-wrapper-top">',
+		`	<p>${dialogTxt}</p>`,
+		'</div>',
+		'<div class="row modal-window-wrapper-bottom">',
+		`	<button type="button" class="button color green large" aria-label="${locale.general.continue}" onclick="modalToggle('off');">${locale.general.continue}</button>`,
+		`	<button type="button" class="button color cyan large" aria-label="${locale.general.reload}" onclick="window.location.reload();">${locale.general.reload}</button>`,
+		'</div>'
+	].join("\n");
+	document.getElementById('modal-window').innerHTML = modalContent;
+	modalToggle("on");
+	userControl("open");
+	statusIndicator("error");
+}
+
+// set the state of the check all button
+function setCheckAllState() {
+	let noteAttrTotal = 0;
+	let _nbDivs = document.querySelectorAll('#notepad-body > div');
+	_nbDivs.forEach(function(el) {
+		noteAttrTotal += Number(el.getAttribute('data-is-checked'));
+	});
+	let _chkAll = document.querySelector('#notepad-header .checkbox');
+	if (noteAttrTotal == 0) {
+		_chkAll.setAttribute('data-check-state', 0);
+	} else if (noteAttrTotal == _nbDivs.length) {
+		_chkAll.setAttribute('data-check-state', 1);
+	} else {
+		_chkAll.setAttribute('data-check-state', 2);
+	}
+}
+
+// build the note tools overlay
+function toolsToggle(domID) {
+	let thisnote = document.querySelector(`${domID} .col-4`);
+	let thisbtn = document.querySelector(`${domID} .expand-button i`);
+	if (document.querySelector(`${domID} .col-4 .note-tool-btns`) !== null) {
+		_ppClear(document.querySelector(`${domID} .col-4 .note-tool-btns .color-selector`));
+		document.querySelector(`${domID} .col-4 .note-tool-btns`).remove();
+	}
+	if (!thisnote.classList.contains('tools-disp')) {// if currently off
+		let toolsContent = [
+			'<div class="note-tool-btns">',
+			`	<button type="button" class="button circle color-selector" aria-label="${locale.notepad.change_color}" title="${locale.notepad.change_color}"><i class="fa fa-palette"></i></button>`,
+			`	<button type="button" class="button circle edit-button" aria-label="${locale.notepad.edit}" title="${locale.notepad.edit}"><i class="fa fa-pencil"></i></button>`,
+			`	<button type="button" class="button circle delete-button" aria-label="${locale.general.delete}" title="${locale.general.delete}"><i class="fa fa-trash"></i></button>`,
+			'</div>'
+		].join("\n");
+		thisnote.insertAdjacentHTML('afterbegin', toolsContent);
+		thisnote.offsetHeight; // force reflow so scale transition fires
+	}
+	thisnote.classList.toggle('tools-disp');
+	thisbtn.classList.toggle('fa-ellipsis-h');
+	thisbtn.classList.toggle('fa-ellipsis-v');
+}
+
+// remove all tool overlays
+function removeAllToolOverlays() {
+	document.querySelectorAll('#notepad-body .tools-disp').forEach(function(el) { el.classList.remove('tools-disp'); });
+	document.querySelectorAll('#notepad-body .expand-button i').forEach(function(el) { el.className = 'fa fa-ellipsis-h'; });
+	document.querySelectorAll('#notepad-body .col-4 .color-selector').forEach(function(el) { _ppClear(el); });
+}
+
+// toggle the display of the notepad sticky buttons
+function stickyButtonsToggle(showOrHide) {
+	switch (showOrHide) {
+		case "show":
+			document.getElementById('sticky-buttons').classList.add('display');
+			break;
+		case "hide":
+			document.getElementById('sticky-buttons').classList.remove('display');
+			break;
+	}
+}
+
+// toggle the display of the notepad expanded sticky buttons
+function stickyExpandToggle() {
+	let _sbe = document.getElementById('sticky-buttons-expand');
+	if (!_sbe.classList.contains('display')) {
+		anime.animate('#sticky-toggle .fa-ellipsis-v', {
+			rotate: { to: 90, duration: speed, ease: 'inOutSine' }
+		});
+		_sbe.classList.add('display');
+		document.getElementById('sticky-top').style.transform = 'scale(0)';
+		document.getElementById('sticky-sort').style.transform = 'scale(0)';
+		document.getElementById('sticky-refresh').style.transform = 'scale(0)';
+		anime.animate('#sticky-top', {
+			scale: { to: 1, duration: speed, ease: 'inOutSine' }
+		});
+		anime.animate('#sticky-sort', {
+			scale: { to: 1, duration: speed, delay: 100, ease: 'inOutSine' }
+		});
+		anime.animate('#sticky-refresh', {
+			scale: { to: 1, duration: speed, delay: 200, ease: 'inOutSine' }
+		});
+	} else {
+		anime.animate('#sticky-toggle .fa-ellipsis-v', {
+			rotate: { to: 0, duration: speed, ease: 'inOutSine' }
+		});
+		anime.animate('#sticky-buttons-expand button', {
+			scale: { to: 0, duration: speed, ease: 'inOutSine' },
+			onComplete: function(anim) {
+				_sbe.classList.remove('display');
+			}
 		});
 	}
+}
+
+// make the notepad sticky expanded buttons available or not based on document scroll position
+// show it if the document y scroll position > 500px
+function dispStickyExpand() {
+	let _sbeg = document.getElementById('sticky-buttons-expand-group');
+	if (!_sbeg) return;
+	if (window.scrollY > 500) {
+		if (!_sbeg.classList.contains('display')) {
+			document.getElementById('sticky-toggle').style.display = 'inline';
+			_sbeg.classList.add('display');
+		}
+	} else {
+		if (_sbeg.classList.contains('display')) {
+			_sbeg.classList.remove('display');
+			setTimeout(function() { document.getElementById('sticky-toggle').style.display = ''; }, 400);
+			if (document.getElementById('sticky-buttons-expand').classList.contains('display')) stickyExpandToggle();
+		}
+	}
+}
+
+// start & stop long touch copy animation on notes
+function noteCopyAnimation(target, action) {
+	switch (action) {
+		case "start":
+			document.querySelector(target).insertAdjacentHTML('beforeend', '<div class="circle-1"></div><div class="circle-2"></div><div class="circle-3"></div>');
+			break;
+		case "end":
+			document.querySelectorAll('.circle-1, .circle-2, .circle-3').forEach(function(el) { el.remove(); });
+			break;
+		default:
+			return;
+			break;
+	}
+}
+
+// display video modal
+function videoModal() {
+	let modalContent = [
+		`<i id="modal-close" class="fa fa-times" title="${locale.general.close}" onclick="modalToggle('off');"></i>`,
+		'<div class="row video-row">',
+		'	<div class="video-wrap">',
+		'		<div class="video-container">',
+		'			<iframe src="https://www.youtube.com/embed/rGf_xXftWbA?autoplay=1&rel=0" frameborder="0" allowfullscreen></iframe>',
+		'		</div>',
+		'	</div>',
+		'</div>'
+	].join("\n");
+	document.getElementById('modal-window').innerHTML = modalContent;
+	modalToggle("on");
+}
+
+//** SETTINGS & SYNC **//
+
+// display the settings modal window
+function settingsModal() {
+	let langOptions = (typeof availableLangs !== 'undefined') ? Object.entries(availableLangs).map(function(entry) {
+		return `<option value="${entry[0]}"${entry[0] === langCode ? ' selected' : ''}>${entry[1]}</option>`;
+	}).join('') : `<option value="${langCode}" selected>${langCode}</option>`;
+	let themeOptions = themeRegistry.map(function(theme) {
+		return `<option value="${theme.id}"${theme.id === currentTheme ? ' selected' : ''}>${locale.themes[theme.key]}</option>`;
+	}).join('');
+	let modalContent = [
+		`<i id="modal-close" class="fa fa-times" title="${locale.general.close}" onclick="modalToggle('off');"></i>`,
+		'<div class="row modal-window-wrapper-top">',
+		`	<p class="bold">${locale.modal.settings.title}</p>`,
+		`	<span class="settings-section-label">${locale.modal.settings.about}</span>`,
+		'	<div class="spacer10"></div>',
+		`	<span class="smaller"><span class="bold">${locale.modal.settings.app_version}: </span>${appVer}</span>`,
+		'	<div class="spacer20"></div>',
+		`	<span class="settings-section-label">${locale.modal.settings.appearance}</span>`,
+		'	<div class="spacer10"></div>',
+		`	<select id="settings-theme-select" class="settings-select" onchange="settingsSetTheme(parseInt(this.value));">${themeOptions}</select>`,
+		'	<div class="spacer20"></div>',
+		`	<span class="settings-section-label">${locale.modal.settings.language}</span>`,
+		'	<div class="spacer10"></div>',
+		`	<select id="settings-language-select" class="settings-select" onchange="settingsChangeLanguage(this.value);">${langOptions}</select>`,
+		'	<div class="spacer20"></div>',
+		`	<span class="settings-section-label">${locale.modal.settings.data}</span>`,
+		'	<div class="spacer10"></div>',
+		`	<p class="smaller">${locale.modal.settings.data_detail}</p>`,
+		`	<button type="button" class="button color red large" onclick="idbEmpty().then(function() { window.location.replace(window.location.href+'?override=1'); });">${locale.modal.settings.purge_idb}</button>`,
+		'</div>',
+		'<div class="row modal-window-wrapper-bottom">',
+		`	<button type="button" class="button large" onclick="modalToggle('off');">${locale.general.close}</button>`,
+		'</div>'
+	].join("\n");
+	document.getElementById('modal-window').innerHTML = modalContent;
+	modalToggle("on");
+}
+
+// set theme by ID without reload
+function settingsSetTheme(id) {
+	if (!themeRegistry[id]) return;
+	currentTheme = id;
+	localStorage.setItem('_theme', String(currentTheme));
+	document.body.setAttribute('data-theme', currentTheme);
+}
+
+// change language: store preference and reload
+function settingsChangeLanguage(code) {
+	if (code === langCode) return;
+	localStorage.setItem('_language', code);
+	document.cookie = `lang=${code}; max-age=${60*60*24*365}; path=/; SameSite=Lax`;
+	window.location.reload();
 }
 
 // sync all local-only IndexedDB changes --> MySQL, in not only this notepad but all notepads opened on the device
 function syncAll(toggle) {
 	// variables, objects, arrays
-	var oosIndex = {};
+	let oosIndex = {};
 	for (let npid in catalog) {
 		oosIndex[npid] = {};
 		for (let ntid in notepads[npid]) { if (notepads[npid][ntid]['synced'] === 0) oosIndex[npid][ntid] = notepads[npid][ntid]; }
@@ -2863,17 +3491,17 @@ function syncAll(toggle) {
 	}
 	// conditions for early bailing
 	if ((globalSync) || (Object.keys(oosIndex).length === 0)) {
+		globalSync = true;
+		idbSnapshotUpdate("sync");
 		setOfflineState("system", 0);
 		modalToggle("off");
 		popupMsg(locale.popup.sync.already, "blue");
-		globalSync = true;
-		idbSnapshotUpdate("sync");
 		return;
 	} else {
 		// MySQL update
-		$.ajax({
+		apiFetch({
 			type: "POST",
-			url: "/ajax/sync-all",
+			url: "/api/sync-all",
 			data: JSON.stringify({
 				oosNotes: oosIndex,
 				override: toggle
@@ -2882,18 +3510,22 @@ function syncAll(toggle) {
 				syncModal("process");
 				modalForce = true;
 			},
-			complete: function() {
+			onComplete: function() {
 				modalForce = false;
 			},
 			success: function(postData) {
 				if (postData.warning == true) {
 					syncModal("error", postData);
 				} else {
-					idbEmpty().then(function() {
-						if ((appLoc == "notepad") && (typeof catalog[notepadIdLocal]["nphash"] === 'undefined') && (postData[notepadIdLocal]["nphash"] != null)) {
-							window.location.replace(window.location.protocol+'//'+window.location.hostname+'/np/'+postData[notepadIdLocal]["nphash"]+'?override=1');
+					// capture redirect destination before idbSyncWipe patches the in-memory catalog
+					let newHash = ((appLoc == "notepad") && (!catalog[notepadIdLocal]["nphash"]) && (postData[notepadIdLocal] && postData[notepadIdLocal]["nphash"])) ? postData[notepadIdLocal]["nphash"] : null;
+					idbSyncWipe(postData).then(function() {
+						if (newHash) {
+							window.location.replace(`/np/${newHash}?override=1`);
 						} else {
-							window.location.replace(window.location.href+'?override=1');
+							let url = new URL(window.location.href);
+							url.searchParams.set('override', '1');
+							window.location.replace(url.toString());
 						}
 					});
 				}
@@ -2908,554 +3540,75 @@ function syncAll(toggle) {
 }
 
 // all the modal screens that compromise the IndexedDB --> MySQL sync
-function syncModal(syncstep, ajaxData) {
+function syncModal(syncstep, apiData) {
+	let modalContent;
 	switch (syncstep) {
 		case "dialog":
 			if (offlineState == 1) setOfflineState("system", 2, "override");// if the system had set Offline Mode, whether or not to remain in it now belongs to the user
-			var modalContent = [
-				'<i id="modal-close" class="fa fa-times" title="'+ locale.general.close +'" onclick="modalToggle(\'off\');"></i>',
+			modalContent = [
+				`<i id="modal-close" class="fa fa-times" title="${locale.general.close}" onclick="modalToggle('off');"></i>`,
 				'<div class="row modal-window-wrapper-top">',
-				'	<p class="bold">'+ locale.modal.sync.dialog.prompt +'</p>',
-				'	<p class="smaller">'+ locale.modal.sync.dialog.prompt_detail +'</p>',
-				'	<p class="smaller ital">'+ locale.modal.sync.dialog.prompt_warning +'</p>',
+				`	<p class="bold">${locale.modal.sync.dialog.prompt}</p>`,
+				`	<p class="smaller">${locale.modal.sync.dialog.prompt_warning}</p>`,
 				'</div>',
 				'<div class="row modal-window-wrapper-bottom">',
-				'	<button type="button" class="button color green large next" aria-label="'+ locale.modal.sync.dialog.sync_confirm +'" onclick="syncAll();">'+ locale.modal.sync.dialog.sync_confirm +'</button>',
-				'	<button type="button" class="button large" aria-label="'+ locale.modal.sync.dialog.sync_decline +'" onclick="modalToggle(\'off\');">'+ locale.modal.sync.dialog.sync_decline +'</button>',
+				`	<button type="button" class="button color green large next" aria-label="${locale.modal.sync.dialog.sync_confirm}" onclick="syncAll();">${locale.modal.sync.dialog.sync_confirm}</button>`,
+				`	<button type="button" class="button large" aria-label="${locale.modal.sync.dialog.sync_decline}" onclick="modalToggle('off');">${locale.modal.sync.dialog.sync_decline}</button>`,
 				'</div>'
 			].join("\n");
-			$('#modal-window').empty().append(modalContent);
+			document.getElementById('modal-window').innerHTML = modalContent;
 			modalToggle("on");
 			break;
 		case "process":
-			var modalContent = [
+			modalContent = [
 				'<div class="row" style="display: flex; justify-content: center; padding: 75px 25px;">',
 				'	<div id="icon-sync-process"><i class="fa fa-refresh fa-spin"></i></div>',
 				'</div>'
 			].join("\n");
-			$('#modal-window').empty().append(modalContent);
+			document.getElementById('modal-window').innerHTML = modalContent;
 			break;
 		case "error":
-			var warnings = {
+			let warnings = {
 				"npnamefail": locale.modal.sync.error.npnamefail,
 				"nprenamefail": locale.modal.sync.error.nprenamefail,
 				"lockfail": locale.modal.sync.error.lockfail,
 				"hashfail": locale.modal.sync.error.hashfail,
 				"findfail": locale.modal.sync.error.findfail
 			};
-			var warningContent = [];
-			for (let n in ajaxData) {
-				if ((n != "warning") && (ajaxData[n]['result'] != "success")) {
+			let warningContent = [];
+			for (let n in apiData) {
+				if ((n != "warning") && (apiData[n]['result'] != "success")) {
 					warningContent.push(
 						'<div class="row">',
-						'	<span class="bold"><i class="fa fa-pencil"></i>&nbsp;&nbsp;'+ ajaxData[n]["npname"] +'</span>',
-						'	<p class="smaller" style="text-align: left;">'+ warnings[ajaxData[n]["result"]] +'</p>',
+						`	<span class="bold"><i class="fa fa-pencil"></i>&nbsp;&nbsp;${apiData[n]["npname"]}</span>`,
+						`	<p class="smaller" style="text-align: left;">${warnings[apiData[n]["result"]]}</p>`,
 						'</div>'
 					);
 				}
 			}
-			var modalContent = [
-				'<i id="modal-close" class="fa fa-times" title="'+ locale.general.close +'" onclick="modalToggle(\'off\');"></i>',
+			modalContent = [
+				`<i id="modal-close" class="fa fa-times" title="${locale.general.close}" onclick="modalToggle('off');"></i>`,
 				'<div class="row modal-window-wrapper-top">',
-				'	<p class="bold">'+ locale.modal.sync.error.prompt +'</p>',
-				'	<p>'+ locale.modal.sync.error.prompt_detail +'</p>',
+				`	<p class="bold">${locale.modal.sync.error.prompt}</p>`,
+				`	<p>${locale.modal.sync.error.prompt_detail}</p>`,
 				'	<hr />',
 				'	<div id="warning-details"></div>',
 				'</div>',
 				'<div class="row modal-window-wrapper-bottom">',
-				'	<button type="button" class="button color cyan large" aria-label="'+ locale.modal.sync.error.override +'" onclick="syncAll(\'override\');">'+ locale.modal.sync.error.override +'</button>',
-				'	<button type="button" class="button large" aria-label="'+ locale.general.cancel +'" onclick="modalToggle(\'off\');">'+ locale.general.cancel +'</button>',
+				`	<button type="button" class="button color cyan large" aria-label="${locale.modal.sync.error.override}" onclick="syncAll('override');">${locale.modal.sync.error.override}</button>`,
+				`	<button type="button" class="button large" aria-label="${locale.general.cancel}" onclick="modalToggle('off');">${locale.general.cancel}</button>`,
 				'</div>'
 			].join("\n");
-			$('#modal-window').empty().append(modalContent);
-			$('#warning-details').append(warningContent.join("\n"));
+			document.getElementById('modal-window').innerHTML = modalContent;
+			document.getElementById('warning-details').insertAdjacentHTML('beforeend', warningContent.join("\n"));
 			break;
 	}
 }
 
+//** INITIALIZATION **//
 
-//** ASSIST FUNCTIONS **//
-
-// create or destroy the notepad root as a result of it becoming empty or getting its first note
-// also handle the display of buttons in response
-function notepadRoot(ntpdstate) {
-	switch (ntpdstate) {
-		case "create":
-			$('#notepad-empty').remove();
-			var notepadContent = [
-				'<div id="notepad-table">',
-				'	<div id="notepad-header">',
-				'		<div class="col-1"></div>',
-				'		<div class="col-2">',
-				'			<div id="spectrum-change-all">',
-				'				<button type="button" class="button empty white palette color-selector" aria-label="'+ locale.notepad.change_colors +'" title="'+ locale.notepad.change_colors +'">',
-				'					<i class="fa fa-palette"></i>',
-				'				</button>',
-				'			</div>',
-				'		</div>',
-				'		<div class="col-3">',
-				'			<button type="button" class="button empty white checkbox" aria-label="'+ locale.notepad.check_all +'" title="'+ locale.notepad.check_all +'" data-check-state="0" onclick="checkAllBox();">',
-				'					<i class="fa fa-checkbox"></i>',
-				'			</button>',
-				'		</div>',
-				'		<div class="col-4">',
-				'			<i id="logo-nphead"><svg  version="1.1" xmlns="http://www.w3.org/2000/svg" class="logo-nphead-svg" viewBox="0 0 122 32"><path class="logo-nphead-path" d="M117.41,11.35c.1.2.1.2,0,.7-.2,1.69-2.3,2.89-3.7,3.59a4.64,4.64,0,0,0-2.3,1.2,1.57,1.57,0,0,0,.2,2.19c1.1,1,4,.7,5.29.3,1-.3,1.9-.8,2.9-1s2.8,0,2,1.39c-.6,1.1-2.4,1.69-3.4,2.09a13.62,13.62,0,0,1-5.29.7,6.71,6.71,0,0,1-3.1-.7A3.39,3.39,0,0,1,108,19a19.15,19.15,0,0,1-.1-2.39,1,1,0,0,0-.1-.3c-.6-.2-.7-.8-.8-1.3a1.8,1.8,0,0,1,1.3-2.29.44.44,0,0,0,.3-.4c.1-.2.1-.5.2-.7s0-.4-.3-.4c-1.1.1-2.1.2-3.2.4a15,15,0,0,1-2,.2c-.4,0-.5.2-.6.5-.2,1.39-.4,3-.7,4.28-.4,1.79-.4,3.59-.9,5.28a1.39,1.39,0,0,1-1.2.7c-.7-.1-1.4-.2-1.7-1a.6.6,0,0,1-.1-.4,7.22,7.22,0,0,1,.4-2.49c.4-1.69.5-3.49.9-5.18.1-.4.1-1.1.2-1.39s0-.4-.3-.4l-3.8.3a1.63,1.63,0,0,1-1.7-1.3,2.24,2.24,0,0,1,.1-1.39c.2-.5.6-.6,1.1-.6s1.1.1,1.7.1c1,0,2.1-.1,3.1-.2a.45.45,0,0,0,.3-.3c.2-1.1.3-2,.4-3.09l.2-1.39c.1-.5,0-.9.1-1.39a9.31,9.31,0,0,1,.4-1.59,1.27,1.27,0,0,1,1.6-.8,5.36,5.36,0,0,1,1.1.5.81.81,0,0,1,.4.8c-.4,2.19-.4,1.39-.8,3.59-.2,1.2-.1,2.19-.3,3.39-.1.4,0,.4.4.4,1.9-.1,3.7-.2,5.59-.2.3,0,.6.1.8.1a4.87,4.87,0,0,0,1.2-.1,4.75,4.75,0,0,1,3.7.2,4.69,4.69,0,0,1,2.5,2.29v.3m-4.3-.3c-.2,0-.4.1-.6.1a2,2,0,0,0-1.2,1c-.1.5.5.6.9.6a2.23,2.23,0,0,0,1.3-.6c.3-.2.8-.6.6-1A1.1,1.1,0,0,0,113.12,11Z"/><path class="logo-nphead-path" d="M88.55,8.16a5.42,5.42,0,0,1,1.9.3,4.48,4.48,0,0,1,2,1.2,6,6,0,0,1,.7,1,1.92,1.92,0,0,1,.3,1,21.53,21.53,0,0,1,.1,3.59,9.85,9.85,0,0,1-1.4,4.38A5.63,5.63,0,0,1,89.94,22a3.6,3.6,0,0,1-4.4-.4,7.51,7.51,0,0,1-2.3-3.79,7.1,7.1,0,0,1-.1-4.09,16.51,16.51,0,0,1,.6-1.59c.2-.3,0-.4-.3-.5s-.4-.2-.5-.5c-.2-.8.2-1.2,1.1-1.49a8,8,0,0,0,1.6-.8,5.09,5.09,0,0,1,1.7-.7Zm-2.6,7a6.92,6.92,0,0,0,.5,2.49c.2.6.8,2.09,1.8,1.79.8-.2,1.4-1.39,1.7-2a7.8,7.8,0,0,0,1.3-5.08,2.35,2.35,0,0,0-.9-1.59,3.72,3.72,0,0,0-2.1-.2,2.25,2.25,0,0,0-1.8,1.69,15.44,15.44,0,0,0-.4,2.09C86,14.64,85.95,15,85.95,15.14Z"/><path class="logo-nphead-path" d="M74.36,9.56c0,.3-.1.5-.1.8,0,.1,0,.1.1.2s.1-.1.2-.1a4.33,4.33,0,0,1,2.6-2,3.44,3.44,0,0,1,2.6.5c1.3.7,1.5,2,1.7,3.19a21.5,21.5,0,0,1,.2,4.38c-.1,1.79-.3,3.69-.5,5.48,0,.4-.2.6-.7.5-.3-.1-.6.2-.9.2a1.8,1.8,0,0,1-.9-.4,1.2,1.2,0,0,1-.5-.5c-.5-.8.1-1.49.2-2.19.1-1.39.3-2.89.5-4.28a7.75,7.75,0,0,0-.3-3.69.37.37,0,0,0-.1-.3s-.3-.5-1-.1A10.33,10.33,0,0,0,75,14.34a30.21,30.21,0,0,0-2.3,6.58,1.69,1.69,0,0,0-.1.7c0,.7-.5,1.1-1.3,1h-.5a1.82,1.82,0,0,1-1.3-.8c-.4-.7-.1-1.3,0-2,.2-1.3.5-2.59.7-3.89.2-1.1.3-2.09.5-3.19l.6-3.89a1.6,1.6,0,0,1,2.2-1C73.86,8.36,74.46,8.76,74.36,9.56Z"/><path class="logo-nphead-path" d="M68.37,12.44c-.3,2.79-.4,4.78-.8,7.17-.2,1.2-.5,2.39-.7,3.79a15.13,15.13,0,0,1-2.8,5.68A6,6,0,0,1,60,32a4.1,4.1,0,0,1-4.1-2.19c-.7-1.39-1.5-3.79.3-4.38,2.6-.5,1,2.29,2.5,3.39s3.9-1.59,4.69-3.39a26.07,26.07,0,0,0,1.7-7.07c0-.1-.1-.2-.1-.3l-.2.2A18.06,18.06,0,0,1,63,20.32c-1,.9-1.8,1.89-3.4,2a2.1,2.1,0,0,1-1.8-1,6.81,6.81,0,0,1-.9-4.18c.2-1.69.6-3.49.9-5.18a11.16,11.16,0,0,1,.8-2.59c.3-.7.9-.9,1.8-.8a1.48,1.48,0,0,1,1.3,1.2,5.25,5.25,0,0,1-.4,2.49c-.3,1.3-.8,2.49-1.1,3.79-.1.4-.8,2.79.3,2.49.6-.2,1.1-1,1.5-1.39a15.53,15.53,0,0,0,1.6-2A11.19,11.19,0,0,0,65,11.55l.3-1.79a1.27,1.27,0,0,1,1-1.1A2.17,2.17,0,0,1,68,9c.7.5.7,1.1.6,1.89A3.88,3.88,0,0,0,68.37,12.44Z"/><path class="logo-nphead-path" d="M47.19,10.15c0,.5.1.9.1,1.3,0,.1.1.3.1.4l.3-.3c.7-.9,1.4-1.39,2.1-2.29a2.73,2.73,0,0,1,1.2-.9c1.5-.7,2.2-.4,3.2.8a6.15,6.15,0,0,1,1.1,3.69,20.36,20.36,0,0,1,.1,3.49c-.1,1.59-.4,3.69-.6,5.28a1,1,0,0,1-.7.8,3.93,3.93,0,0,1-1.4.3,1.11,1.11,0,0,1-.7-1.59,12.08,12.08,0,0,0,.7-5V12.25c0-.5.2-1.89-.7-1.79-.5,0-.8.5-1,.8a40.29,40.29,0,0,0-3,7.47c-.3,1.1-.5,1.59-.8,2.79a1.42,1.42,0,0,1-.8.9c-1,.6-2.3.2-2.4-.8a4,4,0,0,1,.3-1.49,13,13,0,0,0,.5-5.88c-.2-1.49-.4-3-.5-4.48a1,1,0,0,1,.6-.9,1.51,1.51,0,0,1,2,.3A3.79,3.79,0,0,1,47.19,10.15Z"/><path class="logo-nphead-path" d="M32,17.73a6.51,6.51,0,0,1,.4-3.39,1.38,1.38,0,0,1,.3-.4,1,1,0,0,0,0-1.3c-.2-.3,0-.5.1-.9a5.55,5.55,0,0,1,3.7-3.29,4.36,4.36,0,0,1,3.7.2,2.78,2.78,0,0,1,1.8,2,15.79,15.79,0,0,1,.7,2,11.17,11.17,0,0,1-.3,3.19,17.94,17.94,0,0,1-1.6,3.79,6.1,6.1,0,0,1-3.4,3.09,2.88,2.88,0,0,1-2.7-.1,6.4,6.4,0,0,1-2.8-4.48C32.11,17.93,32,17.83,32,17.73Zm3.1.2c.1.4.3,1,.5,1.59,0,.1.1.2.2.3A.71.71,0,0,0,37,20a4.73,4.73,0,0,0,1-1,11.06,11.06,0,0,0,2.3-5.88A3.05,3.05,0,0,0,40.1,11a1.37,1.37,0,0,0-.5-.8,2.28,2.28,0,0,0-2.8.4c-.5.7-1.4,1.1-1.1,2.09a.75.75,0,0,1-.2.4c0,.1-.1.2-.1.3a2.75,2.75,0,0,0-.1.9A7.09,7.09,0,0,0,35.11,17.93Z"/><path class="logo-nphead-path" d="M30.61,14a24.75,24.75,0,0,1-.8,6.08,20.26,20.26,0,0,1-.9,2.19,1.56,1.56,0,0,1-1.4.6,1.59,1.59,0,0,1-1.2-.4c-.3-.3-.7-1-.5-1.39,1.3-1.89,1.5-4.38,1.7-6.58a18.18,18.18,0,0,0-.2-3.29.75.75,0,0,0-.2-.4c-.1.1-.3.1-.4.2a11.06,11.06,0,0,0-3.6,4.48c-.8,1.69-1.5,3.49-2.3,5.28-.1.4-.2.7-.3,1.1a.81.81,0,0,1-.9.7c-.4,0-.7.2-1.1,0a2.76,2.76,0,0,1-1.3-1.1c-.3-.6,0-1,.2-1.39A12.49,12.49,0,0,0,19,14.84c.1-1.39.2-2.79.4-4.09v-1c-.1-.7,0-.8.8-1.1a1.69,1.69,0,0,1,1.7.2c.6.3.6.9.7,1.49v.3c.1-.1.2-.1.3-.2a9.78,9.78,0,0,1,3.3-2.29,3.21,3.21,0,0,1,1.4-.1,2.75,2.75,0,0,1,2.2,1.49c.2.8.4,1.49.6,2.29A17.85,17.85,0,0,0,30.61,14Z"/><path class="logo-nphead-path" d="M15,8.66v1.1c0,.5,0,.7.6.6a5,5,0,0,1,1.2-.2c.2,0,.7-.2.8,0s-.7.5-.9.5c.4,0,1.7-.5,2,0s-1,.8-1.3.9c.1,0,.2-.1.3-.1-.8.3-1.6.6-2.5.9-.2.1-.3.2-.3.4-.2,1.49-.3,2.89-.6,4.38a25.77,25.77,0,0,0-.4,4.78,1,1,0,0,1-1.5,1A2.55,2.55,0,0,1,11,20c.4-2.19.7-4.48,1.1-6.68.1-.4-.1-.4-.4-.4-.9.2-.6.3-1.4.6-1.8.6-3.6,1.39-5.39,2.09a.82.82,0,0,0-.4.6c-.4,1.69-.8,3.49-1.2,5.18-.3.1-.3.3-.3.6a1.11,1.11,0,0,1-1.4.9c-.9,0-1.2-.7-1.6-1.3-.1-.1,0-.3,0-.4.3-1.1.7-2.29,1-3.39l.6-2.39a4,4,0,0,0,0-1.1,1.34,1.34,0,0,1,.2-.9c.4-.4.4-.9.6-1.39.4-1.59.8-1.89,1.3-3.49.5-1.2.7-1.49,1.2-2.59l1.6-3c1.3-1.89,1.2-1.89,2-2.49a1.85,1.85,0,0,1,1.3-.4c1.8.3,2.8,2.19,3.7,3.59.4.9,0,0,.8,2.09A17.27,17.27,0,0,1,15,8.66Zm-2.8.3c-.1-.6-.1-.8-.2-1.2-.4-1.39-2-5.38-3.3-3s-.5,1-.9,1.59a13.16,13.16,0,0,0-.9,1.69,28.23,28.23,0,0,0-1.7,4.09v.3h.3c1.2-.4,2.3-.7,3.5-1.1a19.64,19.64,0,0,1,3-.8.21.21,0,0,0,.2-.2Z"/></svg></i>',
-				'		</div>',
-				'	</div>',
-				'	<div id="notepad-body"></div>',
-				'</div>'
-			].join("\n");
-			$('#notepad').append(notepadContent);
-			// initiate Spectrum color selector plugin for the change all color button
-			$('#spectrum-change-all .color-selector').spectrum({
-				showPaletteOnly: true,
-				hideAfterPaletteSelect: true,
-				allowEmpty: true,
-				preferredFormat: 'hex',
-				change: function(color) {
-					if (color != null) {// null indicates a clickout; if so, take no action
-						changeAllColors();
-						$(this).spectrum("set", "");
-					}
-				},
-				palette: [
-					[colors[0]['hex'], colors[1]['hex'], colors[2]['hex']],
-					[colors[3]['hex'], colors[4]['hex'], colors[5]['hex']],
-					[colors[6]['hex'], colors[7]['hex'], colors[8]['hex']]
-				]
-			});
-			// make the notes sortable and movable
-			$('#notepad-body').sortable({
-				items: ".note-row",
-				cursor: "move",
-				handle: ".sort-button",
-				cancel: "",
-				delay: 150,
-				distance: 5,
-				placeholder: "sortable-placeholder",
-				forcePlaceholderSize: true,
-				update: function(event, ui) {
-					reorderEntry();
-				}
-			});
-			$('#delete-all-modal-button').removeClass('disabled');
-			$('#sort-modal-button').removeClass('disabled');
-			break;
-		case "destroy":
-			$('.color-selector').spectrum("destroy");// destroy all color picker instances
-			$('#notepad-table').remove();
-			var npEmptyContent = [
-				'<div id="notepad-empty">',
-				'	<i id="empty-folder">',
-				'		<svg id="empty-folder-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle class="folder-bkg" cx="50" cy="50" r="49"/><path class="folder-otl" d="M47.7,71.36s-8.79,0-9.6,0c-3.18,0-6.21,0-9.63,0a20,20,0,0,1-3.19-.2,2.22,2.22,0,0,1-2.12-2.48c0-1.7,0-3.39,0-5.09q.06-13.87.11-27.75a6.63,6.63,0,0,1,.06-1,2.78,2.78,0,0,1,2.87-2.5c1.16,0,2.34,0,3.51,0,.85,0,1.6,0,2-.9.17-.46.45-.89.66-1.34a2,2,0,0,1,2-1.19h9.55c1.68,0,3.36,0,5,0a1.59,1.59,0,0,1,1.6,1c.25.52.53,1,.74,1.58a1.26,1.26,0,0,0,1.37.89c3.88,0,7.76-.07,11.64-.09,2,0,4,0,5.94,0a2.88,2.88,0,0,1,3,2.91c0,.83,0,1.67,0,2.5s.15.89.87.89h6.24c.24,0,.47,0,.7,0A1.79,1.79,0,0,1,82.7,41c-.23.85-.53,1.68-.83,2.51-1,2.76-2,5.51-3,8.27Q76.18,59.36,73.48,67c-.21.58-.41,1.16-.61,1.74a3.49,3.49,0,0,1-3.55,2.61c-3.46,0-3.46,0-10.39.06-3.74,0-3.74,0-11.23,0Z"/><path class="folder-bkg" d="M81.12,40.38c0,.2,0,.07-.06.29s-1,2.85-1.52,4.26-1.14,3-1.7,4.52c-.71,1.89-1.41,3.77-2.1,5.66-1.55,4.23-3,8.49-4.54,12.74-.38,1.07-1,1.33-2.06,1.33-12.76,0-25.46,0-38.22,0h-5c-.27,0-.33-.12-.28-.4a3.06,3.06,0,0,1,.13-.43c.83-2.32,1.69-4.63,2.51-6.95s1.56-4.56,2.36-6.84c.93-2.66,1.89-5.33,2.84-8q.89-2.43,1.79-4.87a7.41,7.41,0,0,1,.4-.86,1.14,1.14,0,0,1,1.13-.55H76.29c1.58,0,1.24,0,4,0h.58C81,40.29,81.14,40.27,81.12,40.38Z"/></svg>',
-				'	</i>',
-				'	<p class="larger">'+ locale.notepad.empty_msg +'</p>',
-				'	<p class="ital">'+ locale.notepad.empty_tip +'</p>',
-				'</div>'
-			].join("\n");
-			$('#notepad').append(npEmptyContent);
-			$('#delete-all-modal-button').addClass('disabled');
-			$('#sort-modal-button').addClass('disabled');
-			break;
-	}
-}
-
-// fill in notepad name element
-function fillNotepadName() {
-	var npnameContent = [
-		'<div id="np-name-wrapper">',
-		'	<div id="np-name" onclick="renameNotepad(\'edit\');">'+ catalog[notepadIdLocal]["npname"] +'</div>',
-		'</div>'
-	].join("\n");
-	$('#np-rename').empty().append(npnameContent);
-}
-
-// fill in notepad description element
-function fillNotepadDesc() {
-	var npdescContent = [
-		'<span id="np-desc-textarea" class="break-word" contenteditable="true" spellcheck="false" data-placeholder="'+ locale.notepad.desc_placeholder +'"></span>',
-		'<span id="np-desc-label"><span id="np-desc-char">'+ charSplitter.countGraphemes($('#np-desc-textarea').text()) +'</span>/'+ npdescMaxChar +' '+ locale.notepad.desc_char +'</span>'
-	].join("\n");
-	$('#np-desc').empty().append(npdescContent);
-	if (typeof catalog[notepadIdLocal]["npdesc"] !== 'undefined') $('#np-desc-textarea').text(catalog[notepadIdLocal]["npdesc"]);
-	$('#np-desc-textarea').on({
-		'keypress': function(e) {
-			if (e.keyCode == 8 ||// backspace
-				e.keyCode == 33 ||// pgup
-				e.keyCode == 34 ||// pgdown
-				e.keyCode == 35 ||// end
-				e.keyCode == 36 ||// home
-				e.keyCode == 37 ||// left
-				e.keyCode == 38 ||// up
-				e.keyCode == 39 ||// right
-				e.keyCode == 40 ||// down
-				e.keyCode == 46) {// delete
-					// always allow these keys
-			} else if (e.keyCode == 13) {// enter
-				e.preventDefault();
-				$('#np-desc-textarea').blur();
-			} else {
-				return charSplitter.countGraphemes($('#np-desc-textarea').text()) < npdescMaxChar;// block all other keys if we're at the character limit
-			}
-		},
-		'keyup': function(e) {
-			$('#np-desc-char').text(charSplitter.countGraphemes($('#np-desc-textarea').text()));
-			 if (e.keyCode == 27) {// escape
-				e.preventDefault();
-				if (typeof catalog[notepadIdLocal]["npdesc"] === 'undefined') {
-					$('#np-desc-textarea').text("");
-				} else {
-					$('#np-desc-textarea').text(catalog[notepadIdLocal]["npdesc"]);
-				}
-				$('#np-desc-textarea').blur();
-			}
-		},
-		'drop': function(e) {
-			e.preventDefault();
-			e.stopPropagation();
-		},
-		'focusin': function() {
-			$('#np-desc-char').text(charSplitter.countGraphemes($('#np-desc-textarea').text()));
-			$('#np-desc-label').addClass("show");
-			if (typeof quickAddFocusOut !== 'undefined') {
-				clearTimeout(quickAddFocusOut);
-				quickAddFocusOut = void 0;
-			} else {
-				stickyButtonsToggle("hide");
-			}
-			if ($(this).text().length == 0) $(this).empty();// clear any stray tags
-		},
-		'focusout': function() {
-			$('#np-desc-label').removeClass("show");
-			stickyButtonsToggle("show");
-			changeNotepadDesc();
-			if ($(this).text().length == 0) {
-				$(this).empty();// clear any stray tags
-				$(document).one("click", function() { $('#np-desc-textarea').empty(); });// IE fix
-			}
-		}
-	});
-	document.getElementById('np-desc-textarea').addEventListener("paste", function(e) {
-		if (clipboardAccess) {
-			e.preventDefault();
-			navigator.clipboard.readText().then(function(clipText) {
-				var clipboard = clipText;
-				var originalDesc = document.getElementById('np-desc-textarea').textContent;
-				var originalCount = charSplitter.countGraphemes(originalDesc);
-				var pasteCount = charSplitter.countGraphemes(clipText);
-				if ((originalCount + pasteCount) > npdescMaxChar) {
-					var clipboardMax = npdescMaxChar - originalCount;
-					clipboard = charSplitter.splitGraphemes(clipText).slice(0, clipboardMax).join('');
-				}
-				var selection = window.getSelection();
-				if (!selection.rangeCount) return;
-				selection.deleteFromDocument();
-				selection.getRangeAt(0).insertNode(document.createTextNode(clipboard));
-				selection.collapseToEnd();
-			});
-		}
-	});
-}
-
-// return (and optionally append) the note DOM elements on a specified note
-function fillNoteText(resultAction, thisId, thisNote) {
-	var isCut = false;
-	if (thisNote.length > truncateNote) {
-		var cutPos = null;
-		var nextSpace = thisNote.indexOf(" ", truncateNote);
-		var nextLb = thisNote.indexOf("\n", truncateNote);
-		if (nextSpace != -1) {
-			if (nextLb != -1) {
-				cutPos = Math.min(nextSpace, nextLb);
-			} else {
-				cutPos = nextSpace;
-			}
-		} else if (nextLb != -1) {
-			cutPos = nextLb;
-		}
-		if ((cutPos != null) && ((cutPos/thisNote.length) < 0.90)) {
-			var cutStr = '... <a href="#" class="nolink read-more" title="'+ locale.notepad.expand +'">'+ locale.notepad.expand.toLowerCase() +'</a>';
-			isCut = true;
-		}
-	}
-	var noteFull = thisNote.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#039;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-	if (isCut == true) {
-		var noteCut = thisNote.substr(0, cutPos).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#039;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + cutStr;
-	} else {
-		var noteCut = noteFull;
-	}
-	var noteContent = [
-		'<span class="note-short">'+ noteCut +'</span>',
-		'<span class="note-full">'+ noteFull +'</span>'
-	].join("\n");
-	if (resultAction== "append") $(thisId+' .note').empty().append(noteContent);
-	return noteContent;
-}
-
-// build the notepad rows (notes)
-function rowBuilder(thisLocalId, thisRemoteId, thisColor, thisChecked, thisNote) {
-	var inputDomId = notePrefix + thisLocalId;
-	var inputRemoteId = ((thisRemoteId == 0) || (thisRemoteId == "") || (thisRemoteId == null) || (typeof thisRemoteId === 'undefined')) ? "" : thisRemoteId;
-	var colorHex = colors[thisColor]["hex"];
-	var noteContent = fillNoteText("return", "#"+inputDomId, thisNote);
-	var desktopTools = ($(window).width() < desktopWidth) ? false : true;
-	var thisRow = [
-		'<div id="'+ inputDomId +'" class="note-row" data-local-id="'+ thisLocalId +'" data-remote-id="'+ inputRemoteId +'" data-color="'+ thisColor +'" data-is-checked="'+ thisChecked +'">',
-		'	<div class="col-1">',
-		'		<button type="button" class="button circle move-up-button" aria-label="'+ locale.notepad.moveup +'" title="'+ locale.notepad.moveup +'"><i class="fa fa-arrow-up"></i></button>',
-		'		<button type="button" class="button circle move-down-button" aria-label="'+ locale.notepad.movedown +'" title="'+ locale.notepad.movedown +'"><i class="fa fa-arrow-down"></i></button>',
-		'	</div>',
-		'	<div class="col-2">',
-		'		<button type="button" class="button circle expand-button" aria-label="'+ locale.notepad.options +'" title="'+ locale.notepad.options +'"><i class="fa fa-ellipsis-h"></i></button>',
-		... desktopTools ? ['		<div class="note-tool-btns">'] : [],
-		... desktopTools ? ['			<button type="button" class="button circle sort-button" aria-label="'+ locale.notepad.reorder +'" title="'+ locale.notepad.reorder +'"><i class="fa fa-arrows"></i></button>'] : [],
-		... desktopTools ? ['			<button type="button" class="button circle delete-button" aria-label="'+ locale.general.delete +'" title="'+ locale.general.delete +'"><i class="fa fa-trash"></i></button>'] : [],
-		... desktopTools ? ['			<button type="button" class="button circle edit-button" aria-label="'+ locale.notepad.edit +'" title="'+ locale.notepad.edit +'"><i class="fa fa-pencil"></i></button>'] : [],
-		... desktopTools ? ['			<div class="spectrum" title="'+ locale.notepad.change_color +'"><input type="text" class="color-selector" value="#'+ colorHex +'"/></div>'] : [],
-		... desktopTools ? ['		</div>'] : [],
-		'	</div>',
-		'	<div class="col-3">',
-		'		<button type="button" class="button empty black checkbox" aria-label="'+ locale.notepad.check +'" title="'+ locale.notepad.check +'"><i class="fa fa-checkbox"></i></button>',
-		'	</div>',
-		'	<div class="col-4">',
-		'		<div class="note break-word">'+ noteContent +'</div>',
-		'	</div>',
-		... clipboardAccess ? ['	<button class="copy-button" aria-label="'+ locale.notepad.note_copy +'" title="'+ locale.notepad.note_copy +'"><i class="fa fa-copy"></i></button>'] : [],
-		'</div>'
-	].join("\n");
-	return thisRow;
-}
-
-// fully display a truncated note
-function readMore(domID) {
-	$(domID).find('.note-short').addClass('hidden');
-	$(domID).find('.note-full').addClass('display');
-}
-
-// initialize Spectrum color picker
-function spectrumInit(whichtarget) {
-	if (whichtarget == "all") {
-		var spectrumTarget = $('#notepad-body .color-selector');
-	} else {
-		var spectrumTarget = $(whichtarget+' .color-selector');
-	}
-	spectrumTarget.spectrum({
-		showPaletteOnly: true,
-		showSelectionPalette: false,
-		hideAfterPaletteSelect: true,
-		preferredFormat: 'hex',
-		change: function(color) {
-			var domID = '#' + $(this).parents('.note-row').attr('id');
-			changeColor(domID, color.toHexString());
-		},
-		palette: [
-			[colors[0]['hex'], colors[1]['hex'], colors[2]['hex']],
-			[colors[3]['hex'], colors[4]['hex'], colors[5]['hex']],
-			[colors[6]['hex'], colors[7]['hex'], colors[8]['hex']]
-		]
-	});
-	$('.sp-container .sp-picker-container').remove();// extra, possibly useless, DOM elements
-}
-
-// Linkify URLs in notes
-function linkifyInit(whichtarget) {
-	if (whichtarget == "all") {
-		var linkifyTarget = $('#notepad-body');
-	} else {
-		var linkifyTarget = $('#notepad-body '+whichtarget);
-	}
-	linkifyTarget.linkify({
-		tagName: 'a',
-		target: '_blank'
-	});
-	linkifyTarget.find('a').attr('rel', 'noopener noreferrer');
-}
-
-// set the state of the check all button
-function setCheckAllState() {
-	var noteAttrTotal = 0;
-	$('#notepad-body > div').each(function(index) {
-		noteAttrTotal += Number($(this).attr('data-is-checked'));
-	});
-	if (noteAttrTotal == 0) {
-		$('#notepad-header .checkbox').attr('data-check-state', 0);
-	} else if (noteAttrTotal == $('#notepad-body > div').length) {
-		$('#notepad-header .checkbox').attr('data-check-state', 1);
-	} else {
-		$('#notepad-header .checkbox').attr('data-check-state', 2);
-	}
-}
-
-// build the note tools overlay
-function toolsToggle(domID) {
-	var thisnote = $(domID).find('.col-4');
-	var thisbtn = $(domID).find('.expand-button i');
-	if ($(domID + ' .col-4 .note-tool-btns').length) {
-		$(domID + ' .col-4 .note-tool-btns .color-selector').spectrum("destroy");
-		$(domID + ' .col-4 .note-tool-btns').remove();
-	}
-	if (!thisnote.hasClass('tools-disp')) {// if currently off
-		var colorHex = colors[Number($(domID).attr('data-color'))]["hex"];
-		var toolsContent = [
-			'<div class="note-tool-btns">',
-			'	<div class="spectrum" title="'+ locale.notepad.change_color +'"><input type="text" class="color-selector" value="#'+ colorHex +'"/></div>',
-			'	<button type="button" class="button circle edit-button" aria-label="'+ locale.notepad.edit +'" title="'+ locale.notepad.edit +'"><i class="fa fa-pencil"></i></button>',
-			'	<button type="button" class="button circle delete-button" aria-label="'+ locale.general.delete +'" title="'+ locale.general.delete +'"><i class="fa fa-trash"></i></button>',
-			'</div>'
-		].join("\n");
-		thisnote.prepend(toolsContent);
-		spectrumInit(domID + ' .col-4');
-	}
-	thisnote.toggleClass('tools-disp');
-	thisbtn.toggleClass('fa-ellipsis-h');
-	thisbtn.toggleClass('fa-ellipsis-v');
-}
-
-// remove all tool overlays
-function removeAllToolOverlays() {
-	$('#notepad-body').find('.tools-disp').removeClass('tools-disp');
-	$('#notepad-body').find('.expand-button i').removeClass();
-	$('#notepad-body').find('.expand-button i').addClass('fa fa-ellipsis-h');
-	$('#notepad-body .col-4 .color-selector').spectrum("destroy");
-}
-
-// toggle the display of the notepad sticky buttons
-function stickyButtonsToggle(showOrHide) {
-	switch (showOrHide) {
-		case "show":
-			if (!$('#sticky-buttons').hasClass('display')) $('#sticky-buttons').addClass('display');
-			break;
-		case "hide":
-			if ($('#sticky-buttons').hasClass('display')) $('#sticky-buttons').removeClass('display');
-			break;
-	}
-}
-
-// toggle the display of the notepad expanded sticky buttons
-function stickyExpandToggle() {
-	if (!$('#sticky-buttons-expand').hasClass('display')) {
-		anime({
-			targets: '#sticky-toggle .fa-ellipsis-v',
-			rotate: { value: 90, duration: speed, easing: 'easeInOutSine' }
-		});
-		$('#sticky-buttons-expand').addClass('display');
-		$('#sticky-top').css('scale', 0);
-		$('#sticky-sort').css('scale', 0);
-		$('#sticky-refresh').css('scale', 0);
-		anime({
-			targets: '#sticky-top',
-			scale: { value: 1, duration: speed, easing: 'easeInOutSine' }
-		});
-		anime({
-			targets: '#sticky-sort',
-			scale: { value: 1, duration: speed, delay: 100, easing: 'easeInOutSine' }
-		});
-		anime({
-			targets: '#sticky-refresh',
-			scale: { value: 1, duration: speed, delay: 200, easing: 'easeInOutSine' }
-		});
-	} else if ($('#sticky-buttons-expand').hasClass('display')) {
-		anime({
-			targets: '#sticky-toggle .fa-ellipsis-v',
-			rotate: { value: 0, duration: speed, easing: 'easeInOutSine' }
-		});
-		anime({
-			targets: '#sticky-buttons-expand button',
-			scale: { value: 0, duration: speed, easing: 'easeInOutSine' },
-			complete: function(anim) {
-				$('#sticky-buttons-expand').removeClass('display');
-			}
-		});
-	}
-}
-
-// make the notepad sticky expanded buttons available or not based on document scroll position
-// show it if the document y scroll position > 500px
-function dispStickyExpand() {
-	if ($(document).scrollTop() > 500) {
-		if (!$('#sticky-buttons-expand-group').hasClass('display')) {
-			$('#sticky-toggle').css('display', 'inline');
-			$('#sticky-buttons-expand-group').addClass('display');
-		}
-	} else {
-		if ($('#sticky-buttons-expand-group').hasClass('display')) {
-			$('#sticky-buttons-expand-group').removeClass('display');
-			setTimeout(function() { $('#sticky-toggle').css('display', ''); }, 400);
-			if ($('#sticky-buttons-expand').hasClass('display')) stickyExpandToggle();
-		}
-	}
-}
-
-// start & stop long touch copy animation on notes
-function noteCopyAnimation(target, action) {
-	switch (action) {
-		case "start":
-			$(target).append('<div class="circle-1"></div><div class="circle-2"></div><div class="circle-3"></div>');
-			break;
-		case "end":
-			$('.circle-1').remove();
-			$('.circle-2').remove();
-			$('.circle-3').remove();
-			break;
-		default:
-			return;
-			break;
-	}
-}
-
-// display video modal
-function videoModal() {
-	var modalContent = [
-		'<i id="modal-close" class="fa fa-times" title="'+ locale.general.close +'" onclick="modalToggle(\'off\');"></i>',
-		'<div class="row video-row">',
-		'	<div class="video-wrap">',
-		'		<div class="video-container">',
-		'			<iframe src="https://www.youtube.com/embed/rGf_xXftWbA?autoplay=1&rel=0" frameborder="0" allowfullscreen></iframe>',
-		'		</div>',
-		'	</div>',
-		'</div>'
-	].join("\n");
-	$('#modal-window').empty().append(modalContent);
-	modalToggle("on");
-}
-
-
-//** HELPER FUNCTIONS **//
-
-// expand shorthand hex form (e.g. "03F") to full form (e.g. "0033FF"), by Igor Grinchesku: https://gist.github.com/Arahnoid/9923989
-function hexReturnFull(hex) {
-	var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-	return hex.replace(shorthandRegex, function(m, r, g, b) {
-		return "#" + r + r + g + g + b + b;
-	});
-}
-
-// convert RGB to hex, by Erick Petrucelli: http://stackoverflow.com/questions/1740700/how-to-get-hex-color-value-rather-than-rgb-value
-function rgb2hex(rgb) {
-	if (/^#[0-9A-F]{6}$/i.test(rgb)) return rgb;
-	rgb = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
-	function hex(x) {
-		return ("0" + parseInt(x).toString(16)).slice(-2);
-	}
-	return "#" + hex(rgb[1]) + hex(rgb[2]) + hex(rgb[3]);
-}
-
-function getUnixTimestamp() {
-	var clientDate = new Date();
-	var secondsUnix = Math.floor(clientDate.getTime()/1000);// number of seconds since Unix epoch
-	return secondsUnix;
-}
-
-function getUnixTimestampMS() {
-	var clientDate = new Date();
-	var msUnix = clientDate.getTime();// number of milliseconds since Unix epoch
-	return msUnix;
-}
-
-
-//** ON DOCUMENT READY, START THE APPLICATION **//
-
-$(document).ready(function() {
+document.addEventListener('DOMContentLoaded', function() { _appReadyPromise.then(function() {
+	_ppBuildPopup();// build the singleton palette picker popup
 	// now that we have the current offline state, potentially toggle it based on internet connectivity
 	if (internetConn) {
 		console.log('Internet connection detected.');
@@ -3465,236 +3618,262 @@ $(document).ready(function() {
 		setOfflineState("system", 1);
 		recheckInternet(15, 12);
 	}
-	$('body').attr('data-internet', (internetConn) ? 1 : 0);
-	// now that we've determined whether we're in dark mode or not, set it as a body tag attribute
-	$('body').attr('data-dark-mode', (darkMode) ? 1 : 0);
-	// pull color palette from anonynote.css
-	var root = document.querySelector(':root');
-	var rootStyles = getComputedStyle(root);
-	var d = (darkMode) ? 'dark-' : '';
-	var colorWhite = hexReturnFull(rootStyles.getPropertyValue('--'+d+'white-color'));
-	var colorGray = hexReturnFull(rootStyles.getPropertyValue('--'+d+'gray-color'));
-	var colorYellow = hexReturnFull(rootStyles.getPropertyValue('--'+d+'yellow-color'));
-	var colorGreen = hexReturnFull(rootStyles.getPropertyValue('--'+d+'green-color'));
-	var colorCyan = hexReturnFull(rootStyles.getPropertyValue('--'+d+'cyan-color'));
-	var colorBlue = hexReturnFull(rootStyles.getPropertyValue('--'+d+'blue-color'));
-	var colorPurple = hexReturnFull(rootStyles.getPropertyValue('--'+d+'purple-color'));
-	var colorRed = hexReturnFull(rootStyles.getPropertyValue('--'+d+'red-color'));
-	var colorOrange = hexReturnFull(rootStyles.getPropertyValue('--'+d+'orange-color'));
-	// populate color arrays
-	colors[0] = { "name" : "White", "hex" : colorWhite };
-	colors[1] = { "name" : "Gray", "hex" : colorGray };
-	colors[2] = { "name" : "Yellow", "hex" : colorYellow };
-	colors[3] = { "name" : "Green", "hex" : colorGreen };
-	colors[4] = { "name" : "Cyan", "hex" : colorCyan };
-	colors[5] = { "name" : "Blue", "hex" : colorBlue };
-	colors[6] = { "name" : "Purple", "hex" : colorPurple };
-	colors[7] = { "name" : "Red", "hex" : colorRed };
-	colors[8] = { "name" : "Orange", "hex" : colorOrange };
-	for (var c = 0; c < colors.length; c++) {
-		colorHexToId[colors[c]["hex"]] = c;
-	}
-	// add styles that utilize JSON data
-	var styleEl = document.createElement('style'), jsSheet;
-	document.head.appendChild(styleEl);
-	jsSheet = styleEl.sheet;
-	jsSheet.insertRule('.sp-container.sp-clear-enabled .sp-palette-container:before { content: "'+ locale.notepad.change_colors +'"; }');
+	document.body.setAttribute('data-internet', (internetConn) ? 1 : 0);
+	// apply the current theme to the body tag
+	document.body.setAttribute('data-theme', currentTheme);
+	// refresh language cookie so PHP renders correctly on next page load
+	document.cookie = `lang=${langCode}; max-age=${60*60*24*365}; path=/; SameSite=Lax`;
+	// update all PHP-rendered locale strings from the JS locale (cookie may not have existed on this load)
+	document.getElementById('splash-reload-button').textContent = locale.general.reload;
+	document.getElementById('menu-button').title = locale.header.menu;
+	document.getElementById('menu-button').setAttribute('aria-label', locale.header.menu);
+	document.querySelector('.menu-app a').setAttribute('aria-label', locale.app.title);
+	document.querySelector('.menu-app a span').textContent = locale.app.title;
+	document.querySelector('.menu-about a').setAttribute('aria-label', locale.about.title);
+	document.querySelector('.menu-about a span').textContent = locale.about.title;
+	document.querySelector('.menu-credits a').setAttribute('aria-label', locale.credits.title);
+	document.querySelector('.menu-credits a span').textContent = locale.credits.title;
+	document.querySelector('.menu-contact a').setAttribute('aria-label', locale.contact.title);
+	document.querySelector('.menu-contact a span').textContent = locale.contact.title;
+	document.getElementById('offline-button').title = locale.header.offline_mode;
+	document.getElementById('offline-button').setAttribute('aria-label', locale.header.offline_mode);
+	document.getElementById('offline-text').textContent = locale.general.offline;
+	document.getElementById('online-text').textContent = locale.general.online;
+	document.querySelector('#notepad-input-label .label-text').innerHTML = locale.app.input_label;
+	document.getElementById('notepad-input-info-button').title = locale.app.info;
+	document.querySelector('#recent-notepads-label .label-text').textContent = locale.app.recent_label;
+	document.getElementById('recent-notepads-button').textContent = locale.app.recent;
+	// inject settings gear button immediately before #menu-button
+	let _settingsBtn = document.createElement('button');
+	_settingsBtn.id = 'settings-button';
+	_settingsBtn.type = 'button';
+	_settingsBtn.setAttribute('aria-label', locale.header.settings);
+	_settingsBtn.setAttribute('title', locale.header.settings);
+	_settingsBtn.innerHTML = '<i class="fa fa-cog"></i>';
+	_settingsBtn.addEventListener('click', function() { settingsModal(); });
+	document.getElementById('menu-button').insertAdjacentElement('beforebegin', _settingsBtn);
 	// prevent all form submits from reloading the page
-	$(document).on("submit", 'form', function(e) {
-		e.preventDefault();
+	document.addEventListener('submit', function(e) {
+		if (e.target.matches('form')) e.preventDefault();
 	});
 	// declare modal window click actions
-	$('#modal').on("click", function(e) {
+	document.getElementById('modal').addEventListener('click', function(e) {
 		if (!modalForce) modalToggle("off");
 	});
-	$('#modal-window').on("click", function(e) {
+	document.getElementById('modal-window').addEventListener('click', function(e) {
 		e.stopPropagation();
 	});
 	// add listener to home page input
-	$('#notepad-input').on({
-		'input': function() {
-			if ($(this).val() == "") {
-				if (!$('#find-notepad-button').hasClass('disabled')) $('#find-notepad-button').addClass('disabled');
-			} else {
-				if ($('#find-notepad-button').hasClass('disabled')) $('#find-notepad-button').removeClass('disabled');
-				if (charSplitter.countGraphemes($(this).val()) >= npnameMaxChar) { $(this).val(charSplitter.splitGraphemes($(this).val()).slice(0, npnameMaxChar).join('')); }
-			}
-		},
-		'keyup': function(e) {
-			if ((e.keyCode == 13) && (!$('#find-notepad-button').hasClass('disabled'))) {
-				$(':focus').blur();
-				$('#find-notepad-button').click();
-			}
+	let _npInput = document.getElementById('notepad-input');
+	let _findBtn = document.getElementById('find-notepad-button');
+	_npInput.addEventListener('input', function() {
+		if (this.value == "") {
+			if (!_findBtn.classList.contains('disabled')) _findBtn.classList.add('disabled');
+		} else {
+			if (_findBtn.classList.contains('disabled')) _findBtn.classList.remove('disabled');
+			if ([...charSplitter.segment(this.value)].length >= npnameMaxChar) { this.value = [...charSplitter.segment(this.value)].slice(0, npnameMaxChar).map(function(s){return s.segment;}).join(''); }
+		}
+	});
+	_npInput.addEventListener('keyup', function(e) {
+		if ((e.key === "Enter") && (!_findBtn.classList.contains('disabled'))) {
+			if (document.activeElement) document.activeElement.blur();
+			_findBtn.click();
 		}
 	});
 	// set the web app mode status as a body tag attribute; if web app, add listener
-	$('body').attr('data-web-app', (isInWebApp) ? 1 : 0);
+	document.body.setAttribute('data-web-app', (isInWebApp) ? 1 : 0);
 	if (isInWebApp) {
-		$('#recent-notepads-button').on({
-			'touchstart': function() {
-				touchStatus = 'touchstart';
-			},
-			'touchmove': function() {
-				touchStatus = 'touchmove';
-			},
-			'click touchend': function(event) {
-				if ((event.type == 'click') || ((event.type == 'touchend') && (touchStatus == 'touchstart'))) {
-					$(this).toggleClass('active');
-					if ($('#recent-notepads').css('max-height') != '0px') {
-						$('#recent-notepads').css('max-height', '0px');
-					} else {
-						$('#recent-notepads').css('max-height', $('#recent-notepads').prop('scrollHeight'));
-					}
-				}
-				if (event.type == 'touchend') touchStatus = void 0;
-			}
+		let _rnBtn = document.getElementById('recent-notepads-button');
+		let _rn = document.getElementById('recent-notepads');
+		let _rnTouchStatus;
+		_rnBtn.addEventListener('touchstart', function() {
+			_rnTouchStatus = 'touchstart';
 		});
+		_rnBtn.addEventListener('touchmove', function() {
+			_rnTouchStatus = 'touchmove';
+		});
+		function _rnToggle(event) {
+			if ((event.type == 'click') || ((event.type == 'touchend') && (_rnTouchStatus == 'touchstart'))) {
+				this.classList.toggle('active');
+				if (getComputedStyle(_rn).maxHeight != '0px') {
+					_rn.style.maxHeight = '0px';
+				} else {
+					_rn.style.maxHeight = `${_rn.scrollHeight}px`;
+				}
+			}
+			if (event.type == 'touchend') _rnTouchStatus = void 0;
+		}
+		_rnBtn.addEventListener('click', _rnToggle);
+		_rnBtn.addEventListener('touchend', _rnToggle);
 	}
 	// IndexedDB snapshot includes scroll position. Keep that updated on scroll.
-	$(window).scroll($.debounce(500, false, function() { idbSnapshotUpdate("pos"); }));
+	window.addEventListener('scroll', debounce(function() { idbSnapshotUpdate("pos"); }, 500));
 	// run dispStickyExpand() now and also on screen scroll and resize
 	dispStickyExpand();
-	$(window).scroll($.throttle(500, false, dispStickyExpand));
-	$(window).resize($.debounce(500, false, dispStickyExpand));
+	window.addEventListener('scroll', throttle(dispStickyExpand, 500));
+	window.addEventListener('resize', debounce(dispStickyExpand, 500));
 	// if the browser window resizes from mobile to desktop size or vice versa, build/destroy buttons accordingly
-	var winWidth = $(window).width();
-	$(window).resize($.throttle(500, false, function() {
-		if ($('#notepad').hasClass("active-loc") && $('#notepad-table').length) {
-			if ((winWidth >= desktopWidth) && ($(window).width() < desktopWidth)) {// desktop --> mobile
-				$('#notepad-body .col-2 .note-tool-btns .color-selector').spectrum("destroy");
-				$('#notepad-body .col-2 .note-tool-btns').remove();
-			} else if ((winWidth < desktopWidth) && ($(window).width() >= desktopWidth)) {// mobile --> desktop
+	let winWidth = window.innerWidth;
+	window.addEventListener('resize', throttle(function() {
+		if (document.getElementById('notepad').classList.contains('active-loc') && document.getElementById('notepad-table') !== null) {
+			if ((winWidth >= desktopWidth) && (window.innerWidth < desktopWidth)) {// desktop --> mobile
+				_ppClear(document.querySelector('#notepad-body .col-2 .note-tool-btns .color-selector'));
+				document.querySelectorAll('#notepad-body .col-2 .note-tool-btns').forEach(function(el) { el.remove(); });
+			} else if ((winWidth < desktopWidth) && (window.innerWidth >= desktopWidth)) {// mobile --> desktop
 				buildNotepad("refresh");// refresh the notepad so's to re-run row builder and re-create those missing tools buttons
 			}
 		}
-		winWidth = $(window).width();	
-	}));
+		winWidth = window.innerWidth;
+	}, 500));
 	// populate sticky button content
-	var stickyButtonContent = [
+	let stickyButtonContent = [
 		'<div id="sticky-buttons-expand-group">',
 		'	<div id="sticky-buttons-expand">',
-		'		<button id="sticky-refresh" type="button" class="button transparent" aria-label="'+ locale.notepad.refresh +'" title="'+ locale.notepad.refresh +'" onclick="buildNotepad(\'refresh\');">',
+		`		<button id="sticky-refresh" type="button" class="button transparent" aria-label="${locale.notepad.refresh}" title="${locale.notepad.refresh}" onclick="buildNotepad('refresh');">`,
 		'			<span class="fa-stack"><i class="fa fa-circle fa-stack-2x"></i><i class="fa fa-repeat fa-stack-1x fa-inverse"></i></span>',
 		'		</button>',
-		'		<button id="sticky-sort" type="button" class="button transparent" aria-label="'+ locale.notepad.sort +'" title="'+ locale.notepad.sort +'" onclick="sortModal();">',
+		`		<button id="sticky-sort" type="button" class="button transparent" aria-label="${locale.notepad.sort}" title="${locale.notepad.sort}" onclick="sortModal();">`,
 		'			<span class="fa-stack"><i class="fa fa-circle fa-stack-2x"></i><i class="fa fa-sort fa-stack-1x fa-inverse"></i></span>',
 		'		</button>',
-		'		<button id="sticky-top" type="button" class="button transparent" aria-label="'+ locale.notepad.go_to_top +'" title="'+ locale.notepad.go_to_top +'">',
+		`		<button id="sticky-top" type="button" class="button transparent" aria-label="${locale.notepad.go_to_top}" title="${locale.notepad.go_to_top}">`,
 		'			<span class="fa-stack"><i class="fa fa-circle fa-stack-2x"></i><i class="fa fa-arrow-up fa-stack-1x fa-inverse"></i></span>',
 		'		</button>',
 		'	</div>',
-		'	<button id="sticky-toggle" type="button" class="button transparent" aria-label="'+ locale.notepad.sticky_toggle +'" title="'+ locale.notepad.sticky_toggle +'" onclick="stickyExpandToggle();">',
+		`	<button id="sticky-toggle" type="button" class="button transparent" aria-label="${locale.notepad.sticky_toggle}" title="${locale.notepad.sticky_toggle}" onclick="stickyExpandToggle();">`,
 		'		<span class="fa-stack"><i class="fa fa-circle fa-stack-2x"></i><i class="fa fa-ellipsis-v fa-stack-1x fa-inverse"></i></span>',
 		'	</button>',
 		'</div>',
-		'<button id="sticky-add" type="button" class="button transparent" aria-label="'+ locale.notepad.add_new +'" title="'+ locale.notepad.add_new +'" onclick="buildEdit();">',
+		`<button id="sticky-add" type="button" class="button transparent" aria-label="${locale.notepad.add_new}" title="${locale.notepad.add_new}" onclick="buildEdit();">`,
 		'	<span class="fa-stack"><i class="fa fa-circle fa-stack-2x"></i><i class="fa fa-plus fa-stack-1x fa-inverse"></i></span>',
 		'</button>'
 	].join("\n");
-	$('#sticky-buttons').empty().append(stickyButtonContent);
-	$('#sticky-top').on("click", function() {
-		$('html, body').animate({
-			scrollTop: 0
-		}, 800);
+	document.getElementById('sticky-buttons').innerHTML = stickyButtonContent;
+	document.getElementById('sticky-top').addEventListener('click', function() {
+		window.scrollTo({top: 0, behavior: 'smooth'});
 		return false;
 	});
 	// define the onclick actions for all the buttons on the notes
 	// these events are binded to document; they are not binded to any particular note and hence do not need to be called again
-	$(document).on("click", '.note-row .move-up-button', function() {
-		moveUp('#'+$(this).closest('.note-row').attr('id'));
+	document.addEventListener('click', function(e) {
+		let _row = e.target.closest('.note-row');
+		if (!_row) return;
+		if (e.target.closest('.color-selector')) return;// handled by separate color picker listener
+		if (e.target.closest('.move-up-button')) { moveUp(`#${_row.id}`); return; }
+		if (e.target.closest('.move-down-button')) { moveDown(`#${_row.id}`); return; }
+		if (e.target.closest('.expand-button')) { toolsToggle(`#${_row.id}`); return; }
+		if (e.target.closest('.delete-button')) { deleteNote(`#${_row.id}`); return; }
+		if (e.target.closest('.edit-button')) { buildEdit(`#${_row.id}`); return; }
+		if (e.target.closest('.checkbox')) { checkBox(`#${_row.id}`); return; }
+		if (e.target.closest('.read-more')) { readMore(`#${_row.id}`); return; }
 	});
-	$(document).on("click", '.note-row .move-down-button', function() {
-		moveDown('#'+$(this).closest('.note-row').attr('id'));
-	});
-	$(document).on("click", '.note-row .expand-button', function() {
-		toolsToggle('#'+$(this).closest('.note-row').attr('id'));
-	});
-	$(document).on("click", '.note-row .delete-button', function() {
-		deleteNote('#'+$(this).closest('.note-row').attr('id'));
-	});
-	$(document).on("click", '.note-row .edit-button', function() {
-		buildEdit('#'+$(this).closest('.note-row').attr('id'));
-	});
-	$(document).on("click", '.note-row .checkbox', function() {
-		checkBox('#'+$(this).closest('.note-row').attr('id'));
-	});
-	$(document).on("click", '.note-row .read-more', function() {
-		readMore('#'+$(this).closest('.note-row').attr('id'));
+	// handle all color-selector button clicks (note-row, edit screen, change-all)
+	document.addEventListener('click', function(e) {
+		let el = e.target.closest('.color-selector');
+		if (!el) return;
+		if (!_pp.has(el)) {
+			let opts = {};
+			let _row = el.closest('.note-row');
+			if (_row) {
+				let _localId = Number(_row.getAttribute('data-local-id'));
+				opts = {
+					colorId: notepads[notepadIdLocal][_localId]['color'],
+					change: function(colorId) { changeColor(`#${_row.id}`, colorId); }
+				};
+			} else if (el.closest('#color-change-all-button')) {
+				opts = {
+					label: locale.notepad.change_colors,
+					change: function(colorId) {
+						changeAllColors(colorId);
+						_ppClear(el);
+					}
+				};
+			} else {
+				return;
+			}
+			_pp.set(el, { colorId: opts.colorId !== undefined ? opts.colorId : null, opts: opts, open: false, onDocClick: null });
+		}
+		_ppOpen(el, _pp.get(el));
 	});
 	if (clipboardAccess) {
-		$(document).on("click", '.note-row .copy-button', function() {
-			var thisId = $(this).closest('.note-row').attr('id');
-			window.clipboardButton = "#" + thisId + " .copy-button";
-			window.clipboardTarget = "#" + thisId + " .note-full";
-			var ntText = document.querySelector(window.clipboardTarget).textContent;
+		document.addEventListener('click', function(e) {
+			let _btn = e.target.closest('.copy-button');
+			if (!_btn || !e.target.closest('.note-row')) return;
+			let thisId = e.target.closest('.note-row').id;
+			window.clipboardButton = `#${thisId} .copy-button`;
+			window.clipboardTarget = `#${thisId} .note-full`;
+			let ntText = document.querySelector(window.clipboardTarget).textContent;
 			navigator.clipboard.writeText(ntText).then(
 				() => {
-					$(this).addClass('tooltipped tooltipped-w');
-					$(this).attr('aria-label', locale.notepad.note_copy_success);
+					_btn.classList.add('tooltipped', 'tooltipped-w');
+					_btn.setAttribute('aria-label', locale.notepad.note_copy_success);
 					window.setTimeout(function() {
-						$(window.clipboardButton).removeClass('tooltipped tooltipped-w');
-						$(window.clipboardButton).removeAttr('aria-label');
+						let _cb = document.querySelector(window.clipboardButton);
+						if (_cb) { _cb.classList.remove('tooltipped', 'tooltipped-w'); _cb.removeAttribute('aria-label'); }
 					}, 1000);
 				},
 				() => {
-					$(this).addClass('tooltipped tooltipped-w');
-					$(this).attr('aria-label', locale.general.error);
+					_btn.classList.add('tooltipped', 'tooltipped-w');
+					_btn.setAttribute('aria-label', locale.general.error);
 					window.setTimeout(function() {
-						$(window.clipboardButton).removeClass('tooltipped tooltipped-w');
-						$(window.clipboardButton).removeAttr('aria-label');
+						let _cb = document.querySelector(window.clipboardButton);
+						if (_cb) { _cb.classList.remove('tooltipped', 'tooltipped-w'); _cb.removeAttribute('aria-label'); }
 					}, 1000);
 				}
 			);
 		});
-		$(document).on("touchstart", '#notepad-table .col-4', function(e) {
+		document.addEventListener('touchstart', function(e) {
+			if (!e.target.closest('#notepad-table .col-4')) return;
 			touchStatus = 'touchstart';
 			touchTime = getUnixTimestamp();
-			touchCoorStart = e.originalEvent.targetTouches[0].clientY;
-			touchId = '#' + $(this).closest('.note-row').attr('id');
-			$(touchId + ' .col-4 .note').addClass('disable-select');
+			touchCoorStart = e.targetTouches[0].clientY;
+			touchId = `#${e.target.closest('.note-row').id}`;
+			let _noteEl = document.querySelector(`${touchId} .col-4 .note`);
+			if (_noteEl) _noteEl.classList.add('disable-select');
 			noteCopyAnimation(touchId, "start");
 		});
-		$(document).on("touchmove", '#notepad-table .col-4', function(e) {
-			touchCoorMove = e.originalEvent.targetTouches[0].clientY;
-			if ((touchCoorMove > (touchCoorStart + 7)) || (touchCoorMove < (touchCoorStart - 7))) {
+		document.addEventListener('touchmove', function(e) {
+			if (!e.target.closest('#notepad-table .col-4')) return;
+			touchCoorMove = e.targetTouches[0].clientY;
+			if ((touchCoorMove > (touchCoorStart + 15)) || (touchCoorMove < (touchCoorStart - 15))) {
 				touchStatus = 'touchmove';
 				noteCopyAnimation(touchId, "end");
 			}
 		});
-		$(document).on("touchend", '#notepad-table .col-4', function() {
+		document.addEventListener('touchend', function(e) {
+			if (!e.target.closest('#notepad-table .col-4')) return;
+			if (!touchId) return;
 			noteCopyAnimation(touchId, "end");
 			if (((getUnixTimestamp() - touchTime) >= 1) && (touchStatus == 'touchstart')) {
-				window.noteCopyText = document.querySelector(touchId + ' .note-full').textContent;
+				window.noteCopyText = document.querySelector(`${touchId} .note-full`).textContent;
 				navigator.clipboard.writeText(window.noteCopyText).then(
 					() => {
 						popupMsg(locale.popup.note_copied);
 					},
 					() => {
-						var modalContent = [
-							'<i id="modal-close" class="fa fa-times" title="'+ locale.general.close +'" onclick="modalToggle(\'off\');"></i>',
+						let modalContent = [
+							`<i id="modal-close" class="fa fa-times" title="${locale.general.close}" onclick="modalToggle('off');"></i>`,
 							'<div class="row modal-window-wrapper-top">',
-							'	<button type="button" class="color red button large" aria-label="'+ locale.notepad.note_copy +'" onclick="navigator.clipboard.writeText(window.noteCopyText);$(this).removeClass(\'red\');$(this).addClass(\'green\');$(this).text(locale.notepad.note_copy_success);">'+ locale.notepad.note_copy +'</button>',
+							`	<button type="button" class="color red button large" aria-label="${locale.notepad.note_copy}" onclick="navigator.clipboard.writeText(window.noteCopyText);this.classList.remove('red');this.classList.add('green');this.textContent=locale.notepad.note_copy_success;">${locale.notepad.note_copy}</button>`,
 							'</div>'
 						].join("\n");
-						$('#modal-window').empty().append(modalContent);
+						document.getElementById('modal-window').innerHTML = modalContent;
 						modalToggle("on");
 					}
 				);
 			}
-			$(touchId + ' .col-4 .note').removeClass('disable-select');
+			let _noteEl2 = document.querySelector(`${touchId} .col-4 .note`);
+			if (_noteEl2) _noteEl2.classList.remove('disable-select');
 			touchStatus = touchTime = touchCoorStart = touchCoorMove = touchId = void 0;
 		});
 	}
 	// listen for browser back and forward buttons
-	$(window).on("popstate", function(event) {
-		if ($('#splash').is(":visible")) splashHandler("clear");// the back button on Chrome for Android is doing strange things, like putting the splash screen back up and not clearing it
-		var state = event.originalEvent.state;
+	window.addEventListener('popstate', function(event) {
+		if (document.getElementById('splash').offsetParent !== null) splashHandler("clear");// the back button on Chrome for Android is doing strange things, like putting the splash screen back up and not clearing it
+		let state = event.state;
 		if (state) {
 			switch (state.loc) {
 				case "notepad":
 					notepadIdLocal = state.npidLocal;
-					catalog[notepadIdLocal]["lastOpen"] = getUnixTimestamp();
-					idbCatalogUpdate();
 					buildNotepad("jump");
 					break;
 				case "home":
@@ -3717,4 +3896,4 @@ $(document).ready(function() {
 		buildHome("start");
 		if (npLaunchFail) popupMsg(locale.popup.find_notepad_launch_fail, "red");
 	}
-});
+}) });// end _appReadyPromise.then()

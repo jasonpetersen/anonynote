@@ -1,114 +1,51 @@
 /* CSS VARIABLES - NOTE COLORS */
-/* applied here at the CSS level and tapped by JavaScript */
 
-:root {
-	/* LIGHT */
-	--white-color: #ffffff;
-	--white-medium-color: #ababab;
-	--white-dark-color: #808080;
-
-	--gray-color: #dddddd;
-	--gray-medium-color: #949494;
-	--gray-dark-color: #6f6f6f;
-
-	--yellow-color: #fff4bb;
-	--yellow-medium-color: #b5aa72;
-	--yellow-dark-color: #91864d;
-
-	--green-color: #c6ffbb;
-	--green-medium-color: #7db572;
-	--green-dark-color: #58914d;
-
-	--cyan-color: #bbfff4;
-	--cyan-medium-color: #72b5aa;
-	--cyan-dark-color: #4d9186;
-
-	--blue-color: #bbddff;
-	--blue-medium-color: #7294b5;
-	--blue-dark-color: #4d6f91;
-
-	--purple-color: #ddbbff;
-	--purple-medium-color: #9472b5;
-	--purple-dark-color: #6f4d91;
-
-	--red-color: #ffbbc6;
-	--red-medium-color: #b5727d;
-	--red-dark-color: #914d58;
-
-	--orange-color: #ffd5b2;
-	--orange-medium-color: #b58872;
-	--orange-dark-color: #91644d;
-
-	/* DARK */
-	--dark-white-color: #000;
-	--dark-white-medium-color: #3f3f3f;
-	--dark-white-light-color: #7f7f7f;
-
-	--dark-gray-color: #373737;
-	--dark-gray-medium-color: #6f6f6f;
-	--dark-gray-light-color: #a6a6a6;
-
-	--dark-yellow-color: #594d16;
-	--dark-yellow-medium-color: #91854d;
-	--dark-yellow-light-color: #c8bd84;
-
-	--dark-green-color: #1e5916;
-	--dark-green-medium-color: #57914d;
-	--dark-green-light-color: #8dc884;
-
-	--dark-cyan-color: #16594d;
-	--dark-cyan-medium-color: #4b9185;
-	--dark-cyan-light-color: #83c8bd;
-
-	--dark-blue-color: #163559;
-	--dark-blue-medium-color: #4b6f91;
-	--dark-blue-light-color: #83a5c8;
-
-	--dark-purple-color: #351659;
-	--dark-purple-medium-color: #6f4d91;
-	--dark-purple-light-color: #a584c8;
-
-	--dark-red-color: #591622;
-	--dark-red-medium-color: #914d57;
-	--dark-red-light-color: #c8848f;
-
-	--dark-orange-color: #5c3011;
-	--dark-orange-medium-color: #936945;
-	--dark-orange-light-color: #c99e7c;
+:root {/* THEME 0 (LIGHT) */
+	--color-0: #ffffff;
+	--color-1: #dddddd;
+	--color-2: #fff4bb;
+	--color-3: #c6ffbb;
+	--color-4: #bbfff4;
+	--color-5: #bbddff;
+	--color-6: #ddbbff;
+	--color-7: #ffbbc6;
+	--color-8: #ffd5b2;
+	--l-mid: -0.15;
+	--l-dim: -0.26;
+	--l-floor-mid: 0;
+	--l-floor-dim: 0;
 }
 
-/* SPLASH */
-
-#splash {
-	position: fixed;
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	z-index: 30000;
-	background-color: #0099cc;
+body[data-theme="1"] {/* THEME 1 (DARK) */
+	--color-0: #000000;
+	--color-1: #373737;
+	--color-2: #594d16;
+	--color-3: #1e5916;
+	--color-4: #16594d;
+	--color-5: #163559;
+	--color-6: #351659;
+	--color-7: #591622;
+	--color-8: #5c3011;
+	--l-mid: 0.22;
+	--l-dim: 0.28;
+	--l-floor-mid: 0.40;
+	--l-floor-dim: 0.50;
 }
 
-#splash .loading-circle {
-	margin-top: 52px;
-}
-
-#splash .loading-circle div:after {
-	background: #fff;
-}
-
-#splash #splash-reload-button {
-	margin-top: 20px;
-	visibility: hidden;
-}
-
-#splash .error {
-	color: #fff;
-	font-size: 5em;
+body[data-theme="2"] {/* THEME 2 (DESERT SUNSET) */
+	--color-0: #f0e4c8;
+	--color-1: #e0cba8;
+	--color-2: #f5d060;
+	--color-3: #c8e090;
+	--color-4: #80d0c0;
+	--color-5: #90b8e0;
+	--color-6: #d0a0e0;
+	--color-7: #e0906a;
+	--color-8: #f0b060;
+	--l-mid: -0.12;
+	--l-dim: -0.22;
+	--l-floor-mid: 0;
+	--l-floor-dim: 0;
 }
 
 /* USER LOCK */
@@ -122,11 +59,10 @@
 	z-index: 9500;
 	opacity: 0;
 	visibility: hidden;
-	background-color: #f1f4f9;
+	background-color: var(--bg-page);
 	-webkit-transition: all 0.5s ease-in-out;
 	-moz-transition: all 0.5s ease-in-out;
 	-o-transition: all 0.5s ease-in-out;
-	-ms-transition: all 0.5s ease-in-out;
 	transition: all 0.5s ease-in-out;
 }
 
@@ -144,7 +80,7 @@
 #app #header #app-header-wrapper {
 	display: inline-flex;
 	justify-content: space-between;
-	width: calc(100% - 100px);
+	width: calc(100% - 140px);
 	height: 60px;/* MATCH HEADER HEIGHT ON MAIN.CSS */
 	padding-left: 20px;
 	color: #fff;
@@ -153,16 +89,17 @@
 #header #app-header-wrapper #offline-button {
 	position: relative;
 	margin-bottom: 0.2em;
+	color: var(--text-header);
 }
 
 .no-touchevents #header #app-header-wrapper #offline-button:hover {
-	color: #002b4a;
+	color: color-mix(in srgb, var(--text-header) 50%, transparent);
 }
 
 #header #app-header-wrapper #offline-button #offline-button-label {
 	position: absolute;
-	right: 18px;
-	top: 17px;
+	right: 16px;
+	top: 19px;
 	font-size: 16px;
 	letter-spacing: 0.1em;
 	font-feature-settings: "liga" 0;
@@ -177,8 +114,8 @@ body[data-offline-mode="2"] #header #app-header-wrapper #offline-button #offline
 body[data-offline-mode="1"] #header #app-header-wrapper #offline-button #offline-button-label,
 body[data-offline-mode="2"] #header #app-header-wrapper #offline-button #offline-button-label {
 	right: initial;
-	left: 20px;
-	color: #0099cc;
+	left: 16px;
+	color: var(--primary);
 }
 
 body[data-offline-mode="1"] #header #app-header-wrapper #offline-button #offline-button-label #offline-text,
@@ -190,12 +127,12 @@ body[data-offline-mode="2"] #header #app-header-wrapper #offline-button #offline
 	font-size: 2.3em;
 }
 
-#header #app-header-wrapper #offline-button .fa-toggle:before {
+#header #app-header-wrapper #offline-button .fa-toggle-long:before {
 	content: "\2606";
 }
 
-body[data-offline-mode="1"] #header #app-header-wrapper #offline-button .fa-toggle:before,
-body[data-offline-mode="2"] #header #app-header-wrapper #offline-button .fa-toggle:before {
+body[data-offline-mode="1"] #header #app-header-wrapper #offline-button .fa-toggle-long:before,
+body[data-offline-mode="2"] #header #app-header-wrapper #offline-button .fa-toggle-long:before {
 	content: "\2605";
 }
 
@@ -212,16 +149,14 @@ body[data-offline-mode="3"] #header #app-header-wrapper #offline-button {
 	justify-content: center;
 	font-size: 3em;
 	width: 45px;
-	height: 60px;/* MATCHES APP-TOOLBAR HEIGHT */
+	height: 60px;
 	-webkit-transform: scale(0);
 	-moz-transform: scale(0);
 	-o-transform: scale(0);
-	-ms-transform: scale(0);
 	transform: scale(0);
 	-webkit-transition: -webkit-transform 0.2s linear;
 	-moz-transition: -moz-transform 0.2s linear;
 	-o-transition: -o-transform 0.2s linear;
-	-ms-transition: -ms-transform 0.2s linear;
 	transition: transform 0.2s linear;
 }
 
@@ -229,7 +164,6 @@ body[data-offline-mode="3"] #header #app-header-wrapper #offline-button {
 	-webkit-transform: scale(1);
 	-moz-transform: scale(1);
 	-o-transform: scale(1);
-	-ms-transform: scale(1);
 	transform: scale(1);
 }
 
@@ -242,159 +176,6 @@ body[data-offline-mode="2"] #header #app-header-wrapper #icon-status {
 	display: none;
 }
 
-/* APP TOOLBAR */
-
-#app #app-toolbar {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	justify-content: space-between;
-	position: fixed;
-	width: 260px;
-	height: 60px;
-	top: 60px;
-	right: 0;
-	z-index: 9001;
-	background-color: #282828;
-	padding: 0 22px 0 10px;
-	-webkit-transition: right 0.5s ease-in-out;
-	-moz-transition: right 0.5s ease-in-out;
-	-o-transition: right 0.5s ease-in-out;
-	-ms-transition: right 0.5s ease-in-out;
-	transition: right 0.5s ease-in-out;
-}
-
-#app #app-toolbar.hide {
-	right: -270px;
-}
-
-#app-toolbar #app-toolbar-handle-background {
-	position: absolute;
-	width: 0px;
-	height: 0px;
-	border-top: 30px solid transparent;
-	border-bottom: 30px solid transparent;
-	border-right: 20px solid #282828;
-	left: -20px;
-}
-
-#app-toolbar #app-toolbar-handle-wrapper {
-	position: absolute;
-	left: -20px;
-}
-
-#app-toolbar #app-toolbar-handle {
-	font-size: 50%;
-	width: 40px;
-	height: 60px;/* MATCHES APP-TOOLBAR HEIGHT */
-}
-
-#app-toolbar #app-toolbar-handle .fa:before {
-	content: "\2212";
-}
-
-#app-toolbar.hide #app-toolbar-handle .fa:before {
-	content: "\2795";
-}
-
-#app-toolbar #app-toolbar-status-wrapper {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: space-evenly;
-	background-color: rgba(255,255,255,0.2);
-	height: 60px;/* MATCHES APP-TOOLBAR HEIGHT */
-	margin-left: 20px;
-	padding: 0 20px;
-}
-
-#app-toolbar #app-toolbar-status-wrapper > span {
-	color: #fff;
-	font-weight: bold;
-	font-size: 16px;
-	line-height: 16px;
-	cursor: default;
-}
-
-#app-toolbar #icon-wrapper {
-	display: flex;
-	flex-direction: row;
-	justify-content: space-around;
-	width: 100%;
-	gap: 10px;
-}
-
-#app-toolbar #icon-wrapper i {
-	font-size: 1.5em;
-}
-
-#app-toolbar #icon-database,
-#app-toolbar #icon-cloud,
-#app-toolbar #app-toolbar-handle-wrapper {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	justify-content: center;
-}
-
-#app-toolbar #app-toolbar-handle-wrapper {
-	width: 45px;
-	height: 60px;/* MATCHES APP-TOOLBAR HEIGHT */
-}
-
-#app-toolbar .fa-database:before {
-	content: "\2617";
-}
-
-body[data-idb-support="0"] #app-toolbar .fa-database:before {
-	content: "\2616";
-}
-
-body[data-internet="0"] #app-toolbar #icon-cloud .fa:before,
-body[data-offline-mode="1"] #app-toolbar #icon-cloud .fa:before,
-body[data-offline-mode="2"] #app-toolbar #icon-cloud .fa:before {
-	content: "\2601";
-}
-
-body[data-internet="0"] #app-toolbar #icon-cloud .fa,
-body[data-offline-mode="1"] #app-toolbar #icon-cloud .fa,
-body[data-offline-mode="2"] #app-toolbar #icon-cloud .fa {
-	color: #c43c35;
-}
-
-#app-toolbar .fa-cloud-online,
-#app-toolbar .fa-database {
-	color: #57a957;
-}
-
-#app-toolbar .fa-cloud-offline,
-#app-toolbar .fa-cloud-error,
-body[data-idb-support="0"] #app-toolbar .fa-database {
-	color: #c43c35;
-}
-
-#app-toolbar .fa-cloud-upload {
-	color: #c48335;
-}
-
-#app-toolbar .fa-cloud-download {
-	color: #269ce9;
-}
-
-#app-toolbar button {
-	width: 60px;
-	height: 60px;/* MATCHES APP-TOOLBAR HEIGHT */
-}
-
-#app-toolbar button i {
-	font-size: 3em;
-	margin-bottom: 5px;
-}
-
-#app-toolbar #light-dark-modal-button i {
-	text-shadow: 0 0 20px #bdc435;
-}
-
 /* POP UP MESSAGE */
 
 #popup-status {
@@ -405,15 +186,14 @@ body[data-idb-support="0"] #app-toolbar .fa-database {
 	overflow: auto;
 	width: 100%;
 	min-height: 60px;/* MATCHES FOOTER HEIGHT ON MAIN.CSS */
-	background-color: #282828;
-	color: #ffffff;
+	background-color: var(--bg-page-inv);
+	color: var(--text-inv);
 	font-size: 18px;
 	text-align: center;
 	z-index: 8000;
 	-webkit-transition: all 0.5s ease-in-out;
 	-moz-transition: all 0.5s ease-in-out;
 	-o-transition: all 0.5s ease-in-out;
-	-ms-transition: all 0.5s ease-in-out;
 	transition: all 0.5s ease-in-out;
 }
 
@@ -421,6 +201,10 @@ body[data-idb-support="0"] #app-toolbar .fa-database {
 	bottom: 0;
 	opacity: 1;
 	visibility: visible;
+}
+
+#popup-status.red, #popup-status.green, #popup-status.blue, #popup-status.yellow {
+	color: #fff;
 }
 
 #popup-status.red {
@@ -442,6 +226,93 @@ body[data-idb-support="0"] #app-toolbar .fa-database {
 #popup-status #popup-msg {
 	display: inline-block;
 	padding: 15px 10px;
+	font-weight: 500;
+	line-height: 1.6em;
+}
+
+#popup-status #popup-dismiss {
+	position: absolute;
+	right: 12px;
+	top: 50%;
+	-webkit-transform: translateY(-50%);
+	-moz-transform: translateY(-50%);
+	-o-transform: translateY(-50%);
+	transform: translateY(-50%);
+	font-size: 1.75em;
+	color: var(--text-inv);
+	cursor: pointer;
+}
+
+.no-touchevents #popup-status #popup-dismiss:hover {
+	color: color-mix(in srgb, var(--text-inv) 60%, transparent);
+}
+
+#popup-status a {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.no-touchevents #popup-status a:hover {
+	color: inherit;
+	text-decoration: none;
+	opacity: 0.5;
+}
+
+/* SETTINGS MODAL */
+
+#settings-button {
+	position: fixed;
+	top: 6px;
+	right: 68px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background: none;
+	border: none;
+	padding: 0;
+	font-size: 40px;
+	width: 40px;
+	height: 40px;
+	color: var(--text-header);
+	cursor: pointer;
+	z-index: 9999;
+}
+
+.no-touchevents #settings-button:hover {
+	color: color-mix(in srgb, var(--text-header) 50%, transparent);
+}
+
+.settings-section-label {
+	display: block;
+	font-weight: 700;
+	font-size: 0.75em;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: color-mix(in srgb, var(--text-default) 40%, transparent);
+	border-bottom: 2px solid color-mix(in srgb, var(--bg-page) 85%, var(--bg-page-inv));
+	padding-bottom: 4px;
+}
+
+.settings-select {
+	width: 100%;
+	max-width: 300px;
+	padding: 8px;
+	font-size: 1em;
+	font-weight: 500;
+	text-align: center;
+	border: 2px solid color-mix(in srgb, var(--bg-page) 85%, var(--bg-page-inv));
+	border-radius: var(--radius);
+	background-color: var(--bg-input);
+	color: var(--text-default);
+	cursor: pointer;
+}
+
+.no-touchevents .settings-select:hover {
+	background-color: var(--bg-input-accent);
+}
+
+.settings-select:focus {
+	outline: none;
 }
 
 /* MODAL WINDOW */
@@ -458,7 +329,7 @@ body[data-idb-support="0"] #app-toolbar .fa-database {
 	height: 100%;
 	top: 0;
 	left: 0;
-	background: rgba(0,0,0,0.85);
+	background: var(--bg-overlay);
 }
 
 #modal.display {
@@ -471,7 +342,8 @@ body[data-idb-support="0"] #app-toolbar .fa-database {
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
-	background: #f1f4f9;
+	background: var(--bg-page);
+	border-radius: var(--radius);
 	height: auto;
 	max-height: 90vh;
 	width: 90vw;
@@ -482,7 +354,6 @@ body[data-idb-support="0"] #app-toolbar .fa-database {
 	-webkit-transition: opacity 0.4s ease-out, margin-top 0.4s ease-out;
 	-moz-transition: opacity 0.4s ease-out, margin-top 0.4s ease-out;
 	-o-transition: opacity 0.4s ease-out, margin-top 0.4s ease-out;
-	-ms-transition: opacity 0.4s ease-out, margin-top 0.4s ease-out;
 	transition: opacity 0.4s ease-out, margin-top 0.4s ease-out;
 }
 
@@ -494,14 +365,14 @@ body[data-idb-support="0"] #app-toolbar .fa-database {
 #modal #modal-window #modal-close {
 	position: absolute;
 	font-size: 1.75em;
-	top: 0;
-	right: 4px;
-	color: #000000;
+	top: 5px;
+	right: 9px;
+	color: var(--text-default);
 	cursor: pointer;
 }
 
 .no-touchevents #modal #modal-window #modal-close:hover {
-	color: #888888;
+	color: color-mix(in srgb, var(--text-default) 50%, transparent);
 }
 
 #modal #modal-window .row {
@@ -513,6 +384,10 @@ body[data-idb-support="0"] #app-toolbar .fa-database {
 	box-sizing: border-box;
 }
 
+#modal #modal-window .row button {
+	border-radius: var(--radius);
+}
+
 #modal #modal-window .row button,
 #modal #modal-window .row a {
 	margin: 5px 10px;
@@ -521,7 +396,17 @@ body[data-idb-support="0"] #app-toolbar .fa-database {
 #modal #modal-window .modal-window-wrapper-top {
 	margin-top: 30px;
 	overflow: auto;
+	-webkit-overflow-scrolling: touch;
+	will-change: scroll-position;
 	word-break: break-word;
+}
+
+#modal #modal-window .modal-window-wrapper-top > *:first-child {
+	margin-top: 0;
+}
+
+#modal #modal-window .modal-window-wrapper-top > *:last-child {
+	margin-bottom: 0;
 }
 
 @media screen and (max-width: 767px) {
@@ -552,66 +437,48 @@ body[data-idb-support="0"] #app-toolbar .fa-database {
 #modal hr {
 	width: 200px;
 	height: 3px;
-	color: #0099cc;
-	background-color: #0099cc;
+	color: var(--primary);
+	background-color: var(--primary);
 	border: 0;
 	margin: 1em auto;
 }
 
 /* sync */
 
-#modal #modal-window .loading-circle div:after {
-	background: #282828;
-}
-
 #modal #modal-window #icon-sync-process {
 	font-size: 4em;
 }
 
-/* json */
+/* api */
 
-#modal #modal-window #json-wrapper a {
-	color: rgba(0,0,0,0.35);
-	background-color: rgba(0,0,0,0.10);
-	padding: 5px 10px;
-	margin: 0;
-	font-size: calc(13px + (26 - 13) * ((100vw - 300px) / (2000 - 300)));
-	font-weight: bold;
-	word-break: keep-all;
-	-webkit-transition: color 0.3s linear, background-color 0.3s linear;
-	-moz-transition: color 0.3s linear, background-color 0.3s linear;
-	-o-transition: color 0.3s linear, background-color 0.3s linear;
-	-ms-transition: color 0.3s linear, background-color 0.3s linear;
-	transition: color 0.3s linear, background-color 0.3s linear;
+#modal #modal-window #api-modal-link {
+	color: var(--text-link);
+	font-weight: 700;
+	text-decoration: underline;
+	word-break: break-all;
 }
 
-.no-touchevents #modal #modal-window #json-wrapper a:hover {
-	color: rgba(0,128,0,0.50);
-	background-color: rgba(0,128,0,0.25);
+.no-touchevents #modal #modal-window #api-modal-link:hover {
+	color: var(--text-link);
+	text-decoration: none;
+	opacity: 0.5;
 }
 
 /* lock & unlock */
 #modal #modal-window #lock-password-input-1,
 #modal #modal-window #lock-password-input-2,
 #modal #modal-window #unlock-password-input {
-	color: rgba(0,0,0,0.35);
-	background-color: rgba(0,0,0,0.10);
-	padding: 5px 10px;
+	color: color-mix(in srgb, var(--text-default) 35%, transparent);
+	background-color: var(--bg-input);
+	padding: 5px 20px;
 	font-size: 1.5em;
 }
 
-#modal #modal-window #lock-password-input-1:focus,
-#modal #modal-window #lock-password-input-2:focus,
-#modal #modal-window #unlock-password-input:focus {
-	color: rgba(0,128,0,0.50);
-	background-color: rgba(0,128,0,0.25);
-}
-
-#modal #modal-window #lock-password-input-1.invalid:focus,
-#modal #modal-window #lock-password-input-2.invalid:focus,
-#modal #modal-window #unlock-password-input.invalid:focus {
-	color: rgba(0,0,0,0.35);
-	background-color: rgba(0,0,0,0.10);
+#modal #modal-window #lock-password-input-1:focus:not(.invalid),
+#modal #modal-window #lock-password-input-2:focus:not(.invalid),
+#modal #modal-window #unlock-password-input:focus:not(.invalid) {
+	color: var(--text-success);
+	background-color: var(--bg-success);
 }
 
 /* ACTIVE DIV */
@@ -647,6 +514,7 @@ body[data-idb-support="0"] #app-toolbar .fa-database {
 
 #home .label .label-text {
 	font-size: 1.2em;
+	font-weight: 500;
 }
 
 #home .label .label-info {
@@ -680,7 +548,7 @@ body[data-idb-support="0"] #app-toolbar .fa-database {
 }
 
 .logo-homepage-path {
-	fill: #000;
+	fill: var(--text-default);
 }
 
 #notepad-input-wrapper,
@@ -712,13 +580,16 @@ body[data-idb-support="0"] #app-toolbar .fa-database {
 	width: calc(100% - 50px);
 	height: 50px;
 	font-size: 1.5em;
-	padding: 5px 10px;
+	font-weight: 500;
+	padding: 5px 20px;
+	border-radius: var(--radius) 0 0 var(--radius);
 }
 
 #find-notepad-button {
 	width: 50px;
 	height: 50px;
 	font-size: 24px;
+	border-radius: 0 var(--radius) var(--radius) 0;
 }
 
 @media screen and (min-width: 481px) {
@@ -741,6 +612,7 @@ body[data-idb-support="0"] #app-toolbar .fa-database {
 
 #recent-notepads-button {
 	position: relative;
+	border-radius: var(--radius);
 }
 
 #recent-notepads-button:after {
@@ -749,7 +621,12 @@ body[data-idb-support="0"] #app-toolbar .fa-database {
 	right: 20px;
 	font-size: 13px;
 	color: transparent;
-    text-shadow: 0 0 0 #fff;
+	text-shadow: 0 0 0 var(--text-inv);
+}
+
+#recent-notepads-button.active {
+	border-bottom-left-radius: 0;
+	border-bottom-right-radius: 0;
 }
 
 #recent-notepads-button.active:after {
@@ -763,11 +640,13 @@ body[data-idb-support="0"] #app-toolbar .fa-database {
 }
 
 #recent-notepads button {
-	border-bottom: 1pt solid #000;
+	border-bottom: 1pt solid var(--text-default);
 }
 
-#recent-notepads button:last-of-type {
+#recent-notepads button:last-child {
 	border-bottom: none !important;
+	border-bottom-left-radius: var(--radius);
+	border-bottom-right-radius: var(--radius);
 }
 
 body[data-web-app="1"] #recent-notepads-wrapper {
@@ -815,12 +694,12 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 	font-size: 24px;
 	padding: 0;
 	margin-right: 10px;
-	background-color: #ddd;
+	background-color: color-mix(in srgb, var(--bg-page-inv) 30%, transparent);
 	color: #ffaa4a;
 }
 
 .no-touchevents #lock-button:hover {
-	background-color: #ababab;
+	background-color: color-mix(in srgb, var(--bg-page-inv) 50%, transparent);
 }
 
 #np-rename {
@@ -829,6 +708,7 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 	align-items: center;
 	justify-content: flex-start;
 	flex-grow: 1;
+	font-weight: 800;
 	width: calc(100% - 50px);/*lock-button 40px width + 10px margin*/
 	white-space: nowrap;
 	overflow: hidden;
@@ -842,13 +722,13 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 	font-size: inherit;
 	font-weight: inherit;
 	width: 100%;
-	padding: 0 0 0 5px;
+	padding: 0 10px;
 	margin: 0;
 	background-color: transparent;
 }
 
 #np-rename-input:focus {
-	background-color: rgba(0,0,0,0.10);
+	background-color: var(--bg-input-accent);
 }
 
 #np-rename-input.warning {
@@ -856,36 +736,35 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 }
 
 #np-rename #np-name-wrapper {
-	padding: 0 5px;
+	padding: 0 10px;
 	overflow: hidden;
 	cursor: pointer;
 	background-color: transparent;
+	border-radius: var(--radius);
 	-webkit-transition: background-color 0.3s linear;
 	-moz-transition: background-color 0.3s linear;
 	-o-transition: background-color 0.3s linear;
-	-ms-transition: background-color 0.3s linear;
 	transition: background-color 0.3s linear;
 }
 
 .no-touchevents #np-rename #np-name-wrapper:hover {
-	background-color: rgba(0, 153, 204, 0.50);
+	background-color: color-mix(in srgb, var(--text-link) 50%, transparent);
 }
 
 #np-rename #np-name-wrapper #np-name {
-	-webkit-box-shadow: inset 0 -4px 0 rgba(0, 153, 204, 0.50);
-	-moz-box-shadow: inset 0 -4px 0 rgba(0, 153, 204, 0.50);
-	box-shadow: inset 0 -4px 0 rgba(0, 153, 204, 0.50);
+	-webkit-box-shadow: inset 0 -4px 0 color-mix(in srgb, var(--text-link) 50%, transparent);
+	-moz-box-shadow: inset 0 -4px 0 color-mix(in srgb, var(--text-link) 50%, transparent);
+	box-shadow: inset 0 -4px 0 color-mix(in srgb, var(--text-link) 50%, transparent);
 	-webkit-transition: -webkit-box-shadow 0.3s linear;
 	-moz-transition: -moz-box-shadow 0.3s linear;
 	-o-transition: box-shadow 0.3s linear;
-	-ms-transition: box-shadow 0.3s linear;
 	transition: box-shadow 0.3s linear;
 }
 
 .no-touchevents #np-rename #np-name-wrapper #np-name:hover {
-	-webkit-box-shadow: inset 0 0 0 rgba(0, 153, 204, 0.50);
-	-moz-box-shadow: inset 0 0 0 rgba(0, 153, 204, 0.50);
-	box-shadow: inset 0 0 0 rgba(0, 153, 204, 0.50);
+	-webkit-box-shadow: inset 0 0 0 color-mix(in srgb, var(--text-link) 50%, transparent);
+	-moz-box-shadow: inset 0 0 0 color-mix(in srgb, var(--text-link) 50%, transparent);
+	box-shadow: inset 0 0 0 color-mix(in srgb, var(--text-link) 50%, transparent);
 }
 
 #np-desc {
@@ -896,44 +775,41 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 	display: block;
 	width: 100%;
 	font-size: 1.5em;
+	font-weight: 500;
 	padding: 5px;
 	cursor: pointer;
 	box-sizing: border-box;
 	outline: none;
-	-webkit-appearance: none;
 	background-color: transparent;
+	resize: none;
+	overflow: hidden;
 	-webkit-transition: background-color 0.2s linear;
 	-moz-transition: background-color 0.2s linear;
 	-o-transition: background-color 0.2s linear;
-	-ms-transition: background-color 0.2s linear;
 	transition: background-color 0.2s linear;
 }
 
-.no-touchevents #np-desc-textarea:hover {
-	background-color: rgba(0,0,0,0.10);
+#np-desc-textarea::placeholder {
+	color: color-mix(in srgb, var(--text-default) 35%, transparent);
 }
 
-.no-touchevents #np-desc-textarea:empty:hover {
-	color: rgba(0,0,0,0.50);
-	background-color: rgba(0,0,0,0.25);
+.no-touchevents #np-desc-textarea:hover {
+	background-color: var(--bg-input-accent);
+}
+
+.no-touchevents #np-desc-textarea:placeholder-shown:hover {
+	color: color-mix(in srgb, var(--text-default) 50%, transparent);
+	background-color: color-mix(in srgb, var(--bg-input-accent) 80%, var(--bg-page-inv));
 }
 
 #np-desc-textarea:focus,
-#np-desc-textarea:empty:focus,
-.no-touchevents #np-desc-textarea:focus:hover,
-.no-touchevents #np-desc-textarea:empty:focus:hover {
+.no-touchevents #np-desc-textarea:focus:hover {
 	cursor: text;
-	background-color: rgba(0, 153, 204, 0.50);
+	background-color: color-mix(in srgb, var(--text-link) 50%, transparent);
 }
 
-#np-desc-textarea:empty {
-	color: rgba(0,0,0,0.35);
-	background-color: rgba(0,0,0,0.10);
-}
-
-#np-desc-textarea:empty:before {
-	content: attr(data-placeholder);
-	display: block;/* For Firefox */
+#np-desc-textarea:placeholder-shown {
+	background-color: var(--bg-input-accent);
 }
 
 #np-desc-label {
@@ -964,10 +840,31 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 	gap: 10px;
 }
 
+#notepad-btns button {
+	flex: 1 1 0;
+	border-radius: var(--radius);
+}
+
+#notepad-btns button span {
+	font-weight: 500;
+}
+
 @media screen and (max-width: 767px) {
 	#notepad-btns {
 		flex-wrap: nowrap;
 		gap: 0;
+	}
+	#notepad-btns button {
+		border-radius: 0;
+	}
+	#notepad-btns button:first-child {
+		border-top-left-radius: var(--radius);
+		border-bottom-left-radius: var(--radius);
+	}
+	#notepad-btns button:last-child,
+	#notepad[data-lock-status="locked"] #notepad-btns button#json-modal-button {
+		border-top-right-radius: var(--radius);
+		border-bottom-right-radius: var(--radius);
 	}
 }
 
@@ -975,14 +872,6 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 	#notepad-btns {
 		gap: 20px;
 	}
-}
-
-#notepad-btns button {
-	flex: 1 1 0;
-}
-
-#notepad-btns button:nth-last-child(1) {
-	margin-right: 0;
 }
 
 #quick-add {
@@ -996,9 +885,11 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 }
 
 #quick-add-input {
+	font-weight: 500;
 	width: calc(100% - 50px);
 	height: 50px;
-	padding: 5px 10px;
+	padding: 5px 20px;
+	border-radius: var(--radius) 0 0 var(--radius);
 }
 
 @media screen and (max-width: 767px) {
@@ -1011,6 +902,10 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 	#quick-add-input {
 		font-size: 1.5em;
 	}
+}
+
+#quick-add-button {
+	border-radius: 0 var(--radius) var(--radius) 0;
 }
 
 /* EMPTY NOTEPAD PLACEHOLDER CONTENT */
@@ -1037,18 +932,20 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 }
 
 #notepad-empty #empty-folder-svg .folder-bkg {
-	fill: #ccc;
+	fill: color-mix(in srgb, var(--bg-page-inv) 20%, transparent);
 }
 
 #notepad-empty #empty-folder-svg .folder-otl {
-	fill: #999;
+	fill: var(--primary);
 }
 
 /* NOTEPAD TABLE */
 
 #notepad-table {
 	width: 100%;
-	background-color: #000000;
+	background-color: var(--bg-page-inv);
+	border-top-left-radius: var(--radius);
+	border-top-right-radius: var(--radius);
 }
 
 #notepad-table #notepad-header {
@@ -1056,11 +953,13 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
-	color: #fff;
-	background-color: #0099cc;
+	color: var(--text-header);
+	background-color: var(--primary);
 	height: 46px;
-	border: 1px solid #000000;
-	margin: -1pt 0 0 -1pt;
+	border: 2px solid var(--border-notepad);
+	border-top-left-radius: var(--radius);
+	border-top-right-radius: var(--radius);
+	margin: -2px 0 0 0;
 }
 
 #notepad-table #notepad-header .col-2,
@@ -1070,12 +969,24 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 	justify-content: flex-end;
 }
 
-#notepad-table #notepad-header .col-2 > div {
+#notepad-table #notepad-header #color-change-all-button {
 	margin-right: 20px;
 }
 
-.no-touchevents #notepad-table #notepad-header button:hover {
-	color: #002b4a;
+@media screen and (max-width: 767px) {
+	#notepad-table #notepad-header #color-change-all-button {
+		margin-right: 10px;
+	}
+}
+
+#notepad-table #notepad-header #color-change-all-button,
+#notepad-table #notepad-header #check-all-button {
+	color: var(--text-header);
+}
+
+.no-touchevents #notepad-table #notepad-header #color-change-all-button:hover,
+.no-touchevents #notepad-table #notepad-header #check-all-button:hover {
+	color: color-mix(in srgb, var(--text-header) 50%, transparent);
 }
 
 #notepad-table #notepad-header .checkbox .fa-checkbox:before {
@@ -1104,7 +1015,7 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 }
 
 #notepad-table #notepad-header #logo-nphead .logo-nphead-path {
-	fill: #fff;
+	fill: var(--text-header);
 }
 
 #notepad-table .note-row {
@@ -1113,13 +1024,12 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 	flex-direction: row;
 	align-items: flex-start;
 	min-height: 70px;
-	border: 1px solid #000000;
-	margin: -1pt 0 0 -1pt;
+	border: 2px solid var(--border-notepad);
+	margin: -2px 0 0 0;
 	overflow: hidden;
 	-webkit-transition: background-color 0.1s linear;
 	-moz-transition: background-color 0.1s linear;
 	-o-transition: background-color 0.1s linear;
-	-ms-transition: background-color 0.1s linear;
 	transition: background-color 0.1s linear;
 }
 
@@ -1127,7 +1037,6 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 	-webkit-transition: all 0.1s linear;
 	-moz-transition: all 0.1s linear;
 	-o-transition: all 0.1s linear;
-	-ms-transition: all 0.1s linear;
 	transition: all 0.1s linear;
 }
 
@@ -1142,10 +1051,10 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 #notepad-table .note-row[data-is-checked="1"] {
 	background-image: repeating-linear-gradient(
 		45deg,
-		rgba(0, 0, 0, 0.05),
-		rgba(0, 0, 0, 0.05) 10px,
-		rgba(255, 255, 255, 0.05) 10px,
-		rgba(255, 255, 255, 0.05) 20px
+		var(--bg-stripe),
+		var(--bg-stripe) 10px,
+		transparent 10px,
+		transparent 20px
 	)
 }
 
@@ -1226,7 +1135,7 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 		margin-top: 14px;
 	}
 	#notepad-table .col-4 .note {
-		margin: 9px 0;
+		margin: 12px 0;
 	}
 	#notepad-table .col-4 {
 		width: calc(100% - 305px);
@@ -1274,17 +1183,10 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 	font-size: 1.2em;
 }
 
-#notepad-table .col-2 .spectrum,
-#notepad-table .col-4 .spectrum {
-	display: inline-block;
-	vertical-align: top;
-}
-
 #notepad-table .col-4 a {
 	-webkit-transition: all 0.1s linear;
 	-moz-transition: all 0.1s linear;
 	-o-transition: all 0.1s linear;
-	-ms-transition: all 0.1s linear;
 	transition: all 0.1s linear;
 }
 
@@ -1307,26 +1209,21 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 	opacity: 0;
 }
 
-#notepad-table .col-4 .note-tool-btns button,
-#notepad-table .col-4 .note-tool-btns .spectrum {
+#notepad-table .col-4 .note-tool-btns button {
 	-webkit-transform: scale(0);
 	-moz-transform: scale(0);
 	-o-transform: scale(0);
-	-ms-transform: scale(0);
 	transform: scale(0);
 	-webkit-transition: -webkit-transform 0.2s linear;
 	-moz-transition: -moz-transform 0.2s linear;
 	-o-transition: -o-transform 0.2s linear;
-	-ms-transition: -ms-transform 0.2s linear;
 	transition: transform 0.2s linear;
 }
 
-#notepad-table .col-4.tools-disp .note-tool-btns button,
-#notepad-table .col-4.tools-disp .note-tool-btns .spectrum {
+#notepad-table .col-4.tools-disp .note-tool-btns button {
 	-webkit-transform: scale(1);
 	-moz-transform: scale(1);
 	-o-transform: scale(1);
-	-ms-transform: scale(1);
 	transform: scale(1);
 }
 
@@ -1366,6 +1263,7 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 }
 
 #notepad-table .col-4 .note > span {
+	font-weight: 500;
 	white-space: pre-wrap;
 	white-space: -moz-pre-wrap;
 	white-space: -pre-wrap;
@@ -1377,8 +1275,7 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 		width: 200px;
 		margin-left: -100px;
 	}
-	#notepad-table .col-4 .note-tool-btns button,
-	#notepad-table .col-4 .note-tool-btns .spectrum {
+	#notepad-table .col-4 .note-tool-btns button {
 		margin-left: 10px;
 		margin-right: 10px;
 	}
@@ -1389,8 +1286,7 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 		width: 260px;
 		margin-left: -130px;
 	}
-	#notepad-table .col-4 .note-tool-btns button,
-	#notepad-table .col-4 .note-tool-btns .spectrum {
+	#notepad-table .col-4 .note-tool-btns button {
 		margin-left: 20px;
 		margin-right: 20px;
 	}
@@ -1437,14 +1333,22 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 	font-size: 18px;
 }
 
+#notepad-table .note-row .sort-button {
+	touch-action: none;
+}
+
+#notepad-table .sortable-placeholder {
+	opacity: 0.3;
+}
+
 #notepad-table .circle-1, #notepad-table .circle-2, #notepad-table .circle-3 {
 	position: absolute !important;
-	background-color: rgba(0,0,0,.25);
+	background-color: var(--bg-circle);
 	border-radius: 50%;
 	width: 150%;
 	height: 150%;
 	top: -25%;
-    left: -25%;
+	left: -25%;
 	opacity: 0;
 	animation: growAndFade 1500ms infinite ease-out;
 }
@@ -1479,7 +1383,6 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 	user-select: none;
 	-khtml-user-select: none;
 	-moz-user-select: none;
-	-ms-user-select: none;
 	-webkit-user-select: none;
 	-webkit-touch-callout: none;
 }
@@ -1501,7 +1404,6 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 	-webkit-transition: none 0s linear;
 	-moz-transition: none 0s linear;
 	-o-transition: none 0s linear;
-	-ms-transition: none 0s linear;
 	transition: none 0s linear;
 }
 
@@ -1517,7 +1419,6 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 	-webkit-transition: none 0s linear;
 	-moz-transition: none 0s linear;
 	-o-transition: none 0s linear;
-	-ms-transition: none 0s linear;
 	transition: none 0s linear;
 }
 
@@ -1529,9 +1430,7 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 
 .no-touchevents #notepad[data-lock-status="locked"] #np-desc-textarea:hover,
 #notepad[data-lock-status="locked"] #np-desc-textarea:focus,
-#notepad[data-lock-status="locked"] #np-desc-textarea:empty:focus,
-.no-touchevents #notepad[data-lock-status="locked"] #np-desc-textarea:focus:hover,
-.no-touchevents #notepad[data-lock-status="locked"] #np-desc-textarea:empty:focus:hover {
+.no-touchevents #notepad[data-lock-status="locked"] #np-desc-textarea:focus:hover {
 	cursor: auto;
 	background-color: transparent;
 }
@@ -1555,12 +1454,15 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 	margin-right: 10px;
 }
 
-#color-selector-wrapper .sp-replacer {
-	background-color: var(--white-medium-color);
+#color-selector-wrapper #edit-color-selector {
+	height: 40px;
+	width: 40px;
+	font-size: 1.7em;
+	background-color: color-mix(in srgb, var(--bg-page-inv) 50%, transparent);
 }
 
-.no-touchevents #color-selector-wrapper .sp-replacer:hover {
-	background-color: var(--white-dark-color);
+.no-touchevents #color-selector-wrapper #edit-color-selector:hover {
+	background-color: color-mix(in srgb, var(--bg-page-inv) 30%, transparent);
 }
 
 #note-text {
@@ -1568,12 +1470,11 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 	min-width: 100%;
 	min-height: 45vh;
 	font-size: 1.2em;
-	padding: 5px 10px;
+	font-weight: 500;
+	padding: 20px;
 	margin-bottom: 20px;
 	resize: vertical;
-	-webkit-box-shadow: 5px 5px 0 rgba(0,0,0,0.15);
-	-moz-box-shadow: 5px 5px 0 rgba(0,0,0,0.15);
-	box-shadow: 5px 5px 0 rgba(0,0,0,0.15);
+	border: 4px solid color-mix(in srgb, var(--bg-page-inv) 25%, transparent);
 }
 
 @media screen and (min-width: 481px) {
@@ -1590,6 +1491,7 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 
 #note-edit-btns button {
 	margin: 0 10px 0 0;
+	border-radius: var(--radius);
 }
 
 #note-edit-btns button:nth-last-child(1) {
@@ -1610,7 +1512,6 @@ body[data-offline-mode="2"] #lock-button-wrapper {
 	-webkit-transition: opacity 0.4s linear, visibility 0.4s linear;
 	-moz-transition: opacity 0.4s linear, visibility 0.4s linear;
 	-o-transition: opacity 0.4s linear, visibility 0.4s linear;
-	-ms-transition: opacity 0.4s linear, visibility 0.4s linear;
 	transition: opacity 0.4s linear, visibility 0.4s linear;
 }
 
@@ -1656,11 +1557,11 @@ body.noscroll #sticky-buttons {
 }
 
 #sticky-add {
-	color: #c43c35;
+	color: var(--bg-sticky-add);
 }
 
 .no-touchevents #sticky-add:hover {
-	color: #000000;
+	color: var(--text-default);
 }
 
 #sticky-add .fa-circle {
@@ -1673,7 +1574,6 @@ body.noscroll #sticky-buttons {
 	-webkit-transition: all 0.4s linear;
 	-moz-transition: all 0.4s linear;
 	-o-transition: all 0.4s linear;
-	-ms-transition: all 0.4s linear;
 	transition: all 0.4s linear;
 }
 
@@ -1683,13 +1583,18 @@ body.noscroll #sticky-buttons {
 }
 
 #sticky-buttons-expand-group button {
-	color: #000000;
+	color: var(--text-default);
 	opacity: 0.50;
 }
 
 .no-touchevents #sticky-buttons-expand-group button:hover {
-	color: #000000;
+	color: var(--text-default);
 	opacity: 1;
+}
+
+.no-touchevents #sticky-add:hover .fa-inverse,
+#sticky-buttons-expand-group .fa-inverse {
+	color: var(--text-inv);
 }
 
 #sticky-buttons-expand {
@@ -1707,7 +1612,6 @@ body.noscroll #sticky-buttons {
 	-webkit-transform: scale(0);
 	-moz-transform: scale(0);
 	-o-transform: scale(0);
-	-ms-transform: scale(0);
 	transform: scale(0);
 }
 
@@ -1741,226 +1645,208 @@ body.noscroll #sticky-buttons {
 /* WHITE */
 
 .note-row[data-color="0"] {
-	background-color: var(--white-color);
+	background-color: var(--color-0);
 }
 
-.note-row[data-color="0"] .sp-replacer,
 .note-row[data-color="0"] button {
-	background-color: var(--white-medium-color);
+	background-color: oklch(from var(--color-0) max(calc(l + var(--l-mid)), var(--l-floor-mid)) c h);
 }
 
-.no-touchevents .note-row[data-color="0"] .col-3 button:hover,
+.no-touchevents #notepad-table .note-row[data-color="0"] .col-3 button:hover,
 .note-row[data-color="0"] .note a:link,
 .note-row[data-color="0"] .note a:visited,
 .note-row[data-color="0"] .note a:active {
-	color: var(--white-dark-color);
+	color: oklch(from var(--color-0) max(calc(l + var(--l-dim)), var(--l-floor-dim)) c h);
 }
 
 .note-row[data-color="0"] .note span::selection,
 .note-row[data-color="0"] .note a::selection,
-.no-touchevents .note-row[data-color="0"] .sp-replacer:hover,
-.no-touchevents .note-row[data-color="0"] button:hover {
-	background-color: var(--white-dark-color);
+.no-touchevents #notepad-table .note-row[data-color="0"] button:hover {
+	background-color: oklch(from var(--color-0) max(calc(l + var(--l-dim)), var(--l-floor-dim)) c h);
 }
 
 /* GRAY */
 
 .note-row[data-color="1"] {
-	background-color: var(--gray-color);
+	background-color: var(--color-1);
 }
 
-.note-row[data-color="1"] .sp-replacer,
 .note-row[data-color="1"] button {
-	background-color: var(--gray-medium-color);
+	background-color: oklch(from var(--color-1) max(calc(l + var(--l-mid)), var(--l-floor-mid)) c h);
 }
 
-.no-touchevents .note-row[data-color="1"] .col-3 button:hover,
+.no-touchevents #notepad-table .note-row[data-color="1"] .col-3 button:hover,
 .note-row[data-color="1"] .note a:link,
 .note-row[data-color="1"] .note a:visited,
 .note-row[data-color="1"] .note a:active {
-	color: var(--gray-dark-color);
+	color: oklch(from var(--color-1) max(calc(l + var(--l-dim)), var(--l-floor-dim)) c h);
 }
 
 .note-row[data-color="1"] .note span::selection,
 .note-row[data-color="1"] .note a::selection,
-.no-touchevents .note-row[data-color="1"] .sp-replacer:hover,
-.no-touchevents .note-row[data-color="1"] button:hover {
-	background-color: var(--gray-dark-color);
+.no-touchevents #notepad-table .note-row[data-color="1"] button:hover {
+	background-color: oklch(from var(--color-1) max(calc(l + var(--l-dim)), var(--l-floor-dim)) c h);
 }
 
 /* YELLOW */
 
 .note-row[data-color="2"] {
-	background-color: var(--yellow-color);
+	background-color: var(--color-2);
 }
 
-.note-row[data-color="2"] .sp-replacer,
 .note-row[data-color="2"] button {
-	background-color: var(--yellow-medium-color);
+	background-color: oklch(from var(--color-2) max(calc(l + var(--l-mid)), var(--l-floor-mid)) c h);
 }
 
-.no-touchevents .note-row[data-color="2"] .col-3 button:hover,
+.no-touchevents #notepad-table .note-row[data-color="2"] .col-3 button:hover,
 .note-row[data-color="2"] .note a:link,
 .note-row[data-color="2"] .note a:visited,
 .note-row[data-color="2"] .note a:active {
-	color: var(--yellow-dark-color);
+	color: oklch(from var(--color-2) max(calc(l + var(--l-dim)), var(--l-floor-dim)) c h);
 }
 
 .note-row[data-color="2"] .note span::selection,
 .note-row[data-color="2"] .note a::selection,
-.no-touchevents .note-row[data-color="2"] .sp-replacer:hover,
-.no-touchevents .note-row[data-color="2"] button:hover {
-	background-color: var(--yellow-dark-color);
+.no-touchevents #notepad-table .note-row[data-color="2"] button:hover {
+	background-color: oklch(from var(--color-2) max(calc(l + var(--l-dim)), var(--l-floor-dim)) c h);
 }
 
 /* GREEN */
 
 .note-row[data-color="3"] {
-	background-color: var(--green-color);
+	background-color: var(--color-3);
 }
 
-.note-row[data-color="3"] .sp-replacer,
 .note-row[data-color="3"] button {
-	background-color: var(--green-medium-color);
+	background-color: oklch(from var(--color-3) max(calc(l + var(--l-mid)), var(--l-floor-mid)) c h);
 }
 
-.no-touchevents .note-row[data-color="3"] .col-3 button:hover,
+.no-touchevents #notepad-table .note-row[data-color="3"] .col-3 button:hover,
 .note-row[data-color="3"] .note a:link,
 .note-row[data-color="3"] .note a:visited,
 .note-row[data-color="3"] .note a:active {
-	color: var(--green-dark-color);
+	color: oklch(from var(--color-3) max(calc(l + var(--l-dim)), var(--l-floor-dim)) c h);
 }
 
 .note-row[data-color="3"] .note span::selection,
 .note-row[data-color="3"] .note a::selection,
-.no-touchevents .note-row[data-color="3"] .sp-replacer:hover,
-.no-touchevents .note-row[data-color="3"] button:hover {
-	background-color: var(--green-dark-color);
+.no-touchevents #notepad-table .note-row[data-color="3"] button:hover {
+	background-color: oklch(from var(--color-3) max(calc(l + var(--l-dim)), var(--l-floor-dim)) c h);
 }
 
 /* CYAN */
 
 .note-row[data-color="4"] {
-	background-color: var(--cyan-color);
+	background-color: var(--color-4);
 }
 
-.note-row[data-color="4"] .sp-replacer,
 .note-row[data-color="4"] button {
-	background-color: var(--cyan-medium-color);
+	background-color: oklch(from var(--color-4) max(calc(l + var(--l-mid)), var(--l-floor-mid)) c h);
 }
 
-.no-touchevents .note-row[data-color="4"] .col-3 button:hover,
+.no-touchevents #notepad-table .note-row[data-color="4"] .col-3 button:hover,
 .note-row[data-color="4"] .note a:link,
 .note-row[data-color="4"] .note a:visited,
 .note-row[data-color="4"] .note a:active {
-	color: var(--cyan-dark-color);
+	color: oklch(from var(--color-4) max(calc(l + var(--l-dim)), var(--l-floor-dim)) c h);
 }
 
 .note-row[data-color="4"] .note span::selection,
 .note-row[data-color="4"] .note a::selection,
-.no-touchevents .note-row[data-color="4"] .sp-replacer:hover,
-.no-touchevents .note-row[data-color="4"] button:hover {
-	background-color: var(--cyan-dark-color);
+.no-touchevents #notepad-table .note-row[data-color="4"] button:hover {
+	background-color: oklch(from var(--color-4) max(calc(l + var(--l-dim)), var(--l-floor-dim)) c h);
 }
 
 /* BLUE */
 
 .note-row[data-color="5"] {
-	background-color: var(--blue-color);
+	background-color: var(--color-5);
 }
 
-.note-row[data-color="5"] .sp-replacer,
 .note-row[data-color="5"] button {
-	background-color: var(--blue-medium-color);
+	background-color: oklch(from var(--color-5) max(calc(l + var(--l-mid)), var(--l-floor-mid)) c h);
 }
 
-.no-touchevents .note-row[data-color="5"] .col-3 button:hover,
+.no-touchevents #notepad-table .note-row[data-color="5"] .col-3 button:hover,
 .note-row[data-color="5"] .note a:link,
 .note-row[data-color="5"] .note a:visited,
 .note-row[data-color="5"] .note a:active {
-	color: var(--blue-dark-color);
+	color: oklch(from var(--color-5) max(calc(l + var(--l-dim)), var(--l-floor-dim)) c h);
 }
 
 .note-row[data-color="5"] .note span::selection,
 .note-row[data-color="5"] .note a::selection,
-.no-touchevents .note-row[data-color="5"] .sp-replacer:hover,
-.no-touchevents .note-row[data-color="5"] button:hover {
-	background-color: var(--blue-dark-color);
+.no-touchevents #notepad-table .note-row[data-color="5"] button:hover {
+	background-color: oklch(from var(--color-5) max(calc(l + var(--l-dim)), var(--l-floor-dim)) c h);
 }
 
 /* PURPLE */
 
 .note-row[data-color="6"] {
-	background-color: var(--purple-color);
+	background-color: var(--color-6);
 }
 
-.note-row[data-color="6"] .sp-replacer,
 .note-row[data-color="6"] button {
-	background-color: var(--purple-medium-color);
+	background-color: oklch(from var(--color-6) max(calc(l + var(--l-mid)), var(--l-floor-mid)) c h);
 }
 
-.no-touchevents .note-row[data-color="6"] .col-3 button:hover,
+.no-touchevents #notepad-table .note-row[data-color="6"] .col-3 button:hover,
 .note-row[data-color="6"] .note a:link,
 .note-row[data-color="6"] .note a:visited,
 .note-row[data-color="6"] .note a:active {
-	color: var(--purple-dark-color);
+	color: oklch(from var(--color-6) max(calc(l + var(--l-dim)), var(--l-floor-dim)) c h);
 }
 
 .note-row[data-color="6"] .note span::selection,
 .note-row[data-color="6"] .note a::selection,
-.no-touchevents .note-row[data-color="6"] .sp-replacer:hover,
-.no-touchevents .note-row[data-color="6"] button:hover {
-	background-color: var(--purple-dark-color);
+.no-touchevents #notepad-table .note-row[data-color="6"] button:hover {
+	background-color: oklch(from var(--color-6) max(calc(l + var(--l-dim)), var(--l-floor-dim)) c h);
 }
 
 /* RED */
 
 .note-row[data-color="7"] {
-	background-color: var(--red-color);
+	background-color: var(--color-7);
 }
 
-.note-row[data-color="7"] .sp-replacer,
 .note-row[data-color="7"] button {
-	background-color: var(--red-medium-color);
+	background-color: oklch(from var(--color-7) max(calc(l + var(--l-mid)), var(--l-floor-mid)) c h);
 }
 
-.no-touchevents .note-row[data-color="7"] .col-3 button:hover,
+.no-touchevents #notepad-table .note-row[data-color="7"] .col-3 button:hover,
 .note-row[data-color="7"] .note a:link,
 .note-row[data-color="7"] .note a:visited,
 .note-row[data-color="7"] .note a:active {
-	color: var(--red-dark-color);
+	color: oklch(from var(--color-7) max(calc(l + var(--l-dim)), var(--l-floor-dim)) c h);
 }
 
 .note-row[data-color="7"] .note span::selection,
 .note-row[data-color="7"] .note a::selection,
-.no-touchevents .note-row[data-color="7"] .sp-replacer:hover,
-.no-touchevents .note-row[data-color="7"] button:hover {
-	background-color: var(--red-dark-color);
+.no-touchevents #notepad-table .note-row[data-color="7"] button:hover {
+	background-color: oklch(from var(--color-7) max(calc(l + var(--l-dim)), var(--l-floor-dim)) c h);
 }
 
 /* ORANGE */
 
 .note-row[data-color="8"] {
-	background-color: var(--orange-color);
+	background-color: var(--color-8);
 }
 
-.note-row[data-color="8"] .sp-replacer,
 .note-row[data-color="8"] button {
-	background-color: var(--orange-medium-color);
+	background-color: oklch(from var(--color-8) max(calc(l + var(--l-mid)), var(--l-floor-mid)) c h);
 }
 
-.no-touchevents .note-row[data-color="8"] .col-3 button:hover,
+.no-touchevents #notepad-table .note-row[data-color="8"] .col-3 button:hover,
 .note-row[data-color="8"] .note a:link,
 .note-row[data-color="8"] .note a:visited,
 .note-row[data-color="8"] .note a:active {
-	color: var(--orange-dark-color);
+	color: oklch(from var(--color-8) max(calc(l + var(--l-dim)), var(--l-floor-dim)) c h);
 }
 
 .note-row[data-color="8"] .note span::selection,
 .note-row[data-color="8"] .note a::selection,
-.no-touchevents .note-row[data-color="8"] .sp-replacer:hover,
-.no-touchevents .note-row[data-color="8"] button:hover {
-	background-color: var(--orange-dark-color);
+.no-touchevents #notepad-table .note-row[data-color="8"] button:hover {
+	background-color: oklch(from var(--color-8) max(calc(l + var(--l-dim)), var(--l-floor-dim)) c h);
 }
 
 /* BLACK OR NULL */
@@ -1969,17 +1855,17 @@ body.noscroll #sticky-buttons {
 .note-row[data-color="null"] button,
 .note-row[data-color="null"] .note span::selection,
 .note-row[data-color="null"] .note a::selection,
-.no-touchevents .note-row[data-color="null"] button:hover {
-	background-color: #000000;
+.no-touchevents #notepad-table .note-row[data-color="null"] button:hover {
+	background-color: #000;
 }
 
 .note-row[data-color="null"] .note a:link,
 .note-row[data-color="null"] .note a:visited,
 .note-row[data-color="null"] .note a:active,
-.no-touchevents .note-row[data-color="null"] .note a:hover,
+.no-touchevents #notepad-table .note-row[data-color="null"] .note a:hover,
 .note-row[data-color="null"] .note span::selection,
 .note-row[data-color="null"] .note a::selection {
-	color: #000000;
+	color: #000;
 }
 
 /* SHARED */
@@ -1993,13 +1879,14 @@ body.noscroll #sticky-buttons {
 .note-row[data-color="6"] .note span::selection, .note-row[data-color="6"] .note a::selection,
 .note-row[data-color="7"] .note span::selection, .note-row[data-color="7"] .note a::selection,
 .note-row[data-color="8"] .note span::selection, .note-row[data-color="8"] .note a::selection {
-	color: #ffffff;
+	color: #fff;
 }
 
 .note-row button,
-.no-touchevents .note-row button:hover,
-.no-touchevents .note-row .note a:hover {
-	color: #000000;
+.no-touchevents #notepad-table .note-row button:hover,
+.no-touchevents #notepad-table .note-row .note a:hover,
+#note-text {
+	color: var(--text-default);
 }
 
 .note-row button:disabled,
@@ -2014,154 +1901,94 @@ body.noscroll #sticky-buttons {
 	)
 }
 
-/* SPECTRUM MODS */
+/* PALETTE PICKER */
 
-/* buttons */
-
-.sp-replacer {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	justify-content: center;
-	width: 40px;
-	height: 40px;
-	padding: 0;
-	margin: 0;
-	border: none;
-	-webkit-border-radius: 50%;
-	-moz-border-radius: 50%;
-	border-radius: 50%;
-	transition: all .1s linear;
-}
-
-.sp-replacer:active {
-	position: relative;
-	top: 1px;
-}
-
-.sp-dd {
-	display: none;
-}
-
-.sp-preview {
-	font-family: 'icomoon' !important;
-	font-size: 30px;
-	width: 30px;
-	height: 30px;
-	margin: 0;
-	border: none;
-	color: #000;
-}
-
-.sp-preview:before {
-	content: "\2728";
-}
-
-.sp-preview, .sp-alpha, .sp-thumb-el {
-	background-image: none;
-}
-
-.sp-preview-inner {
-	display: none;
-}
-
-/* palette */
-
-.sp-container {
-	background-color: #282828;
-	border: none;
-	visibility: visible;
-	opacity: 1;
+.pp-popup {
+	visibility: hidden;
+	opacity: 0;
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 1000;
+	background-color: var(--bg-page-inv);
+	padding: 20px;
+	border-radius: var(--radius);
+	box-shadow: 0 4px 16px rgba(0,0,0,0.4);
 	-webkit-transition: opacity 0.3s linear;
 	-moz-transition: opacity 0.3s linear;
 	-o-transition: opacity 0.3s linear;
-	-ms-transition: opacity 0.3s linear;
 	transition: opacity 0.3s linear;
 }
 
-.sp-container.sp-hidden {
-	visibility: hidden;
-	opacity: 0;
+.pp-popup.pp-open {
+	visibility: visible;
+	opacity: 1;
 }
 
-#app .sp-hidden {
-	display: inline-block !important;
+.pp-label {
+	grid-column: 1 / -1;
+	color: var(--text-inv);
+	line-height: 18px;
+	font-size: 18px;
+	font-weight: 700;
+	text-align: center;
+	text-transform: uppercase;
 }
 
-.sp-container .sp-palette-container {
+.pp-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 40px);
+	gap: 12px;
+	-webkit-transform: scale(0);
+	-moz-transform: scale(0);
+	-o-transform: scale(0);
+	transform: scale(0);
+	transform-origin: top center;
+}
+
+.pp-popup.pp-open .pp-grid {
 	-webkit-transform: scale(1);
 	-moz-transform: scale(1);
 	-o-transform: scale(1);
-	-ms-transform: scale(1);
 	transform: scale(1);
-	transform-origin: top center;
 	-webkit-transition: -webkit-transform 0.4s cubic-bezier(.47,1.64,.41,.8);
 	-moz-transition: -moz-transform 0.4s cubic-bezier(.47,1.64,.41,.8);
 	-o-transition: -o-transform 0.4s cubic-bezier(.47,1.64,.41,.8);
-	-ms-transition: -ms-transform 0.4s cubic-bezier(.47,1.64,.41,.8);
 	transition: transform 0.4s cubic-bezier(.47,1.64,.41,.8);
 	transition-delay: 0.2s;
 }
 
-.sp-container.sp-hidden .sp-palette-container {
-	-webkit-transform: scale(0);
-	-moz-transform: scale(0);
-	-o-transform: scale(0);
-	-ms-transform: scale(0);
-	transform: scale(0);
-}
-
-.sp-palette .sp-thumb-el {
-	width: 35px;
-	height: 35px;
-	margin: 7px;
+.pp-swatch {
+	width: 40px;
+	height: 40px;
 	border: none;
+	cursor: pointer;
+	padding: 0;
+	transition: transform 0.15s ease;
 }
 
-.sp-palette .sp-thumb-inner {
-	width: 37px;
-	height: 37px;
-	margin: -1px 0 0 -1px;
-	border: none;
-	box-sizing: border-box;
+.no-touchevents .pp-swatch:hover {
+	transform: scale(1.15);
 }
 
-.no-touchevents .sp-palette .sp-thumb-inner:hover {
-	border: 3px solid #ff0000;
-}
-
-.sp-palette .sp-thumb-light.sp-thumb-active .sp-thumb-inner,
-.sp-palette .sp-thumb-dark.sp-thumb-active .sp-thumb-inner {
+.pp-swatch.active {
+	position: relative;
 	background-image: none;
 	font-family: 'icomoon' !important;
 	font-size: 25px;
 }
 
-.sp-palette .sp-thumb-active .sp-thumb-inner:before {
+.pp-swatch.active::after {
 	content: "\2714";
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	font-family: 'icomoon' !important;
+	font-size: 25px;
 	display: block;
-	margin: 6px;
-}
-
-.no-touchevents .sp-palette .sp-thumb-active .sp-thumb-inner:hover:before {
-	margin: 3px;
-}
-
-/* change all container */
-
-.sp-container.sp-clear-enabled .sp-palette-container {
-	width: 147px;
-}
-
-.sp-container.sp-clear-enabled .sp-palette-container:before {
-	display: block;
-	color: #fff;
-	line-height: 18px;
-	font-size: 18px;
-	font-weight: bold;
-	text-align: center;
-	text-transform: uppercase;
-	margin-bottom: 5px;
+	pointer-events: none;
+	color: var(--text-default);
 }
 
 /* PRIMER TOOLTIPS v2.7.0 */
@@ -2177,7 +2004,7 @@ body.noscroll #sticky-buttons {
 	display: none;
 	padding: 5px 8px;
 	font: normal normal 11px/1.5 Helvetica, arial, nimbussansl, liberationsans, freesans, clean, sans-serif;
-	color: #fff;
+	color: var(--text-inv);
 	text-align: center;
 	text-decoration: none;
 	text-shadow: none;
@@ -2187,7 +2014,7 @@ body.noscroll #sticky-buttons {
 	white-space: pre;
 	pointer-events: none;
 	content: attr(aria-label);
-	background: rgba(0, 0, 0, 0.8);
+	background: var(--text-default);
 	border-radius: 3px;
 	-webkit-font-smoothing: subpixel-antialiased;
 }
@@ -2198,7 +2025,7 @@ body.noscroll #sticky-buttons {
 	display: none;
 	width: 0;
 	height: 0;
-	color: rgba(0, 0, 0, 0.8);
+	color: var(--text-default);
 	pointer-events: none;
 	content: "";
 	border: 5px solid transparent;
@@ -2234,7 +2061,7 @@ body.noscroll #sticky-buttons {
 	right: 50%;
 	bottom: -5px;
 	margin-right: -5px;
-	border-bottom-color: rgba(0, 0, 0, 0.8);
+	border-bottom-color: var(--text-default);
 }
 
 .tooltipped-se::after {
@@ -2262,7 +2089,7 @@ body.noscroll #sticky-buttons {
 	right: 50%;
 	bottom: auto;
 	margin-right: -5px;
-	border-top-color: rgba(0, 0, 0, 0.8);
+	border-top-color: var(--text-default);
 }
 
 .tooltipped-ne::after {
@@ -2292,7 +2119,7 @@ body.noscroll #sticky-buttons {
 	bottom: 50%;
 	left: -5px;
 	margin-top: -5px;
-	border-left-color: rgba(0, 0, 0, 0.8);
+	border-left-color: var(--text-default);
 }
 
 .tooltipped-e::after {
@@ -2307,7 +2134,7 @@ body.noscroll #sticky-buttons {
 	right: -5px;
 	bottom: 50%;
 	margin-top: -5px;
-	border-right-color: rgba(0, 0, 0, 0.8);
+	border-right-color: var(--text-default);
 }
 
 .tooltipped-multiline::after {
@@ -2343,504 +2170,8 @@ body.noscroll #sticky-buttons {
 	display: table-cell;
 }
 
-/* LOADING ANIMATIONS */
+/* THEME 1 (DARK) */
 
-/* circle */
-.loading-circle {
-	display: inline-block;
-	position: relative;
-	width: 64px;
-	height: 64px;
-}
-.loading-circle div {
-	animation: loading-roller 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-	transform-origin: 32px 32px;
-}
-.loading-circle div:after {
-	content: " ";
-	display: block;
-	position: absolute;
-	width: 6px;
-	height: 6px;
-	border-radius: 50%;
-	margin: -3px 0 0 -3px;
-}
-.loading-circle div:nth-child(1) {
-	animation-delay: -0.036s;
-}
-.loading-circle div:nth-child(1):after {
-	top: 50px;
-	left: 50px;
-}
-.loading-circle div:nth-child(2) {
-	animation-delay: -0.072s;
-}
-.loading-circle div:nth-child(2):after {
-	top: 54px;
-	left: 45px;
-}
-.loading-circle div:nth-child(3) {
-	animation-delay: -0.108s;
-}
-.loading-circle div:nth-child(3):after {
-	top: 57px;
-	left: 39px;
-}
-.loading-circle div:nth-child(4) {
-	animation-delay: -0.144s;
-}
-.loading-circle div:nth-child(4):after {
-	top: 58px;
-	left: 32px;
-}
-.loading-circle div:nth-child(5) {
-	animation-delay: -0.18s;
-}
-.loading-circle div:nth-child(5):after {
-	top: 57px;
-	left: 25px;
-}
-.loading-circle div:nth-child(6) {
-	animation-delay: -0.216s;
-}
-.loading-circle div:nth-child(6):after {
-	top: 54px;
-	left: 19px;
-}
-.loading-circle div:nth-child(7) {
-	animation-delay: -0.252s;
-}
-.loading-circle div:nth-child(7):after {
-	top: 50px;
-	left: 14px;
-}
-.loading-circle div:nth-child(8) {
-	animation-delay: -0.288s;
-}
-.loading-circle div:nth-child(8):after {
-	top: 45px;
-	left: 10px;
-}
-@keyframes loading-roller {
-	0% {
-		transform: rotate(0deg);
-	}
-	100% {
-		transform: rotate(360deg);
-	}
-}
-
-/* placeholder */
-.loading-placeholder {
-	display: inline-block;
-}
-.loading-placeholder > div {
-	display: inline-block;
-	width: 4px;
-	height: 18px;
-	border-radius: 4px;
-	margin: 0 2px;
-	animation: loading-wave 1s ease-in-out infinite;
-}
-.loading-placeholder > div:nth-child(1) {
-	background-color: #3498db;
-	animation-delay: 0;
-}
-.loading-placeholder > div:nth-child(2) {
-	background-color: #c0392b;
-	animation-delay: 0.09s;
-}
-.loading-placeholder > div:nth-child(3) {
-	background-color: #f1c40f;
-	animation-delay: .18s;
-}
-.loading-placeholder > div:nth-child(4) {
-	background-color: #27ae60;
-	animation-delay: .27s;
-}
-
-@keyframes loading-wave {
-	0% {
-		transform: scale(1);
-	}
-	20% {
-		transform: scale(1, 2.2);
-	}
-	40% {
-		transform: scale(1);
-	}
-}
-
-/* DARK MODE */
-
-body[data-dark-mode="1"] .logo-homepage-path {
-	fill: #fff;
-}
-
-body[data-dark-mode="1"] #modal {
-	background: rgba(255,255,255,.35);
-}
-
-body[data-dark-mode="1"] #modal #modal-window {
-	background: #000;
-}
-
-body[data-dark-mode="1"] #modal #modal-window #modal-close {
-	color: #fff;
-}
-
-body[data-dark-mode="1"] #modal #modal-window #lock-password-input-1, body[data-dark-mode="1"] #modal #modal-window #lock-password-input-2, body[data-dark-mode="1"] #modal #modal-window #unlock-password-input {
-	background-color: rgba(255,255,255,.2);
-}
-
-body[data-dark-mode="1"] #modal #modal-window #lock-password-input-1.invalid:focus, body[data-dark-mode="1"] #modal #modal-window #lock-password-input-2.invalid:focus, body[data-dark-mode="1"] #modal #modal-window #unlock-password-input.invalid:focus {
-	background-color: rgba(255,255,255,.3);
-}
-
-body[data-dark-mode="1"] #modal #modal-window #lock-password-input-1:focus, body[data-dark-mode="1"] #modal #modal-window #lock-password-input-2:focus, body[data-dark-mode="1"] #modal #modal-window #unlock-password-input:focus,
-.no-touchevents body[data-dark-mode="1"] #modal #modal-window #json-wrapper a:hover {
-	color: rgba(0,128,0,.75);
-	background-color: rgba(0,128,0,.5);
-}
-
-body[data-dark-mode="1"] #modal #modal-window #json-wrapper a {
-	color: rgba(255,255,255,.35);
-	background-color: rgba(255,255,255,.2);
-}
-
-body[data-dark-mode="1"] #popup-status {
-	background-color: #eee;
-	color: #282828;
-}
-
-body#app[data-dark-mode="1"] #app-toolbar {
-	background-color: #eee;
-}
-
-body[data-dark-mode="1"] #app-toolbar #app-toolbar-handle-background {
-	border-right: 20px solid #eee;
-}
-
-body[data-dark-mode="1"] #app-toolbar #app-toolbar-status-wrapper {
-	background-color: rgba(0,0,0,0.2);
-}
-
-body[data-dark-mode="1"] #app-toolbar #app-toolbar-status-wrapper > span {
-	color: #282828;
-}
-
-body[data-dark-mode="1"] #recent-notepads-button:after {
-	text-shadow: 0 0 0 #282828;
-}
-
-body[data-dark-mode="1"] #recent-notepads button {
-	border-bottom: 1pt solid #fff;
-}
-
-body[data-dark-mode="1"] #notepad-table #notepad-header button {
-	color: #fff;
-}
-
-.no-touchevents body[data-dark-mode="1"] #header #app-header-wrapper #offline-button:hover,
-.no-touchevents body[data-dark-mode="1"] #notepad-table #notepad-header button:hover {
-	color: #6e99a8;
-}
-
-body[data-offline-mode="1"][data-dark-mode="1"] #header #app-header-wrapper #offline-button #offline-button-label,
-body[data-offline-mode="2"][data-dark-mode="1"] #header #app-header-wrapper #offline-button #offline-button-label {
-	color: #004d66;
-}
-
-body[data-dark-mode="1"] #np-rename-input:focus {
-	background-color: #000;
-}
-
-body[data-dark-mode="1"] #np-desc-textarea:empty {
-	color: rgba(255,255,255,.35);
-	background-color: #000;
-}
-
-body[data-dark-mode="1"] #lock-button {
-	background-color: #545454;
-}
-
-.no-touchevents body[data-dark-mode="1"] #np-desc-textarea:hover,
-.no-touchevents body[data-dark-mode="1"] #np-desc-textarea:focus {
-	background-color: #000;
-}
-
-.no-touchevents body[data-dark-mode="1"] #np-desc-textarea:empty:hover {
-	color: rgba(255,255,255,.5);
-	background-color: #000;
-}
-
-body[data-dark-mode="1"] #notepad-table #notepad-header {
-	background-color: #004d66;
-}
-
-body[data-dark-mode="1"] #notepad-table #notepad-header,
-body[data-dark-mode="1"] #notepad-table .note-row {
-	border: 1pt solid #fff;
-}
-
-body[data-dark-mode="1"] .sp-preview,
-body[data-dark-mode="1"] .note-row button,
-.no-touchevents body[data-dark-mode="1"] .note-row button:hover,
-.no-touchevents body[data-dark-mode="1"] .note-row .note a:hover,
-.no-touchevents body[data-dark-mode="1"] #sticky-add:hover,
-body[data-dark-mode="1"] #sticky-buttons-expand-group button,
-.no-touchevents body[data-dark-mode="1"] #sticky-buttons-expand-group button:hover,
-body[data-dark-mode="1"] #note-text {
-	color: #fff;
-}
-
-.no-touchevents body[data-dark-mode="1"] #sticky-add:hover .fa-inverse,
-body[data-dark-mode="1"] #sticky-buttons-expand-group .fa-inverse {
-	color: #282828;
-}
-
-body[data-dark-mode="1"] #notepad-table .circle-1,
-body[data-dark-mode="1"] #notepad-table .circle-2,
-body[data-dark-mode="1"] #notepad-table .circle-3 {
-	background-color: rgba(255,255,255,.5);
-}
-
-body[data-dark-mode="1"] .tooltipped::after {
-	color: #282828;
-	background: #fff;
-}
-
-body[data-dark-mode="1"] .tooltipped::before {
-	color: #fff;
-}
-
-body[data-dark-mode="1"] #notepad-table .note-row[data-is-checked="1"][data-color="0"] {
-	background-image: repeating-linear-gradient(
-		45deg,
-		rgba(0, 0, 0, 0.15),
-		rgba(0, 0, 0, 0.15) 10px,
-		rgba(255, 255, 255, 0.15) 10px,
-		rgba(255, 255, 255, 0.15) 20px
-	)
-}
-
-body[data-dark-mode="1"] .note-row[data-color="0"] {
-	background-color: var(--dark-white-color);
-}
-
-body[data-dark-mode="1"] .note-row[data-color="0"] .sp-replacer,
-body[data-dark-mode="1"] .note-row[data-color="0"] button {
-	background-color: var(--dark-white-medium-color);
-}
-
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="0"] .col-3 button:hover,
-body[data-dark-mode="1"] .note-row[data-color="0"] .note a:link,
-body[data-dark-mode="1"] .note-row[data-color="0"] .note a:visited,
-body[data-dark-mode="1"] .note-row[data-color="0"] .note a:active {
-	color: var(--dark-white-light-color);
-}
-
-body[data-dark-mode="1"] .note-row[data-color="0"] .note span::selection,
-body[data-dark-mode="1"] .note-row[data-color="0"] .note a::selection,
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="0"] .sp-replacer:hover,
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="0"] button:hover {
-	background-color: var(--dark-white-light-color);
-}
-
-body[data-dark-mode="1"] .note-row[data-color="1"] {
-	background-color: var(--dark-gray-color);
-}
-
-body[data-dark-mode="1"] .note-row[data-color="1"] .sp-replacer,
-body[data-dark-mode="1"] .note-row[data-color="1"] button,
-body[data-dark-mode="1"] #color-selector-wrapper .sp-replacer {
-	background-color: var(--dark-gray-medium-color);
-}
-
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="1"] .col-3 button:hover,
-body[data-dark-mode="1"] .note-row[data-color="1"] .note a:link,
-body[data-dark-mode="1"] .note-row[data-color="1"] .note a:visited,
-body[data-dark-mode="1"] .note-row[data-color="1"] .note a:active {
-	color: var(--dark-gray-light-color);
-}
-
-body[data-dark-mode="1"] .note-row[data-color="1"] .note span::selection,
-body[data-dark-mode="1"] .note-row[data-color="1"] .note a::selection,
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="1"] .sp-replacer:hover,
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="1"] button:hover,
-.no-touchevents body[data-dark-mode="1"] #color-selector-wrapper .sp-replacer:hover {
-	background-color: var(--dark-gray-light-color);
-}
-
-body[data-dark-mode="1"] .note-row[data-color="2"] {
-	background-color: var(--dark-yellow-color);
-}
-
-body[data-dark-mode="1"] .note-row[data-color="2"] .sp-replacer,
-body[data-dark-mode="1"] .note-row[data-color="2"] button {
-	background-color: var(--dark-yellow-medium-color);
-}
-
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="2"] .col-3 button:hover,
-body[data-dark-mode="1"] .note-row[data-color="2"] .note a:link,
-body[data-dark-mode="1"] .note-row[data-color="2"] .note a:visited,
-body[data-dark-mode="1"] .note-row[data-color="2"] .note a:active {
-	color: var(--dark-yellow-light-color);
-}
-
-body[data-dark-mode="1"] .note-row[data-color="2"] .note span::selection,
-body[data-dark-mode="1"] .note-row[data-color="2"] .note a::selection,
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="2"] .sp-replacer:hover,
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="2"] button:hover {
-	background-color: var(--dark-yellow-light-color);
-}
-
-body[data-dark-mode="1"] .note-row[data-color="3"] {
-	background-color: var(--dark-green-color);
-}
-
-body[data-dark-mode="1"] .note-row[data-color="3"] .sp-replacer,
-body[data-dark-mode="1"] .note-row[data-color="3"] button {
-	background-color: var(--dark-green-medium-color);
-}
-
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="3"] .col-3 button:hover,
-body[data-dark-mode="1"] .note-row[data-color="3"] .note a:link,
-body[data-dark-mode="1"] .note-row[data-color="3"] .note a:visited,
-body[data-dark-mode="1"] .note-row[data-color="3"] .note a:active {
-	color: var(--dark-green-light-color);
-}
-
-body[data-dark-mode="1"] .note-row[data-color="3"] .note span::selection,
-body[data-dark-mode="1"] .note-row[data-color="3"] .note a::selection,
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="3"] .sp-replacer:hover,
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="3"] button:hover {
-	background-color: var(--dark-green-light-color);
-}
-
-body[data-dark-mode="1"] .note-row[data-color="4"] {
-	background-color: var(--dark-cyan-color);
-}
-
-body[data-dark-mode="1"] .note-row[data-color="4"] .sp-replacer,
-body[data-dark-mode="1"] .note-row[data-color="4"] button {
-	background-color: var(--dark-cyan-medium-color);
-}
-
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="4"] .col-3 button:hover,
-body[data-dark-mode="1"] .note-row[data-color="4"] .note a:link,
-body[data-dark-mode="1"] .note-row[data-color="4"] .note a:visited,
-body[data-dark-mode="1"] .note-row[data-color="4"] .note a:active {
-	color: var(--dark-cyan-light-color);
-}
-
-body[data-dark-mode="1"] .note-row[data-color="4"] .note span::selection,
-body[data-dark-mode="1"] .note-row[data-color="4"] .note a::selection,
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="4"] .sp-replacer:hover,
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="4"] button:hover {
-	background-color: var(--dark-cyan-light-color);
-}
-
-body[data-dark-mode="1"] .note-row[data-color="5"] {
-	background-color: var(--dark-blue-color);
-}
-
-body[data-dark-mode="1"] .note-row[data-color="5"] .sp-replacer,
-body[data-dark-mode="1"] .note-row[data-color="5"] button {
-	background-color: var(--dark-blue-medium-color);
-}
-
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="5"] .col-3 button:hover,
-body[data-dark-mode="1"] .note-row[data-color="5"] .note a:link,
-body[data-dark-mode="1"] .note-row[data-color="5"] .note a:visited,
-body[data-dark-mode="1"] .note-row[data-color="5"] .note a:active {
-	color: var(--dark-blue-light-color);
-}
-
-body[data-dark-mode="1"] .note-row[data-color="5"] .note span::selection,
-body[data-dark-mode="1"] .note-row[data-color="5"] .note a::selection,
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="5"] .sp-replacer:hover,
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="5"] button:hover {
-	background-color: var(--dark-blue-light-color);
-}
-
-body[data-dark-mode="1"] .note-row[data-color="6"] {
-	background-color: var(--dark-purple-color);
-}
-
-body[data-dark-mode="1"] .note-row[data-color="6"] .sp-replacer,
-body[data-dark-mode="1"] .note-row[data-color="6"] button {
-	background-color: var(--dark-purple-medium-color);
-}
-
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="6"] .col-3 button:hover,
-body[data-dark-mode="1"] .note-row[data-color="6"] .note a:link,
-body[data-dark-mode="1"] .note-row[data-color="6"] .note a:visited,
-body[data-dark-mode="1"] .note-row[data-color="6"] .note a:active {
-	color: var(--dark-purple-light-color);
-}
-
-body[data-dark-mode="1"] .note-row[data-color="6"] .note span::selection,
-body[data-dark-mode="1"] .note-row[data-color="6"] .note a::selection,
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="6"] .sp-replacer:hover,
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="6"] button:hover {
-	background-color: var(--dark-purple-light-color);
-}
-
-body[data-dark-mode="1"] .note-row[data-color="7"] {
-	background-color: var(--dark-red-color);
-}
-
-body[data-dark-mode="1"] .note-row[data-color="7"] .sp-replacer,
-body[data-dark-mode="1"] .note-row[data-color="7"] button {
-	background-color: var(--dark-red-medium-color);
-}
-
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="7"] .col-3 button:hover,
-body[data-dark-mode="1"] .note-row[data-color="7"] .note a:link,
-body[data-dark-mode="1"] .note-row[data-color="7"] .note a:visited,
-body[data-dark-mode="1"] .note-row[data-color="7"] .note a:active {
-	color: var(--dark-red-light-color);
-}
-
-body[data-dark-mode="1"] .note-row[data-color="7"] .note span::selection,
-body[data-dark-mode="1"] .note-row[data-color="7"] .note a::selection,
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="7"] .sp-replacer:hover,
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="7"] button:hover {
-	background-color: var(--dark-red-light-color);
-}
-
-body[data-dark-mode="1"] .note-row[data-color="8"] {
-	background-color: var(--dark-orange-color);
-}
-
-body[data-dark-mode="1"] .note-row[data-color="8"] .sp-replacer,
-body[data-dark-mode="1"] .note-row[data-color="8"] button {
-	background-color: var(--dark-orange-medium-color);
-}
-
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="8"] .col-3 button:hover,
-body[data-dark-mode="1"] .note-row[data-color="8"] .note a:link,
-body[data-dark-mode="1"] .note-row[data-color="8"] .note a:visited,
-body[data-dark-mode="1"] .note-row[data-color="8"] .note a:active {
-	color: var(--dark-orange-light-color);
-}
-
-body[data-dark-mode="1"] .note-row[data-color="8"] .note span::selection,
-body[data-dark-mode="1"] .note-row[data-color="8"] .note a::selection,
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="8"] .sp-replacer:hover,
-.no-touchevents body[data-dark-mode="1"] .note-row[data-color="8"] button:hover {
-	background-color: var(--dark-orange-light-color);
-}
-
-.no-touchevents body[data-dark-mode="1"] .note-row .note a:hover {
-	color: #fff;
-}
-
-body[data-dark-mode="1"] .sp-container {
-	background-color: #eee;
-}
-
-body[data-dark-mode="1"] .sp-container.sp-clear-enabled .sp-palette-container:before {
-	color: #000;
+body[data-theme="1"] .note-row[data-color="0"] {
+	--bg-stripe: rgba(255,255,255,0.12);
 }

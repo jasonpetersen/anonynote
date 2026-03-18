@@ -23,11 +23,11 @@ I keep numerous notepads for different purposes.
 
 One notepad is a to-do list for my current job. I re-order, check off, and delete things as I complete them.
 
-I manage 40+ computers at my office. I frequently utilize disposable notepads for things like serial numbers and long URLs that I need to access on a dozen computers at a time.
+I once managed 40+ computers at my office. I frequently utilize disposable notepads for things like serial numbers and long URLs that I need to access on a dozen computers at a time.
 
 I store bits of code in another notepad. Miscellaneous code always comes in handy for a developer.
 
-My partner and I share a grocery list. Previously, we used post-it notes. Now, we can both carry around the grocery list on our phones. If there's no cell reception at the store, it works offline and can be synced later.
+My wife and I share a grocery list. Now we can both carry around the grocery list on our phones. If there's no cell reception at the store, it works offline and can be synced later.
 
 What could you use Anonynote for?
 
@@ -35,4 +35,4 @@ What could you use Anonynote for?
 
 Anonynote began life in 2014 on [Peterscene 1.0](https://peterscene.com), the first iteration of my personal website. I was constantly emailing myself data to access on other computers, and created this app out of that need. After continued use, I decided to spin it off onto its own website.
 
-It went through design and feature upgrades for a few years, but went through a significant overhaul in 2019 to make it a Progressive Web App.
+It went through design and feature upgrades for a few years, but went through a significant overhaul in 2019 to make it a Progressive Web App. It went through a second significant overhaul in 2026.
