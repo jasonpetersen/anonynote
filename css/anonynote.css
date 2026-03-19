@@ -346,20 +346,23 @@ body[data-offline-mode="2"] #header #app-header-wrapper #icon-status {
 	border-radius: var(--radius);
 	height: auto;
 	max-height: 90vh;
+	overflow: hidden;
 	width: 90vw;
 	max-width: 767px;
 	z-index: 20001;
 	opacity: 0;
-	margin-top: 30vh;
-	-webkit-transition: opacity 0.4s ease-out, margin-top 0.4s ease-out;
-	-moz-transition: opacity 0.4s ease-out, margin-top 0.4s ease-out;
-	-o-transition: opacity 0.4s ease-out, margin-top 0.4s ease-out;
-	transition: opacity 0.4s ease-out, margin-top 0.4s ease-out;
+	-webkit-transform: translateZ(0) translateY(30vh);
+	transform: translateZ(0) translateY(30vh);
+	-webkit-transition: opacity 0.4s ease-out, -webkit-transform 0.4s ease-out;
+	-moz-transition: opacity 0.4s ease-out, -moz-transform 0.4s ease-out;
+	-o-transition: opacity 0.4s ease-out, -o-transform 0.4s ease-out;
+	transition: opacity 0.4s ease-out, transform 0.4s ease-out;
 }
 
 #modal.display #modal-window {
 	opacity: 1;
-	margin-top: 0;
+	-webkit-transform: translateZ(0) translateY(0);
+	transform: translateZ(0) translateY(0);
 }
 
 #modal #modal-window #modal-close {
@@ -641,6 +644,7 @@ body[data-offline-mode="2"] #header #app-header-wrapper #icon-status {
 
 #recent-notepads button {
 	border-bottom: 1pt solid var(--text-default);
+	border-radius: 0;
 }
 
 #recent-notepads button:last-child {

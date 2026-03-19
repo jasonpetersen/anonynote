@@ -65,7 +65,7 @@ body[data-theme="1"] {/* THEME 1 (DARK) */
 }
 
 body[data-theme="2"] {/* THEME 2 (DESERT SUNSET) */
-	--primary: #9e3d10;
+	--primary: #ae312b;
 	--bg-page: #d4b48c;
 	--bg-page-inv: #1e0e04;
 	--bg-input: #eedcb8;
@@ -74,37 +74,26 @@ body[data-theme="2"] {/* THEME 2 (DESERT SUNSET) */
 	--bg-circle: rgba(0,0,0,0.25);
 	--bg-stripe: rgba(0,0,0,0.06);
 	--bg-success: rgba(0,128,0,0.25);
-	--bg-sticky-add: #c43c35;
+	--bg-sticky-add: #ae312b;
 	--text-default: #1e0e04;
 	--text-inv: #f0e4c8;
 	--text-header: #ffffff;
-	--text-link: #9e3d10;
-	--text-success: rgba(0,128,0,0.5);
+	--text-link: #ae312b;
+	--text-success: rgba(2, 2, 2, 0.5);
 	--border-notepad: #1e0e04;
 	--radius: 10px;
 	--btn-color-text: #ffffff;
-	--btn-red: #c43c35;
-	--btn-green: #57a957;
-	--btn-blue: #3c35c4;
-	--btn-cyan: #269ce9;
-	--btn-magenta: #c435bd;
-	--btn-yellow: #bdc435;
-	--btn-orange: #c48335;
+	--btn-red: #ae312b;
+	--btn-green: #44c294;
+	--btn-blue: #204d64;
+	--btn-cyan: #588dad;
+	--btn-magenta: #e55135;
+	--btn-yellow: #efaa36;
+	--btn-orange: #ec7a22;
 	--dis-bg-mix: white;
 	--dis-bg-pct: 40%;
 	--dis-text-mix: white;
 	--dis-text-pct: 20%;
-}
-
-body[data-theme="2"] {/* Desert Sunset specific mod, to create a sunset body background */
-	background: linear-gradient(
-		to bottom,
-		var(--color-5)  0%,
-		var(--color-6)  10%,
-		var(--color-7)  40%,
-		var(--color-8)  70%,
-		var(--color-2)  100%
-	) fixed;
 }
 
 /* FOUNDATION STYLES */

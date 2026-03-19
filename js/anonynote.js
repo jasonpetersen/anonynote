@@ -3213,34 +3213,35 @@ function modalToggle(op) {
 	switch (op) {
 		case "on":
 			modalScroll = window.scrollY;
-			let offsetY = `${window.scrollY * (-1)}px`;
-			document.getElementById('modal').classList.add('display');
+			let offsetY = `${modalScroll * (-1)}px`;
+			let footerLocationCalc = window.innerHeight - document.getElementById('container').clientHeight - document.getElementById('header').clientHeight;
+			let _footer = document.getElementById('footer');
+			let footerHeight = _footer.clientHeight;
+			let isIE11 = document.documentElement.classList.contains('ie11');
 			document.addEventListener("keyup", modalEsc);
 			document.body.classList.add('noscroll');
 			document.body.style.top = offsetY;
-			let footerLocationCalc = window.innerHeight - document.getElementById('container').clientHeight - document.getElementById('header').clientHeight;
 			if (footerLocationCalc <= 110) {
-				let _footer = document.getElementById('footer');
-				if (document.documentElement.classList.contains('ie11')) {
-					_footer.style.position = 'relative';
-					_footer.style.marginTop = '0';
-				} else {
-					_footer.style.position = 'relative';
-					_footer.style.marginTop = `${_footer.clientHeight * -1}px`;
-				}
+				_footer.style.position = 'relative';
+				_footer.style.marginTop = isIE11 ? '0' : `${footerHeight * -1}px`;
 			}
+			requestAnimationFrame(() => {
+				document.getElementById('modal').classList.add('display');
+			});
 			break;
 		case "off":
-			let _footer = document.getElementById('footer');
-			_footer.style.position = '';
-			_footer.style.marginTop = '';
-			document.body.classList.remove('noscroll');
-			document.body.style.top = '';
 			document.getElementById('modal').classList.remove('display');
 			document.getElementById('modal-window').innerHTML = '';
 			document.removeEventListener("keyup", modalEsc);
-			window.scrollTo(0, modalScroll);
 			modalForce = false;
+			requestAnimationFrame(() => {
+				let _footer = document.getElementById('footer');
+				_footer.style.position = '';
+				_footer.style.marginTop = '';
+				document.body.classList.remove('noscroll');
+				document.body.style.top = '';
+				window.scrollTo(0, modalScroll);
+			});
 			break;
 	}
 }
