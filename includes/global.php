@@ -1,7 +1,7 @@
 <?php
 @ini_set('display_errors', 0);
 
-define("APP_VERSION", "6.0.16");
+define("APP_VERSION", "6.0.17");
 
 $isSecure = false;
 if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') {

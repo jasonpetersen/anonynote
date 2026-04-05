@@ -1,0 +1,181 @@
+{
+	"core": {
+		"app_name": "Anonynote",
+		"lang": "Español",
+		"lang_code": "es-MX"
+	},
+	"themes": {
+		"light": "Claro",
+		"dark": "Oscuro",
+		"desert_sunset": "Atardecer en el desierto"
+	},
+	"header": {
+		"menu": "Menú",
+		"settings": "Configuración",
+		"offline_mode": "Modo sin conexión"
+	},
+	"app": {
+		"title": "App",
+		"tagline": "Una Progressive Web App gratuita para tomar notas",
+		"meta_desc": "Una Progressive Web App gratuita para guardar, consultar y organizar notas de forma anónima. ¡Sin cuentas ni contraseñas! Accede rápidamente a información importante desde todos tus dispositivos.",
+		"input_label": "Escribe un nombre de bloc de notas <br class='visible-sm'/>nuevo o existente",
+		"info": "Distingue mayúsculas/minúsculas, se aceptan todos los caracteres, máx. 16",
+		"recent": "Blocs de notas recientes",
+		"recent_label": "O selecciona un bloc de notas abierto recientemente"
+	},
+	"about": {
+		"title": "Acerca de",
+		"meta_desc": "Una Progressive Web App 100% gratuita, diseñada para un mundo dinámico y multidispositivo. Creemos que guardar, consultar y organizar notas debe ser rápido y sencillo."
+	},
+	"credits": {
+		"title": "Créditos",
+		"meta_desc": "Fue mucho trabajo. El esfuerzo de muchas personas hizo posible esto. Aquí el creador hace una reverencia y ofrece reconocimiento y gratitud."
+	},
+	"contact": {
+		"title": "Contacto",
+		"meta_desc": "Elogios, críticas o lo que sea: ¡me encantaría saber de ti! Quiero que esta app sea la mejor posible. Tu opinión nos ayudaría a lograrlo."
+	},
+	"error": {
+		"title": "404",
+		"meta_desc": "Algo salió mal."
+	},
+	"notepad": {
+		"home": "Inicio",
+		"refresh": "Actualizar",
+		"lock": "Activar/desactivar bloqueo",
+		"api": "API",
+		"sort": "Ordenar",
+		"sort_az": "De A a Z",
+		"sort_za": "De Z a A",
+		"sort_color": "Color",
+		"sort_checked": "Marcadas",
+		"sort_unchecked": "Sin marcar",
+		"quick_add_placeholder": "Escribe una nota breve",
+		"quick_add_label": "Crear nota rápida",
+		"save": "Guardar cambios",
+		"desc_placeholder": "Escribe una descripción del bloc de notas",
+		"desc_char": "caracteres",
+		"empty_msg": "No hay notas",
+		"empty_tip": "Sugerencia: vuelve aquí escribiendo de nuevo el nombre del bloc de notas o marcando esta página como favorita",
+		"expand": "Leer más",
+		"moveup": "Mover arriba",
+		"movedown": "Mover abajo",
+		"options": "Opciones",
+		"reorder": "Arrastra para reordenar",
+		"delete_all": "Eliminar todo",
+		"edit": "Editar",
+		"check": "Marcar",
+		"check_all": "Marcar todo",
+		"change_color": "Cambiar color",
+		"change_colors": "Cambiar todos los colores",
+		"note_copy": "Copiar al portapapeles",
+		"note_copy_success": "Copiado",
+		"add_new": "Agregar nota",
+		"sticky_toggle": "Mostrar/ocultar herramientas",
+		"go_to_top": "Volver arriba"
+	},
+	"popup": {
+		"empty": "Debes escribir algo aquí.",
+		"install": "Agrega Anonynote a tu pantalla de inicio",
+		"find_notepad_launch_fail": "No se encontró el bloc de notas. Volviendo a la página de inicio.",
+		"notepad_launch_timeout": "Tiempo de espera agotado al cargar el bloc de notas.",
+		"rename": "El nombre del bloc de notas ya está en uso. Por favor elige otro.",
+		"note_copied": "Nota copiada al portapapeles.",
+		"offline": {
+			"enabled_user": "Modo sin conexión activado.",
+			"disabled_user": "Modo sin conexión desactivado.",
+			"enabled_sys": "Error de conexión. Modo sin conexión activado.",
+			"disabled_sys": "Conexión restablecida. Modo sin conexión desactivado."
+		},
+		"sync": {
+			"already": "Todos los datos locales ya están sincronizados. Modo sin conexión desactivado.",
+			"error": "Error al sincronizar. Problema de conexión. Continúas en modo sin conexión."
+		}
+	},
+	"modal": {
+		"delete_all": "¿Estás seguro de que quieres eliminar todas las notas de este bloc de notas?",
+		"api": {
+			"prompt": "API JSON",
+			"prompt_detail": "Accede a los datos de este bloc de notas de forma programática en la siguiente URL"
+		},
+		"sort": "Ordena el bloc de notas con el método siguiente",
+		"settings": {
+			"title": "Configuración",
+			"about": "Acerca de",
+			"app_version": "Versión de la app",
+			"appearance": "Apariencia",
+			"language": "Idioma",
+			"data": "Datos",
+			"data_detail": "Para resolver problemas o para borrar los datos de notas de tu dispositivo, puedes vaciar la base de datos local. Al hacerlo se eliminarán todas las notas sin sincronizar creadas en modo sin conexión.",
+			"purge_idb": "Vaciar base de datos local"
+		},
+		"sync": {
+			"dialog": {
+				"prompt": "Ahora estás en línea. ¿Quieres sincronizar los cambios del modo sin conexión con el servidor?",
+				"prompt_warning": "Tras una sincronización exitosa, la aplicación se recargará.",
+				"sync_confirm": "Sincronizar mis datos",
+				"sync_decline": "Volver al modo sin conexión"
+			},
+			"error": {
+				"prompt": "Se produjeron errores críticos durante la sincronización",
+				"prompt_detail": "Revisa los detalles a continuación. Si decides sincronizar de todas formas, parte o todos tus datos se perderán. También puedes cancelar ahora y corregir estos problemas antes de volver a intentarlo.",
+				"override": "Sincronizar de todas formas",
+				"npnamefail": "Este bloc de notas no puede crearse porque el nombre ya existe. Si continúas, el bloc de notas completo se descartará. Cancela e intenta con otro nombre.",
+				"nprenamefail": "Este bloc de notas no puede renombrarse porque ya existe otro con ese nombre. Si continúas, se conservará el nombre anterior. Puedes cancelar e intentar con otro nombre.",
+				"lockfail": "Este bloc de notas está bloqueado. No se permiten cambios. Si continúas, todos tus cambios se perderán.",
+				"hashfail": "Se produjo un error crítico. Contáctanos si el problema persiste. Si continúas, todos tus cambios en este bloc de notas se perderán.",
+				"findfail": "Este bloc de notas ya no existe. Si continúas, todos tus cambios se perderán."
+			}
+		},
+		"lock": {
+			"prompt": "Para bloquear este bloc de notas, ingresa una contraseña",
+			"prompt_detail": "Un bloc de notas bloqueado sigue siendo visible, pero no puede editarse",
+			"password_detail": "Distingue mayúsculas/minúsculas, se aceptan todos los caracteres, máx. 16",
+			"password_placeholder": "Ingresa la contraseña",
+			"reenter_placeholder": "Vuelve a ingresar la contraseña",
+			"mismatch": "Las contraseñas no coinciden",
+			"success": "¡Este bloc de notas ahora está bloqueado!",
+			"success_detail": "Puedes desbloquearlo en cualquier momento con tu contraseña. Los blocs de notas se desbloquean automáticamente después de 30 días.",
+			"locked_already": "Este bloc de notas ya está bloqueado. Recarga la página."
+		},
+		"unlock": {
+			"prompt": "Ingresa la contraseña que usaste para bloquear este bloc de notas",
+			"prompt_detail": "Recuerda que todos los blocs de notas se desbloquean automáticamente después de 30 días",
+			"incorrect": "Contraseña incorrecta",
+			"success": "¡Este bloc de notas ahora está desbloqueado!",
+			"not_locked": "Este bloc de notas no está bloqueado. Recarga la página."
+		},
+		"error": {
+			"retry": "Por favor, intenta de nuevo.",
+			"timeout": "Error de conexión. Por favor, intenta de nuevo.",
+			"http_code_403": "Error de conexión. Acceso denegado.",
+			"http_code_404": "Error de conexión. Archivo no encontrado.",
+			"http_code_408": "Error de conexión. Tiempo de espera agotado.",
+			"http_code_500": "Error de conexión o consulta a la base de datos.",
+			"catchall": "Algo salió mal.",
+			"critical": "Error del sistema. Contáctanos si el problema persiste.",
+			"locked": "Este bloc de notas está bloqueado. Recarga la página."
+		}
+	},
+	"edit": {
+		"pick": "Elige un color",
+		"placeholder": "Escribe tu nota aquí"
+	},
+	"general": {
+		"yes": "Sí",
+		"no": "No",
+		"cancel": "Cancelar",
+		"continue": "Continuar",
+		"reload": "Recargar",
+		"retry": "Reintentar",
+		"close": "Cerrar",
+		"save": "Guardar",
+		"delete": "Eliminar",
+		"next": "Siguiente",
+		"previous": "Anterior",
+		"back": "Volver",
+		"error": "Error",
+		"online": "En línea",
+		"offline": "Sin conexión"
+	}
+}

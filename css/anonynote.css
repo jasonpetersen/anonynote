@@ -97,12 +97,53 @@ body[data-theme="2"] {/* THEME 2 (DESERT SUNSET) */
 }
 
 #header #app-header-wrapper #offline-button #offline-button-label {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
 	position: absolute;
-	right: 16px;
-	top: 19px;
-	font-size: 16px;
+	top: 15px;
+	left: 36px;
+	width: 68px;
+	height: 30px;
+	line-height: 1em;
 	letter-spacing: 0.1em;
 	font-feature-settings: "liga" 0;
+	container-type: inline-size;
+}
+
+#header #app-header-wrapper #offline-button #offline-button-label #online-text,
+#header #app-header-wrapper #offline-button #offline-button-label #offline-text {
+	font-size: 24cqw;
+	word-break: break-word;
+	overflow-wrap: break-word;
+	white-space: normal;
+}
+
+html[lang="es-MX"] #header #app-header-wrapper #offline-button #offline-button-label #online-text,
+html[lang="es-MX"] #header #app-header-wrapper #offline-button #offline-button-label #offline-text {
+	font-size: 19cqw;
+}
+
+html[lang="el-GR"] #header #app-header-wrapper #offline-button #offline-button-label #online-text,
+html[lang="el-GR"] #header #app-header-wrapper #offline-button #offline-button-label #offline-text {
+	font-size: 16cqw;
+}
+
+html[lang="hi-IN"] #header #app-header-wrapper #offline-button #offline-button-label #online-text,
+html[lang="hi-IN"] #header #app-header-wrapper #offline-button #offline-button-label #offline-text {
+	font-size: 22cqw;
+}
+
+html[lang="ja-JP"] #header #app-header-wrapper #offline-button #offline-button-label #online-text,
+html[lang="ja-JP"] #header #app-header-wrapper #offline-button #offline-button-label #offline-text {
+	font-size: 17cqw;
+}
+
+#header #app-header-wrapper #offline-button #offline-button-label #online-text,
+body[data-offline-mode="1"] #header #app-header-wrapper #offline-button #offline-button-label #offline-text,
+body[data-offline-mode="2"] #header #app-header-wrapper #offline-button #offline-button-label #offline-text {
+	display: block;
 }
 
 #header #app-header-wrapper #offline-button #offline-button-label #offline-text,
@@ -113,14 +154,8 @@ body[data-offline-mode="2"] #header #app-header-wrapper #offline-button #offline
 
 body[data-offline-mode="1"] #header #app-header-wrapper #offline-button #offline-button-label,
 body[data-offline-mode="2"] #header #app-header-wrapper #offline-button #offline-button-label {
-	right: initial;
-	left: 16px;
+	left: 12px;
 	color: var(--primary);
-}
-
-body[data-offline-mode="1"] #header #app-header-wrapper #offline-button #offline-button-label #offline-text,
-body[data-offline-mode="2"] #header #app-header-wrapper #offline-button #offline-button-label #offline-text {
-	display: inline;
 }
 
 #header #app-header-wrapper #offline-button i {

@@ -1,0 +1,181 @@
+{
+	"core": {
+		"app_name": "Anonynote",
+		"lang": "简体中文",
+		"lang_code": "zh-CN"
+	},
+	"themes": {
+		"light": "浅色",
+		"dark": "深色",
+		"desert_sunset": "沙漠日落"
+	},
+	"header": {
+		"menu": "菜单",
+		"settings": "设置",
+		"offline_mode": "离线模式"
+	},
+	"app": {
+		"title": "App",
+		"tagline": "免费的笔记 Progressive Web App",
+		"meta_desc": "一款免费的 Progressive Web App，可匿名保存、查找和整理笔记。无需账户或密码！从您的所有设备快速访问重要信息。",
+		"input_label": "输入新的或已有的<br class='visible-sm'/>记事本名称",
+		"info": "区分大小写，支持任意字符，最多16个字符",
+		"recent": "最近的记事本",
+		"recent_label": "或选择最近打开的记事本"
+	},
+	"about": {
+		"title": "关于",
+		"meta_desc": "一款100%免费的 Progressive Web App，专为多设备快节奏生活而设计。我们相信，保存、查找和整理笔记应该简单快捷。"
+	},
+	"credits": {
+		"title": "鸣谢",
+		"meta_desc": "这是一项大工程，许多人的努力功不可没。创作者在此鞠躬致谢。"
+	},
+	"contact": {
+		"title": "联系我们",
+		"meta_desc": "赞美、批评或随便说说——很高兴听到您的声音！希望把这款应用做到最好，您的意见将助我们实现这一目标。"
+	},
+	"error": {
+		"title": "404",
+		"meta_desc": "出了点问题。"
+	},
+	"notepad": {
+		"home": "首页",
+		"refresh": "刷新",
+		"lock": "开启/关闭锁定",
+		"api": "API",
+		"sort": "排序",
+		"sort_az": "A 到 Z",
+		"sort_za": "Z 到 A",
+		"sort_color": "颜色",
+		"sort_checked": "已勾选",
+		"sort_unchecked": "未勾选",
+		"quick_add_placeholder": "输入简短笔记",
+		"quick_add_label": "快速添加笔记",
+		"save": "保存更改",
+		"desc_placeholder": "输入记事本描述",
+		"desc_char": "字符",
+		"empty_msg": "暂无笔记",
+		"empty_tip": "提示：重新输入记事本名称或将本页加入书签，下次轻松返回",
+		"expand": "阅读更多",
+		"moveup": "上移",
+		"movedown": "下移",
+		"options": "选项",
+		"reorder": "拖拽以重新排序",
+		"delete_all": "全部删除",
+		"edit": "编辑",
+		"check": "勾选",
+		"check_all": "全部勾选",
+		"change_color": "更改颜色",
+		"change_colors": "更改所有颜色",
+		"note_copy": "复制到剪贴板",
+		"note_copy_success": "已复制",
+		"add_new": "添加笔记",
+		"sticky_toggle": "显示/隐藏工具",
+		"go_to_top": "返回顶部"
+	},
+	"popup": {
+		"empty": "请在此处输入内容。",
+		"install": "将 Anonynote 添加到主屏幕",
+		"find_notepad_launch_fail": "找不到记事本，正在返回首页。",
+		"notepad_launch_timeout": "加载记事本超时。",
+		"rename": "该记事本名称已被使用，请选择其他名称。",
+		"note_copied": "笔记已复制到剪贴板。",
+		"offline": {
+			"enabled_user": "离线模式已开启。",
+			"disabled_user": "离线模式已关闭。",
+			"enabled_sys": "连接出错，离线模式已开启。",
+			"disabled_sys": "连接已恢复，离线模式已关闭。"
+		},
+		"sync": {
+			"already": "所有本地数据已同步，离线模式已关闭。",
+			"error": "同步失败，连接出错，您仍处于离线模式。"
+		}
+	},
+	"modal": {
+		"delete_all": "确定要删除此记事本中的所有笔记吗？",
+		"api": {
+			"prompt": "JSON API",
+			"prompt_detail": "通过以下 URL 以编程方式访问此记事本的数据"
+		},
+		"sort": "按以下方式对记事本排序",
+		"settings": {
+			"title": "设置",
+			"about": "关于",
+			"app_version": "应用版本",
+			"appearance": "外观",
+			"language": "语言",
+			"data": "数据",
+			"data_detail": "如需排查问题或清除设备上的笔记数据，可清空本地数据库。此操作将删除离线模式中创建的所有未同步笔记。",
+			"purge_idb": "清空本地数据库"
+		},
+		"sync": {
+			"dialog": {
+				"prompt": "您已恢复联网。是否将离线更改同步到服务器？",
+				"prompt_warning": "同步成功后，应用将重新加载。",
+				"sync_confirm": "同步我的数据",
+				"sync_decline": "继续离线模式"
+			},
+			"error": {
+				"prompt": "数据同步时发生严重错误",
+				"prompt_detail": "请查看以下详情。如仍选择同步，部分或全部数据将丢失。您也可以立即取消并修复这些问题后再重试。",
+				"override": "仍然同步",
+				"npnamefail": "该记事本无法创建，因为此名称已存在。继续操作将丢弃整个记事本，请取消并尝试其他名称。",
+				"nprenamefail": "该记事本无法重命名，因为此名称已被其他记事本使用。继续操作将保留原名称，您可取消后尝试其他名称。",
+				"lockfail": "该记事本已锁定，不允许修改。继续操作将丢弃您在此记事本中的所有更改。",
+				"hashfail": "发生严重错误，若问题持续请联系我们。继续操作将丢弃您在此记事本中的所有更改。",
+				"findfail": "该记事本已不存在，继续操作将丢弃您的所有更改。"
+			}
+		},
+		"lock": {
+			"prompt": "请输入密码以锁定此记事本",
+			"prompt_detail": "锁定的记事本仍可查看，但无法编辑",
+			"password_detail": "区分大小写，支持任意字符，最多16个字符",
+			"password_placeholder": "输入密码",
+			"reenter_placeholder": "再次输入密码",
+			"mismatch": "两次密码不一致",
+			"success": "此记事本已锁定！",
+			"success_detail": "您可随时使用密码解锁。记事本将在30天后自动解锁。",
+			"locked_already": "此记事本已经锁定，请刷新页面。"
+		},
+		"unlock": {
+			"prompt": "请输入用于锁定此记事本的密码",
+			"prompt_detail": "提示：所有记事本将在30天后自动解锁",
+			"incorrect": "密码不正确",
+			"success": "此记事本已解锁！",
+			"not_locked": "此记事本未被锁定，请刷新页面。"
+		},
+		"error": {
+			"retry": "请重试。",
+			"timeout": "连接出错，请重试。",
+			"http_code_403": "连接出错，访问被拒绝。",
+			"http_code_404": "连接出错，文件未找到。",
+			"http_code_408": "连接出错，请求超时。",
+			"http_code_500": "数据库连接或查询出错。",
+			"catchall": "出了点问题。",
+			"critical": "系统错误，若问题持续请联系我们。",
+			"locked": "此记事本已锁定，请刷新页面。"
+		}
+	},
+	"edit": {
+		"pick": "选择颜色",
+		"placeholder": "在此输入笔记"
+	},
+	"general": {
+		"yes": "是",
+		"no": "否",
+		"cancel": "取消",
+		"continue": "继续",
+		"reload": "重新加载",
+		"retry": "重试",
+		"close": "关闭",
+		"save": "保存",
+		"delete": "删除",
+		"next": "下一步",
+		"previous": "上一步",
+		"back": "返回",
+		"error": "错误",
+		"online": "在线",
+		"offline": "离线"
+	}
+}

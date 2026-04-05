@@ -229,6 +229,7 @@ function loadLocale() {
 		dataType: "json",
 		success: function(data) {
 			locale = data;
+			document.documentElement.setAttribute('lang', data.core.lang_code);
 			holdRelease();
 		},
 		error: function() {
@@ -3431,7 +3432,11 @@ function videoModal() {
 
 // display the settings modal window
 function settingsModal() {
-	let langOptions = (typeof availableLangs !== 'undefined') ? Object.entries(availableLangs).map(function(entry) {
+	let langOptions = (typeof availableLangs !== 'undefined') ? Object.entries(availableLangs).sort(function(a, b) {
+		if (a[0] === 'en-US') return -1;
+		if (b[0] === 'en-US') return  1;
+		return a[1].localeCompare(b[1]);
+	}).map(function(entry) {
 		return `<option value="${entry[0]}"${entry[0] === langCode ? ' selected' : ''}>${entry[1]}</option>`;
 	}).join('') : `<option value="${langCode}" selected>${langCode}</option>`;
 	let themeOptions = themeRegistry.map(function(theme) {

@@ -1,0 +1,181 @@
+{
+	"core": {
+		"app_name": "Anonynote",
+		"lang": "Português (Brasil)",
+		"lang_code": "pt-BR"
+	},
+	"themes": {
+		"light": "Claro",
+		"dark": "Escuro",
+		"desert_sunset": "Pôr do sol no deserto"
+	},
+	"header": {
+		"menu": "Menu",
+		"settings": "Configurações",
+		"offline_mode": "Modo offline"
+	},
+	"app": {
+		"title": "App",
+		"tagline": "Um Progressive Web App gratuito para anotações",
+		"meta_desc": "Um Progressive Web App gratuito para salvar, encontrar e organizar notas de forma anônima. Sem conta ou senha! Acesse suas informações importantes rapidamente de qualquer dispositivo.",
+		"input_label": "Digite o nome de um<br class='visible-sm'/>bloco de notas novo ou existente",
+		"info": "Diferencia maiúsculas de minúsculas, aceita qualquer caractere, máximo de 16",
+		"recent": "Blocos de notas recentes",
+		"recent_label": "Ou selecione um bloco de notas aberto recentemente"
+	},
+	"about": {
+		"title": "Sobre",
+		"meta_desc": "Um Progressive Web App 100% gratuito, feito para o ritmo acelerado e cheio de dispositivos do mundo de hoje. Acreditamos que salvar, encontrar e organizar notas deve ser algo rápido e simples."
+	},
+	"credits": {
+		"title": "Créditos",
+		"meta_desc": "Muito trabalho foi investido aqui. A contribuição de várias pessoas tornou isso possível. O criador faz uma reverência e expressa sua gratidão."
+	},
+	"contact": {
+		"title": "Contato",
+		"meta_desc": "Elogios, críticas ou qualquer coisa — adoraríamos ouvir você! Queremos fazer deste aplicativo o melhor possível. Sua opinião nos ajudará a chegar lá."
+	},
+	"error": {
+		"title": "404",
+		"meta_desc": "Algo deu errado."
+	},
+	"notepad": {
+		"home": "Início",
+		"refresh": "Atualizar",
+		"lock": "Alternar bloqueio",
+		"api": "API",
+		"sort": "Ordenar",
+		"sort_az": "A a Z",
+		"sort_za": "Z a A",
+		"sort_color": "Cor",
+		"sort_checked": "Marcados",
+		"sort_unchecked": "Não marcados",
+		"quick_add_placeholder": "Digite uma nota rápida",
+		"quick_add_label": "Criar nota rápida",
+		"save": "Salvar alterações",
+		"desc_placeholder": "Digite uma descrição para o bloco de notas",
+		"desc_char": "caracteres",
+		"empty_msg": "Nenhuma nota",
+		"empty_tip": "Dica: Digite o nome do bloco de notas novamente ou salve esta página nos favoritos para voltar facilmente",
+		"expand": "Ler mais",
+		"moveup": "Mover para cima",
+		"movedown": "Mover para baixo",
+		"options": "Opções",
+		"reorder": "Arraste para reordenar",
+		"delete_all": "Excluir tudo",
+		"edit": "Editar",
+		"check": "Marcar",
+		"check_all": "Marcar tudo",
+		"change_color": "Alterar cor",
+		"change_colors": "Alterar todas as cores",
+		"note_copy": "Copiar para a área de transferência",
+		"note_copy_success": "Copiado",
+		"add_new": "Adicionar nota",
+		"sticky_toggle": "Mostrar/ocultar ferramentas",
+		"go_to_top": "Ir para o topo"
+	},
+	"popup": {
+		"empty": "É necessário inserir algum conteúdo aqui.",
+		"install": "Adicionar Anonynote à tela inicial",
+		"find_notepad_launch_fail": "Bloco de notas não encontrado. Voltando para a página inicial.",
+		"notepad_launch_timeout": "O carregamento do bloco de notas expirou.",
+		"rename": "Esse nome de bloco de notas já está em uso. Por favor, escolha outro.",
+		"note_copied": "Nota copiada para a área de transferência.",
+		"offline": {
+			"enabled_user": "Modo offline ativado.",
+			"disabled_user": "Modo offline desativado.",
+			"enabled_sys": "Erro de conexão. Modo offline ativado.",
+			"disabled_sys": "Conexão restaurada. Modo offline desativado."
+		},
+		"sync": {
+			"already": "Todos os dados locais já estão sincronizados. Modo offline desativado.",
+			"error": "Falha na sincronização. Erro de conexão. Você ainda está no modo offline."
+		}
+	},
+	"modal": {
+		"delete_all": "Tem certeza que deseja excluir todas as notas deste bloco de notas?",
+		"api": {
+			"prompt": "JSON API",
+			"prompt_detail": "Acesse os dados deste bloco de notas de forma programática pela URL abaixo"
+		},
+		"sort": "Ordenar o bloco de notas pelo seguinte critério",
+		"settings": {
+			"title": "Configurações",
+			"about": "Sobre",
+			"app_version": "Versão do aplicativo",
+			"appearance": "Aparência",
+			"language": "Idioma",
+			"data": "Dados",
+			"data_detail": "Para solucionar problemas ou apagar os dados das notas do seu dispositivo, você pode limpar o banco de dados local. Isso excluirá todas as notas não sincronizadas criadas no modo offline.",
+			"purge_idb": "Limpar banco de dados local"
+		},
+		"sync": {
+			"dialog": {
+				"prompt": "Você está de volta online. Deseja sincronizar as alterações feitas offline com o servidor?",
+				"prompt_warning": "Após uma sincronização bem-sucedida, o aplicativo será recarregado.",
+				"sync_confirm": "Sincronizar meus dados",
+				"sync_decline": "Continuar no modo offline"
+			},
+			"error": {
+				"prompt": "Ocorreram erros críticos durante a sincronização dos dados",
+				"prompt_detail": "Veja os detalhes abaixo. Se continuar com a sincronização, alguns ou todos os seus dados poderão ser perdidos. Você também pode cancelar agora e corrigir os problemas antes de tentar novamente.",
+				"override": "Sincronizar mesmo assim",
+				"npnamefail": "Este bloco de notas não pode ser criado porque o nome já existe. Continuar descartará o bloco de notas inteiro. Cancele e tente outro nome.",
+				"nprenamefail": "Este bloco de notas não pode ser renomeado porque outro bloco de notas já usa esse nome. Continuar manterá o nome original. Você pode cancelar e tentar outro nome.",
+				"lockfail": "Este bloco de notas está bloqueado e não permite alterações. Continuar descartará todas as suas alterações neste bloco de notas.",
+				"hashfail": "Ocorreu um erro crítico. Se o problema persistir, entre em contato conosco. Continuar descartará todas as suas alterações neste bloco de notas.",
+				"findfail": "Este bloco de notas não existe mais. Continuar descartará todas as suas alterações."
+			}
+		},
+		"lock": {
+			"prompt": "Digite uma senha para bloquear este bloco de notas",
+			"prompt_detail": "Blocos de notas bloqueados podem ser visualizados, mas não editados",
+			"password_detail": "Diferencia maiúsculas de minúsculas, aceita qualquer caractere, máximo de 16",
+			"password_placeholder": "Digite a senha",
+			"reenter_placeholder": "Digite a senha novamente",
+			"mismatch": "As senhas não coincidem",
+			"success": "Este bloco de notas foi bloqueado!",
+			"success_detail": "Você pode desbloqueá-lo a qualquer momento com sua senha. Os blocos de notas são desbloqueados automaticamente após 30 dias.",
+			"locked_already": "Este bloco de notas já está bloqueado. Atualize a página."
+		},
+		"unlock": {
+			"prompt": "Digite a senha usada para bloquear este bloco de notas",
+			"prompt_detail": "Lembre-se: todos os blocos de notas são desbloqueados automaticamente após 30 dias",
+			"incorrect": "Senha incorreta",
+			"success": "Este bloco de notas foi desbloqueado!",
+			"not_locked": "Este bloco de notas não está bloqueado. Atualize a página."
+		},
+		"error": {
+			"retry": "Por favor, tente novamente.",
+			"timeout": "Erro de conexão. Por favor, tente novamente.",
+			"http_code_403": "Erro de conexão. Acesso negado.",
+			"http_code_404": "Erro de conexão. Arquivo não encontrado.",
+			"http_code_408": "Erro de conexão. A conexão expirou.",
+			"http_code_500": "Erro de conexão ou consulta ao banco de dados.",
+			"catchall": "Algo deu errado.",
+			"critical": "Erro de sistema. Se o problema persistir, entre em contato conosco.",
+			"locked": "Este bloco de notas está bloqueado. Atualize a página."
+		}
+	},
+	"edit": {
+		"pick": "Escolher cor",
+		"placeholder": "Digite sua nota aqui"
+	},
+	"general": {
+		"yes": "Sim",
+		"no": "Não",
+		"cancel": "Cancelar",
+		"continue": "Continuar",
+		"reload": "Recarregar",
+		"retry": "Tentar novamente",
+		"close": "Fechar",
+		"save": "Salvar",
+		"delete": "Excluir",
+		"next": "Próximo",
+		"previous": "Anterior",
+		"back": "Voltar",
+		"error": "Erro",
+		"online": "Online",
+		"offline": "Offline"
+	}
+}
