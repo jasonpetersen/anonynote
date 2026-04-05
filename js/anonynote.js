@@ -745,7 +745,9 @@ function _ppPositionPopup(el) {
 	} else {
 		_ppPopup.style.top = `${rect.bottom + window.scrollY + 4}px`;
 	}
-	_ppPopup.style.left = `${rect.left}px`;
+	let popW = _ppPopup.offsetWidth || 150;
+	let leftPos = Math.min(rect.left, window.innerWidth - popW - 24);
+	_ppPopup.style.left = `${leftPos}px`;
 }
 
 function _ppOpen(el, state) {
@@ -3825,7 +3827,7 @@ document.addEventListener('DOMContentLoaded', function() { _appReadyPromise.then
 		document.addEventListener('touchstart', function(e) {
 			if (!e.target.closest('#notepad-table .col-4')) return;
 			touchStatus = 'touchstart';
-			touchTime = getUnixTimestamp();
+			touchTime = getUnixTimestampMS();
 			touchCoorStart = e.targetTouches[0].clientY;
 			touchId = `#${e.target.closest('.note-row').id}`;
 			let _noteEl = document.querySelector(`${touchId} .col-4 .note`);
@@ -3844,7 +3846,7 @@ document.addEventListener('DOMContentLoaded', function() { _appReadyPromise.then
 			if (!e.target.closest('#notepad-table .col-4')) return;
 			if (!touchId) return;
 			noteCopyAnimation(touchId, "end");
-			if (((getUnixTimestamp() - touchTime) >= 1) && (touchStatus == 'touchstart')) {
+			if (((getUnixTimestampMS() - touchTime) >= 1000) && (touchStatus == 'touchstart')) {
 				window.noteCopyText = document.querySelector(`${touchId} .note-full`).textContent;
 				navigator.clipboard.writeText(window.noteCopyText).then(
 					() => {
