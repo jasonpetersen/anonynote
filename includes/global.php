@@ -1,7 +1,7 @@
 <?php
 @ini_set('display_errors', 0);
 
-define("APP_VERSION", "6.0.17");
+require_once __DIR__ . '/version.php';
 
 $isSecure = false;
 if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') {
@@ -46,5 +46,3 @@ function loadLocale($inputCode) {
 	$GLOBALS['locale'] = json_decode($json, true);
 	return $langCode;
 }
-
-?>

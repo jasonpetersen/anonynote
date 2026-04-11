@@ -424,6 +424,7 @@ body[data-offline-mode="2"] #header #app-header-wrapper #icon-status {
 
 #modal #modal-window .row button {
 	border-radius: var(--radius);
+	white-space: normal;
 }
 
 #modal #modal-window .row button,
